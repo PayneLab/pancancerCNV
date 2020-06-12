@@ -1,0 +1,699 @@
+Gene,Cancer type,Pathway
+ACVR1,UCEC,TGFB signaling
+ACVR1B,PANCAN,TGFB signaling
+ACVR2A,COADREAD,TGFB signaling
+ACVR2A,LIHC,TGFB signaling
+ACVR2A,PANCAN,TGFB signaling
+AJUBA,HNSC,Chromatin other
+AJUBA,PANCAN,Chromatin other
+AKT1,BRCA,PI3K signaling
+AKT1,CESC,PI3K signaling
+AKT1,PANCAN,PI3K signaling
+AKT1,PRAD,PI3K signaling
+AKT1,THCA,PI3K signaling
+AKT1,UCEC,PI3K signaling
+ALB,LIHC,Other
+AMER1,COADREAD,Wnt/B-catenin signaling
+AMER1,PANCAN,Wnt/B-catenin signaling
+APC,COADREAD,Wnt/B-catenin signaling
+APC,PANCAN,Wnt/B-catenin signaling
+APC,PRAD,Wnt/B-catenin signaling
+APC,STAD,Wnt/B-catenin signaling
+APOB,LIHC,Other
+ARHGAP35,LUSC,Other signaling
+ARHGAP35,PANCAN,Other signaling
+ARHGAP35,UCEC,Other signaling
+ARID1A,BLCA,Chromatin SWI/SNF complex
+ARID1A,BRCA,Chromatin SWI/SNF complex
+ARID1A,CESC,Chromatin SWI/SNF complex
+ARID1A,CHOL,Chromatin SWI/SNF complex
+ARID1A,COADREAD,Chromatin SWI/SNF complex
+ARID1A,ESCA,Chromatin SWI/SNF complex
+ARID1A,LGG,Chromatin SWI/SNF complex
+ARID1A,LIHC,Chromatin SWI/SNF complex
+ARID1A,LUAD,Chromatin SWI/SNF complex
+ARID1A,LUSC,Chromatin SWI/SNF complex
+ARID1A,PAAD,Chromatin SWI/SNF complex
+ARID1A,PANCAN,Chromatin SWI/SNF complex
+ARID1A,STAD,Chromatin SWI/SNF complex
+ARID1A,UCEC,Chromatin SWI/SNF complex
+ARID1A,UCS,Chromatin SWI/SNF complex
+ARID2,HNSC,Chromatin SWI/SNF complex
+ARID2,LGG,Chromatin SWI/SNF complex
+ARID2,LIHC,Chromatin SWI/SNF complex
+ARID2,PANCAN,Chromatin SWI/SNF complex
+ARID2,SKCM,Chromatin SWI/SNF complex
+ARID2,STAD,Chromatin SWI/SNF complex
+ARID5B,UCEC,Chromatin histone modifiers
+ASXL1,LAML,Chromatin other
+ASXL1,PANCAN,Chromatin other
+ASXL2,BLCA,Chromatin other
+ASXL2,PANCAN,Chromatin other
+ATF7IP,PANCAN,Chromatin other
+ATF7IP,UCEC,Chromatin other
+ATM,BLCA,Genome integrity
+ATM,KIRC,Genome integrity
+ATM,LUAD,Genome integrity
+ATM,PANCAN,Genome integrity
+ATM,UCEC,Genome integrity
+ATR,PANCAN,Genome integrity
+ATR,UCEC,Genome integrity
+ATRX,ACC,Chromatin SWI/SNF complex
+ATRX,GBM,Chromatin SWI/SNF complex
+ATRX,LGG,Chromatin SWI/SNF complex
+ATRX,PANCAN,Chromatin SWI/SNF complex
+ATRX,SARC,Chromatin SWI/SNF complex
+ATXN3,PANCAN,Protein homeostasis/ubiquitination
+AXIN1,LIHC,Wnt/B-catenin signaling
+AXIN1,PANCAN,Wnt/B-catenin signaling
+B2M,DLBC,Immune signaling
+B2M,PANCAN,Immune signaling
+BAP1,CHOL,Protein homeostasis/ubiquitination
+BAP1,KIRC,Protein homeostasis/ubiquitination
+BAP1,KIRP,Protein homeostasis/ubiquitination
+BAP1,LIHC,Protein homeostasis/ubiquitination
+BAP1,MESO,Protein homeostasis/ubiquitination
+BAP1,PANCAN,Protein homeostasis/ubiquitination
+BAP1,UVM,Protein homeostasis/ubiquitination
+BCL2L11,UCS,Apoptosis
+BCOR,PANCAN,Chromatin other
+BCOR,STAD,Chromatin other
+BCOR,UCEC,Chromatin other
+BRAF,COADREAD,MAPK signaling
+BRAF,GBM,MAPK signaling
+BRAF,LUAD,MAPK signaling
+BRAF,PANCAN,MAPK signaling
+BRAF,PRAD,MAPK signaling
+BRAF,SKCM,MAPK signaling
+BRAF,THCA,MAPK signaling
+BRCA1,BRCA,Genome integrity
+BRCA1,OV,Genome integrity
+BRCA1,PANCAN,Genome integrity
+BRCA2,PANCAN,Genome integrity
+BRD7,LIHC,Chromatin SWI/SNF complex
+BRD7,PANCAN,Chromatin SWI/SNF complex
+BRD7,SKCM,Chromatin SWI/SNF complex
+BTG2,DLBC,Cell cycle
+CACNA1A,PANCAN,Other
+CARD11,DLBC,NFKB signaling
+CASP8,BRCA,Apoptosis
+CASP8,CESC,Apoptosis
+CASP8,HNSC,Apoptosis
+CASP8,PANCAN,Apoptosis
+CASP8,STAD,Apoptosis
+CBFB,BRCA,Transcription factor
+CBFB,PANCAN,Transcription factor
+CBWD3,PANCAN,Other
+CCND1,PANCAN,Cell cycle
+CCND1,UCEC,Cell cycle
+CD70,DLBC,Immune signaling
+CD79B,DLBC,Immune signaling
+CDH1,BRCA,Other signaling
+CDH1,PANCAN,Other signaling
+CDH1,STAD,Other signaling
+CDK12,OV,Cell cycle
+CDK12,PANCAN,Cell cycle
+CDK4,PANCAN,Cell cycle
+CDK4,SKCM,Cell cycle
+CDKN1A,BLCA,Cell cycle
+CDKN1A,LIHC,Cell cycle
+CDKN1A,PANCAN,Cell cycle
+CDKN1B,BRCA,Cell cycle
+CDKN1B,PANCAN,Cell cycle
+CDKN2A,BLCA,Cell cycle
+CDKN2A,ESCA,Cell cycle
+CDKN2A,HNSC,Cell cycle
+CDKN2A,LIHC,Cell cycle
+CDKN2A,LUAD,Cell cycle
+CDKN2A,LUSC,Cell cycle
+CDKN2A,PAAD,Cell cycle
+CDKN2A,PANCAN,Cell cycle
+CDKN2A,SKCM,Cell cycle
+CDKN2A,STAD,Cell cycle
+CHD3,PANCAN,Chromatin other
+CHD3,UCEC,Chromatin other
+CHD4,BRCA,Chromatin other
+CHD4,PANCAN,Chromatin other
+CHD4,UCEC,Chromatin other
+CHD4,UCS,Chromatin other
+CHD8,PANCAN,Chromatin other
+CHEK2,PANCAN,Genome integrity
+CIC,LGG,Transcription factor
+CIC,PANCAN,Transcription factor
+CNBD1,STAD,Other
+COL5A1,SKCM,Other
+CREB3L3,LIHC,Transcription factor
+CREBBP,BLCA,Chromatin histone modifiers
+CREBBP,PANCAN,Chromatin histone modifiers
+CSDE1,PCPG,RNA abundance
+CTCF,BRCA,Chromatin other
+CTCF,PANCAN,Chromatin other
+CTCF,UCEC,Chromatin other
+CTNNB1,ACC,Wnt/B-catenin signaling
+CTNNB1,BLCA,Wnt/B-catenin signaling
+CTNNB1,COADREAD,Wnt/B-catenin signaling
+CTNNB1,LIHC,Wnt/B-catenin signaling
+CTNNB1,LUAD,Wnt/B-catenin signaling
+CTNNB1,PANCAN,Wnt/B-catenin signaling
+CTNNB1,PRAD,Wnt/B-catenin signaling
+CTNNB1,SKCM,Wnt/B-catenin signaling
+CTNNB1,STAD,Wnt/B-catenin signaling
+CTNNB1,UCEC,Wnt/B-catenin signaling
+CTNND1,PANCAN,Wnt/B-catenin signaling
+CTNND1,UCEC,Wnt/B-catenin signaling
+CUL1,BLCA,Protein homeostasis/ubiquitination
+CUL1,PANCAN,Protein homeostasis/ubiquitination
+CUL3,HNSC,Protein homeostasis/ubiquitination
+CUL3,KIRP,Protein homeostasis/ubiquitination
+CUL3,LUSC,Protein homeostasis/ubiquitination
+CUL3,PANCAN,Protein homeostasis/ubiquitination
+CYLD,HNSC,Protein homeostasis/ubiquitination
+CYSLTR2,UVM,Other signaling
+DACH1,SKCM,TGFB signaling
+DAZAP1,PANCAN,Splicing
+DDX3X,PANCAN,RNA abundance
+DDX3X,SKCM,RNA abundance
+DHX9,LIHC,RNA abundance
+DIAPH2,BLCA,Other signaling
+DICER1,UCEC,RNA abundance
+DMD,STAD,Other
+DNMT3A,LAML,Epigenetics DNA modifiers
+DNMT3A,PANCAN,Epigenetics DNA modifiers
+DNMT3A,THCA,Epigenetics DNA modifiers
+EEF1A1,LIHC,Protein homeostasis/ubiquitination
+EEF1A1,PANCAN,Protein homeostasis/ubiquitination
+EEF2,PAAD,Protein homeostasis/ubiquitination
+EGFR,GBM,RTK signaling
+EGFR,LGG,RTK signaling
+EGFR,LUAD,RTK signaling
+EGFR,PANCAN,RTK signaling
+EIF1AX,PANCAN,Protein homeostasis/ubiquitination
+EIF1AX,THCA,Protein homeostasis/ubiquitination
+EIF1AX,UVM,Protein homeostasis/ubiquitination
+ELF3,BLCA,Transcription factor
+ELF3,PANCAN,Transcription factor
+EP300,BLCA,Chromatin histone modifiers
+EP300,CESC,Chromatin histone modifiers
+EP300,HNSC,Chromatin histone modifiers
+EP300,LUSC,Chromatin histone modifiers
+EP300,PANCAN,Chromatin histone modifiers
+EP300,UCEC,Chromatin histone modifiers
+EPAS1,PCPG,Transcription factor
+EPHA2,CHOL,RTK signaling
+EPHA2,HNSC,RTK signaling
+EPHA2,PANCAN,RTK signaling
+ERBB2,BLCA,RTK signaling
+ERBB2,BRCA,RTK signaling
+ERBB2,CESC,RTK signaling
+ERBB2,ESCA,RTK signaling
+ERBB2,PANCAN,RTK signaling
+ERBB2,STAD,RTK signaling
+ERBB2,UCEC,RTK signaling
+ERBB3,BLCA,RTK signaling
+ERBB3,CESC,RTK signaling
+ERBB3,PANCAN,RTK signaling
+ERBB3,UCEC,RTK signaling
+ERBB4,STAD,RTK signaling
+ERCC2,BLCA,Genome integrity
+ERCC2,PANCAN,Genome integrity
+FAM46D,STAD,RNA abundance
+FAT1,BLCA,Other signaling
+FAT1,CESC,Other signaling
+FAT1,HNSC,Other signaling
+FAT1,LUSC,Other signaling
+FAT1,PANCAN,Other signaling
+FAT1,UCEC,Other signaling
+FBXW7,BLCA,Protein homeostasis/ubiquitination
+FBXW7,BRCA,Protein homeostasis/ubiquitination
+FBXW7,CESC,Protein homeostasis/ubiquitination
+FBXW7,COADREAD,Protein homeostasis/ubiquitination
+FBXW7,ESCA,Protein homeostasis/ubiquitination
+FBXW7,HNSC,Protein homeostasis/ubiquitination
+FBXW7,LUSC,Protein homeostasis/ubiquitination
+FBXW7,PANCAN,Protein homeostasis/ubiquitination
+FBXW7,STAD,Protein homeostasis/ubiquitination
+FBXW7,UCEC,Protein homeostasis/ubiquitination
+FBXW7,UCS,Protein homeostasis/ubiquitination
+FGFR2,LUSC,RTK signaling
+FGFR2,PANCAN,RTK signaling
+FGFR2,UCEC,RTK signaling
+FGFR3,BLCA,RTK signaling
+FGFR3,HNSC,RTK signaling
+FGFR3,PANCAN,RTK signaling
+FLNA,HNSC,Other
+FLT3,LAML,RTK signaling
+FOXA1,BLCA,Transcription factor
+FOXA1,BRCA,Transcription factor
+FOXA1,PANCAN,Transcription factor
+FOXA1,PRAD,Transcription factor
+FOXA2,PANCAN,Transcription factor
+FOXA2,UCEC,Transcription factor
+FOXQ1,BLCA,Transcription factor
+FUBP1,LGG,Transcription factor
+FUBP1,PANCAN,Transcription factor
+GABRA6,GBM,Other
+GATA3,BRCA,Transcription factor
+GATA3,PANCAN,Transcription factor
+GNA11,PANCAN,Other signaling
+GNA11,SKCM,Other signaling
+GNA11,UVM,Other signaling
+GNA13,BLCA,Other signaling
+GNAQ,PANCAN,Other signaling
+GNAQ,UVM,Other signaling
+GNAS,COADREAD,Other signaling
+GNAS,LIHC,Other signaling
+GNAS,PAAD,Other signaling
+GPS2,BRCA,Other signaling
+GPS2,PANCAN,Other signaling
+GRIN2D,PANCAN,Other
+GTF2I,PANCAN,Transcription factor
+GTF2I,THYM,Transcription factor
+H3F3A,PANCAN,Chromatin other
+H3F3C,PANCAN,Chromatin other
+HIST1H1E,DLBC,Chromatin other
+HIST1H1E,LIHC,Chromatin other
+HLA-A,HNSC,Immune signaling
+HLA-A,LUSC,Immune signaling
+HLA-A,PANCAN,Immune signaling
+HLA-B,CESC,Immune signaling
+HLA-B,DLBC,Immune signaling
+HLA-B,HNSC,Immune signaling
+HLA-B,PANCAN,Immune signaling
+HRAS,BLCA,MAPK signaling
+HRAS,HNSC,MAPK signaling
+HRAS,LUSC,MAPK signaling
+HRAS,PANCAN,MAPK signaling
+HRAS,PCPG,MAPK signaling
+HRAS,PRAD,MAPK signaling
+HRAS,SKCM,MAPK signaling
+HRAS,THCA,MAPK signaling
+HRAS,THYM,MAPK signaling
+HUWE1,HNSC,Protein homeostasis/ubiquitination
+IDH1,CHOL,Metabolism
+IDH1,GBM,Metabolism
+IDH1,LAML,Metabolism
+IDH1,LGG,Metabolism
+IDH1,LIHC,Metabolism
+IDH1,PANCAN,Metabolism
+IDH1,PRAD,Metabolism
+IDH1,SKCM,Metabolism
+IDH2,LAML,Metabolism
+IDH2,LGG,Metabolism
+IDH2,PANCAN,Metabolism
+IL6ST,LIHC,Immune signaling
+INPPL1,PANCAN,PI3K signaling
+INPPL1,UCEC,PI3K signaling
+IRF2,PANCAN,Immune signaling
+IRF6,PANCAN,Immune signaling
+JAK1,PANCAN,RTK signaling
+KANSL1,BLCA,Chromatin histone modifiers
+KANSL1,PANCAN,Chromatin histone modifiers
+KANSL1,UCEC,Chromatin histone modifiers
+KDM5C,KIRC,Chromatin histone modifiers
+KDM5C,PANCAN,Chromatin histone modifiers
+KDM6A,BLCA,Histone modification
+KDM6A,HNSC,Histone modification
+KDM6A,KIRP,Histone modification
+KDM6A,LUSC,Histone modification
+KDM6A,PAAD,Histone modification
+KDM6A,PANCAN,Histone modification
+KDM6A,PRAD,Histone modification
+KEAP1,HNSC,Other signaling
+KEAP1,LIHC,Other signaling
+KEAP1,LUAD,Other signaling
+KEAP1,LUSC,Other signaling
+KEAP1,PANCAN,Other signaling
+KEL,GBM,Other
+KIF1A,KIRC,Other
+KIT,LAML,RTK signaling
+KIT,PANCAN,RTK signaling
+KIT,SKCM,RTK signaling
+KIT,TGCT,RTK signaling
+KLF5,BLCA,Transcription factor
+KLF5,CESC,Transcription factor
+KLF5,LUSC,Transcription factor
+KLF5,PANCAN,Transcription factor
+KMT2A,PANCAN,Chromatin histone modifiers
+KMT2B,PANCAN,Chromatin histone modifiers
+KMT2B,UCEC,Chromatin histone modifiers
+KMT2C,BLCA,Chromatin histone modifiers
+KMT2C,BRCA,Chromatin histone modifiers
+KMT2C,CESC,Chromatin histone modifiers
+KMT2C,PANCAN,Chromatin histone modifiers
+KMT2C,UCEC,Chromatin histone modifiers
+KMT2D,BLCA,Chromatin histone modifiers
+KMT2D,CESC,Chromatin histone modifiers
+KMT2D,DLBC,Chromatin histone modifiers
+KMT2D,ESCA,Chromatin histone modifiers
+KMT2D,HNSC,Chromatin histone modifiers
+KMT2D,LUSC,Chromatin histone modifiers
+KMT2D,PANCAN,Chromatin histone modifiers
+KMT2D,PRAD,Chromatin histone modifiers
+KRAS,BLCA,MAPK signaling
+KRAS,BRCA,MAPK signaling
+KRAS,CESC,MAPK signaling
+KRAS,COADREAD,MAPK signaling
+KRAS,KIRP,MAPK signaling
+KRAS,LAML,MAPK signaling
+KRAS,LIHC,MAPK signaling
+KRAS,LUAD,MAPK signaling
+KRAS,OV,MAPK signaling
+KRAS,PAAD,MAPK signaling
+KRAS,PANCAN,MAPK signaling
+KRAS,SKCM,MAPK signaling
+KRAS,STAD,MAPK signaling
+KRAS,TGCT,MAPK signaling
+KRAS,THCA,MAPK signaling
+KRAS,UCEC,MAPK signaling
+KRAS,UCS,MAPK signaling
+KRT222,PANCAN,Other
+LATS1,CESC,Other signaling
+LATS2,MESO,Other signaling
+LEMD2,PANCAN,Other signaling
+LZTR1,GBM,Transcription factor
+LZTR1,LIHC,Transcription factor
+MAP2K1,PANCAN,MAPK signaling
+MAP2K1,SKCM,MAPK signaling
+MAP2K4,BRCA,Other signaling
+MAP2K4,PANCAN,Other signaling
+MAP3K1,BRCA,Other signaling
+MAP3K1,CESC,Other signaling
+MAP3K1,PANCAN,Other signaling
+MAP3K1,UCEC,Other signaling
+MAP3K4,UCS,MAPK signaling
+MAPK1,CESC,PI3K signaling
+MAPK1,HNSC,PI3K signaling
+MAPK1,PANCAN,PI3K signaling
+MAX,LGG,Transcription factor
+MAX,UCEC,Transcription factor
+MECOM,SKCM,Transcription factor
+MED12,PRAD,Transcription factor
+MEN1,ACC,Chromatin histone modifiers
+MET,KIRP,RTK signaling
+MET,LUAD,RTK signaling
+MGA,LUAD,Transcription factor
+MGA,PANCAN,Transcription factor
+MSH6,UCEC,Genome integrity
+MTOR,KIRC,PI3K signaling
+MTOR,PANCAN,PI3K signaling
+MUC6,STAD,Other
+MYC,PANCAN,Transcription factor
+MYCN,UCEC,Transcription factor
+MYD88,DLBC,NFKB signaling
+MYH9,HNSC,Other
+NCOR1,BRCA,Chromatin histone modifiers
+NCOR1,PANCAN,Chromatin histone modifiers
+NF1,BRCA,MAPK signaling
+NF1,GBM,MAPK signaling
+NF1,LGG,MAPK signaling
+NF1,LUAD,MAPK signaling
+NF1,LUSC,MAPK signaling
+NF1,OV,MAPK signaling
+NF1,PANCAN,MAPK signaling
+NF1,PCPG,MAPK signaling
+NF1,SKCM,MAPK signaling
+NF2,KIRP,Other signaling
+NF2,MESO,Other signaling
+NF2,PANCAN,Other signaling
+NFE2L2,BLCA,Transcription factor
+NFE2L2,CESC,Transcription factor
+NFE2L2,ESCA,Transcription factor
+NFE2L2,HNSC,Transcription factor
+NFE2L2,LIHC,Transcription factor
+NFE2L2,LUSC,Transcription factor
+NFE2L2,PANCAN,Transcription factor
+NFE2L2,UCEC,Transcription factor
+NIPBL,LGG,Chromatin other
+NIPBL,PANCAN,Chromatin other
+NOTCH1,CESC,NOTCH signaling
+NOTCH1,ESCA,NOTCH signaling
+NOTCH1,HNSC,NOTCH signaling
+NOTCH1,LGG,NOTCH signaling
+NOTCH1,LUSC,NOTCH signaling
+NOTCH1,PANCAN,NOTCH signaling
+NPM1,LAML,Chromatin other
+NRAS,BLCA,MAPK signaling
+NRAS,COADREAD,MAPK signaling
+NRAS,LGG,MAPK signaling
+NRAS,LIHC,MAPK signaling
+NRAS,OV,MAPK signaling
+NRAS,PANCAN,MAPK signaling
+NRAS,SKCM,MAPK signaling
+NRAS,TGCT,MAPK signaling
+NRAS,THCA,MAPK signaling
+NRAS,THYM,MAPK signaling
+NRAS,UCEC,MAPK signaling
+NSD1,ESCA,Chromatin histone modifiers
+NSD1,HNSC,Chromatin histone modifiers
+NSD1,PANCAN,Chromatin histone modifiers
+NUP133,LIHC,RNA abundance
+NUP93,THCA,RNA abundance
+PBRM1,CHOL,Chromatin SWI/SNF complex
+PBRM1,KIRC,Chromatin SWI/SNF complex
+PBRM1,PANCAN,Chromatin SWI/SNF complex
+PBRM1,UCEC,Chromatin SWI/SNF complex
+PCBP1,COADREAD,RNA abundance
+PCBP1,PANCAN,RNA abundance
+PDGFRA,GBM,RTK signaling
+PDS5B,UCEC,Genome integrity
+PGR,PANCAN,Transcription factor
+PIK3CA,BLCA,PI3K signaling
+PIK3CA,BRCA,PI3K signaling
+PIK3CA,CESC,PI3K signaling
+PIK3CA,COADREAD,PI3K signaling
+PIK3CA,ESCA,PI3K signaling
+PIK3CA,GBM,PI3K signaling
+PIK3CA,HNSC,PI3K signaling
+PIK3CA,KIRC,PI3K signaling
+PIK3CA,KIRP,PI3K signaling
+PIK3CA,LGG,PI3K signaling
+PIK3CA,LIHC,PI3K signaling
+PIK3CA,LUAD,PI3K signaling
+PIK3CA,LUSC,PI3K signaling
+PIK3CA,PANCAN,PI3K signaling
+PIK3CA,PRAD,PI3K signaling
+PIK3CA,STAD,PI3K signaling
+PIK3CA,TGCT,PI3K signaling
+PIK3CA,UCEC,PI3K signaling
+PIK3CA,UCS,PI3K signaling
+PIK3R1,BRCA,PI3K signaling
+PIK3R1,GBM,PI3K signaling
+PIK3R1,LGG,PI3K signaling
+PIK3R1,PANCAN,PI3K signaling
+PIK3R1,UCEC,PI3K signaling
+PIK3R1,UCS,PI3K signaling
+PIK3R2,PANCAN,PI3K signaling
+PIK3R2,UCEC,PI3K signaling
+PIM1,DLBC,Other signaling
+PLCB4,UVM,Other signaling
+PLCG1,LGG,RTK signaling
+PLXNB2,PANCAN,Other signaling
+POLQ,PANCAN,Genome integrity
+POLRMT,CESC,Other
+PPM1D,THCA,Genome integrity
+PPP2R1A,PANCAN,PI3K signaling
+PPP2R1A,UCEC,PI3K signaling
+PPP2R1A,UCS,PI3K signaling
+PPP6C,SKCM,Histone modification
+PRKAR1A,ACC,Other signaling
+PSIP1,BLCA,Transcription factor
+PSIP1,PANCAN,Transcription factor
+PTCH1,ESCA,Wnt/B-catenin signaling
+PTCH1,PANCAN,Wnt/B-catenin signaling
+PTEN,BLCA,PI3K signaling
+PTEN,BRCA,PI3K signaling
+PTEN,CESC,PI3K signaling
+PTEN,COADREAD,PI3K signaling
+PTEN,GBM,PI3K signaling
+PTEN,HNSC,PI3K signaling
+PTEN,KICH,PI3K signaling
+PTEN,KIRC,PI3K signaling
+PTEN,LGG,PI3K signaling
+PTEN,LUSC,PI3K signaling
+PTEN,PANCAN,PI3K signaling
+PTEN,PRAD,PI3K signaling
+PTEN,SKCM,PI3K signaling
+PTEN,STAD,PI3K signaling
+PTEN,UCEC,PI3K signaling
+PTEN,UCS,PI3K signaling
+PTMA,PANCAN,Immune signaling
+PTMA,TGCT,Immune signaling
+PTPDC1,LAML,Other signaling
+PTPN11,LAML,Other signaling
+PTPN11,LGG,Other signaling
+PTPN11,PANCAN,Other signaling
+PTPRD,BRCA,Other signaling
+RAC1,HNSC,Other signaling
+RAC1,PANCAN,Other signaling
+RAC1,SKCM,Other signaling
+RASA1,HNSC,RTK signaling
+RASA1,LUSC,RTK signaling
+RASA1,PANCAN,RTK signaling
+RASA1,STAD,RTK signaling
+RB1,BLCA,Cell cycle
+RB1,BRCA,Cell cycle
+RB1,CESC,Cell cycle
+RB1,GBM,Cell cycle
+RB1,HNSC,Cell cycle
+RB1,LIHC,Cell cycle
+RB1,LUAD,Cell cycle
+RB1,LUSC,Cell cycle
+RB1,OV,Cell cycle
+RB1,PANCAN,Cell cycle
+RB1,SARC,Cell cycle
+RB1,SKCM,Cell cycle
+RB1,UCEC,Cell cycle
+RB1,UCS,Cell cycle
+RBM10,BLCA,RNA abundance
+RBM10,LUAD,RNA abundance
+RBM10,PANCAN,RNA abundance
+RET,PCPG,RTK signaling
+RFC1,UCS,Genome integrity
+RHOA,BLCA,Other signaling
+RHOA,HNSC,Other signaling
+RHOA,PANCAN,Other signaling
+RHOA,STAD,Other signaling
+RHOB,BLCA,Other signaling
+RIT1,LUAD,RTK signaling
+RNF111,PANCAN,Immune signaling
+RNF43,PAAD,Wnt/B-catenin signaling
+RNF43,PANCAN,Wnt/B-catenin signaling
+RNF43,STAD,Wnt/B-catenin signaling
+RPL22,PANCAN,Other
+RPL22,UCEC,Other
+RPL5,PANCAN,Other
+RPS6KA3,LIHC,MAPK signaling
+RQCD1,PANCAN,RNA abundance
+RQCD1,SKCM,RNA abundance
+RRAS2,UCEC,MAPK signaling
+RUNX1,BRCA,Transcription factor
+RUNX1,LAML,Transcription factor
+RUNX1,PANCAN,Transcription factor
+RXRA,BLCA,Transcription factor
+SCAF4,PANCAN,RNA abundance
+SCAF4,UCEC,RNA abundance
+SETD2,KIRC,Histone modification
+SETD2,KIRP,Histone modification
+SETD2,LGG,Histone modification
+SETD2,LUAD,Histone modification
+SETD2,MESO,Histone modification
+SETD2,PANCAN,Histone modification
+SF1,BLCA,Splicing
+SF1,PANCAN,Splicing
+SF3B1,BLCA,Splicing
+SF3B1,BRCA,Splicing
+SF3B1,LAML,Splicing
+SF3B1,PANCAN,Splicing
+SF3B1,UVM,Splicing
+SIN3A,PANCAN,Chromatin histone modifiers
+SIN3A,UCEC,Chromatin histone modifiers
+SMAD2,COADREAD,TGFB signaling
+SMAD2,PANCAN,TGFB signaling
+SMAD2,STAD,TGFB signaling
+SMAD4,CESC,TGFB signaling
+SMAD4,COADREAD,TGFB signaling
+SMAD4,ESCA,TGFB signaling
+SMAD4,PAAD,TGFB signaling
+SMAD4,PANCAN,TGFB signaling
+SMAD4,STAD,TGFB signaling
+SMARCA1,PANCAN,Chromatin SWI/SNF complex
+SMARCA4,LGG,Chromatin SWI/SNF complex
+SMARCA4,LIHC,Chromatin SWI/SNF complex
+SMARCA4,LUAD,Chromatin SWI/SNF complex
+SMARCA4,PANCAN,Chromatin SWI/SNF complex
+SMARCB1,KIRP,Chromatin SWI/SNF complex
+SMC1A,LAML,Genome integrity
+SMC1A,UCEC,Genome integrity
+SOS1,PANCAN,Other signaling
+SOS1,UCEC,Other signaling
+SOX17,PANCAN,Transcription factor
+SOX17,UCEC,Transcription factor
+SOX9,COADREAD,Transcription factor
+SOX9,PANCAN,Transcription factor
+SPOP,PANCAN,Protein homeostasis/ubiquitination
+SPOP,PRAD,Protein homeostasis/ubiquitination
+SPOP,UCEC,Protein homeostasis/ubiquitination
+SPTA1,GBM,Other
+SPTAN1,BLCA,Other
+SRSF2,UVM,Splicing
+STAG2,BLCA,Genome integrity
+STAG2,GBM,Genome integrity
+STAG2,PANCAN,Genome integrity
+STK11,CESC,TOR signaling
+STK11,LUAD,TOR signaling
+STK11,PANCAN,TOR signaling
+TAF1,UCEC,Transcription factor
+TBX3,BRCA,Transcription factor
+TBX3,PANCAN,Transcription factor
+TCEB1,KIRC,Protein homeostasis/ubiquitination
+TCF12,GBM,Transcription factor
+TCF12,LGG,Transcription factor
+TCF12,PANCAN,Transcription factor
+TCF7L2,COADREAD,Wnt/B-catenin signaling
+TGFBR2,CESC,TGFB signaling
+TGFBR2,HNSC,TGFB signaling
+TGFBR2,PAAD,TGFB signaling
+TGFBR2,PANCAN,TGFB signaling
+TGIF1,COADREAD,Transcription factor
+THRAP3,PANCAN,Splicing
+TMSB4X,DLBC,Other
+TNFAIP3,DLBC,Protein homeostasis/ubiquitination
+TP53,ACC,Genome integrity
+TP53,BLCA,Genome integrity
+TP53,BRCA,Genome integrity
+TP53,CESC,Genome integrity
+TP53,COADREAD,Genome integrity
+TP53,DLBC,Genome integrity
+TP53,ESCA,Genome integrity
+TP53,GBM,Genome integrity
+TP53,HNSC,Genome integrity
+TP53,KICH,Genome integrity
+TP53,KIRC,Genome integrity
+TP53,LAML,Genome integrity
+TP53,LGG,Genome integrity
+TP53,LIHC,Genome integrity
+TP53,LUAD,Genome integrity
+TP53,LUSC,Genome integrity
+TP53,MESO,Genome integrity
+TP53,OV,Genome integrity
+TP53,PAAD,Genome integrity
+TP53,PANCAN,Genome integrity
+TP53,PRAD,Genome integrity
+TP53,SARC,Genome integrity
+TP53,SKCM,Genome integrity
+TP53,STAD,Genome integrity
+TP53,THYM,Genome integrity
+TP53,UCEC,Genome integrity
+TP53,UCS,Genome integrity
+TRAF3,PANCAN,Apoptosis
+TSC1,BLCA,TOR signaling
+TSC1,PANCAN,TOR signaling
+TSC2,LIHC,TOR signaling
+TXNIP,BLCA,Other
+U2AF1,LAML,Splicing
+U2AF1,LUAD,Splicing
+U2AF1,PAAD,Splicing
+U2AF1,PANCAN,Splicing
+U2AF1,UCEC,Splicing
+UNCX,PANCAN,Transcription factor
+USP9X,PANCAN,Protein homeostasis/ubiquitination
+VHL,KIRC,Protein homeostasis/ubiquitination
+VHL,PANCAN,Protein homeostasis/ubiquitination
+WHSC1,LIHC,Chromatin histone modifiers
+WT1,LAML,Transcription factor
+WT1,PANCAN,Transcription factor
+XPO1,LIHC,RNA abundance
+ZBTB20,LGG,Transcription factor
+ZBTB7B,UCS,Transcription factor
+ZC3H12A,PANCAN,RNA abundance
+ZCCHC12,LGG,Transcription factor
+ZFHX3,UCEC,Transcription factor
+ZFP36L1,BLCA,RNA abundance
+ZFP36L2,COADREAD,RNA abundance
+ZFP36L2,PANCAN,RNA abundance
+ZMYM2,UCEC,Transcription factor
+ZMYM3,PRAD,Chromatin histone modifiers
+ZNF133,OV,Transcription factor
+ZNF750,ESCA,Transcription factor
+ZNF750,HNSC,Transcription factor
+ZNF750,PANCAN,Transcription factor
