@@ -9,4 +9,3 @@ build/
 # Exclude intermediate data files since they're big
 01_outputs/*
 02_outputs/*
-test.txt
