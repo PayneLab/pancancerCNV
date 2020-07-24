@@ -6,6 +6,8 @@ import os
 
 def get_gene_locations():
     file = os.path.join('data', 'gene_locations.tsv')
+
+    print(os.getcwd())
     df = pd.read_csv(file, sep='\t', dtype={"chromosome": "O"}, index_col=0)
     return df
 
