@@ -1,6 +1,8 @@
 ---
 title: "Enrichment NB 04: Using rSEA to analyze pathway enrichment for CPTAC CNV data"
 author: "Caleb Lindgren"
+output:
+  pdf_document: default
 ---
 
 # Enrichment NB 04: Using rSEA to analyze pathway enrichment for CPTAC CNV data
@@ -11,17 +13,16 @@ author: "Caleb Lindgren"
 library(tidyverse)
 library(rSEA)
 
-THRESHOLDS = seq(0.1, 0.9, by = 0.1) 
+THRESHOLD <- 0.99 # Since we've filtered our feature sets to include only truly active ones.
 
 INPUT_DIR <- "protein_groups"
 INPUT_FILE <- "groups_proteins.tsv.gz"
 INPUT_FILE_PATH <- file.path(INPUT_DIR, INPUT_FILE)
 
-PATHWAYS_DIR <- "gene_set_libraries"
-PATHWAYS_FILE <- "GO_Biological_Process_2018.gmt"
-PATHWAYS_FILE_PATH <- file.path(PATHWAYS_DIR, PATHWAYS_FILE)
+GENE_SETS_DIR <- "gene_set_libraries"
+GENE_SET_FILES <- c("GO_Biological_Process_2018.gmt", "ReactomePathways.gmt")
 
-OUTPUT_DIR <- "04_rSEA_results"
+OUTPUT_DIR <- "results_04_rSEA"
 
 # Create the output directory if it doesn't already exist
 dir.create(OUTPUT_DIR, showWarnings = FALSE)
@@ -38,24 +39,35 @@ names(split_expr_data) <- groups
 
 ## Step 2: Load pathway lists
 
-```{r}
-pathways <- PATHWAYS_FILE_PATH %>%
-  readLines() %>% # Read in each line of the file as a string
-  sapply(strsplit, split = "\t") # Split each line on the tab character
+GO downloaded on 25 Jul 2020 from: https://amp.pharm.mssm.edu/Enrichr/geneSetLibrary?mode=text&libraryName=GO_Biological_Process_2018
+Reactome downloaded on 27 Jul 2020 from: https://reactome.org/download/current/ReactomePathways.gmt.zip
 
-pathway_ids <- sapply(pathways, function(x) x[[1]]) # Save the pathway ids
-pathways <- sapply(pathways, function(x) x[-(1:2)]) # Cut out the pathway names and blank id spot from the lists
-names(pathways) <- pathway_ids # Set the pathway ids as the names
-```
+Each line of the Reactome file was reformatted to have the pathway ID and name both in the first field, using the find regex `"^([^\t]*)\t(R-HSA-\d+)\t"` and then the replace string `"\1 (\2)\t\t"`.
 
 ## Step 3: Run rSEA and save the results
+
+For some reason, our data was generating an error when the threshold was set to 1. Some problem in the `hommel` package. Since the threshold is set to 1 whenever the competitive hypothesis is tested, we set the optional `competitive` parameter to `FALSE`, to override the default behavior of automatically testing the competitive hypothesis.
+
 ```{r}
-for (threshold in THRESHOLDS) {
+for (gene_set_file in GENE_SET_FILES) {
+  
+  # Step 2
+  gene_set_file_path <- file.path(GENE_SETS_DIR, gene_set_file)
+  
+  pathways <- gene_set_file_path %>%
+    readLines() %>% # Read in each line of the file as a string
+    sapply(strsplit, split = "\t") # Split each line on the tab character
+  
+  pathway_ids <- sapply(pathways, function(x) x[[1]]) # Save the pathway name and id field for later
+  pathways <- sapply(pathways, function(x) x[-(1:2)]) # Cut out the pathway names and blank field from the lists
+  names(pathways) <- pathway_ids # Set the pathway ids as the names
+  
+  # Step 3
   results <- lapply(split_expr_data, function(x) SEA(
     pvalue = x$adj_p,
     featureIDs = x$protein_str,
     pathlist = pathways,
-    thresh = threshold,
+    thresh = THRESHOLD,
     competitive = FALSE))
   
   names(results) <- groups
@@ -66,7 +78,7 @@ for (threshold in THRESHOLDS) {
   
   OUTPUT_FILE_PATH <- file.path(
     OUTPUT_DIR,
-    paste("enrichment_rsea_thresh_", threshold, ".tsv", sep = ""))
+    paste("enrichment_rsea_thresh_", THRESHOLD, "_lib_", strsplit(gene_set_file, "\\.")[[1]][[1]], ".tsv", sep = ""))
   
   write_tsv(results, OUTPUT_FILE_PATH)
 }
