@@ -1,1 +1,1 @@
-include utils/data/gene_locations.tsv
+include utils/gene_locations.tsv

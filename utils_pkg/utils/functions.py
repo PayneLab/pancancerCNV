@@ -5,10 +5,10 @@ import seaborn as sns
 import os
 
 def get_gene_locations():
-    file = os.path.join('data', 'gene_locations.tsv')
-
-    print(os.getcwd())
-    df = pd.read_csv(file, sep='\t', dtype={"chromosome": "O"}, index_col=0)
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # ABSOLUTE_PATH = os.path.abspath(os.path.dirname('__file__'))
+    file = os.path.join(BASE_DIR, 'utils\gene_locations.tsv')
+    df = pd.read_csv(file, sep='\t', dtype={"chromosome": "O"}, index_col=[0,1], usecols=['Name', 'Database_ID', 'chromosome', 'start_bp', 'end_bp', 'arm'])
     return df
 
 
