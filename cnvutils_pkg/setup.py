@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="utils",
-    packages=['utils'],
+    name="cnvutils",
+    packages=['cnvutils'],
     include_package_data=True
 )
