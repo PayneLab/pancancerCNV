@@ -2,7 +2,7 @@
 
 This repository explores the effects of CNV/CNA (copy number variation/alteration) events in cancer datasets from the Clinical Proteomic Tumor Analysis Consortium (CPTAC).
 
-## utils sub-package
+## `utils` sub-package
 
 We include a small utility package that simplifies the code for these analysis by providing several commonly used functions for the project. To use the tool, it must be installed using `pip` on the machine that is running the code. Here are the installation instructions:
 
