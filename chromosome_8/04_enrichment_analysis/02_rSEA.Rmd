@@ -7,6 +7,10 @@ output:
 
 # Enrichment NB 02: Using rSEA to analyze pathway enrichment for CPTAC CNV data
 
+## Instructions for running:
+
+The best way to run this R Markdown notebook is using the RStudio IDE. Start RStudio, open this file, and then press the green play buttons in the top right corners of the code cells. Alternatively, you can run it from the R command line interface using the `rmarkdown` package.
+
 ## Setup
 
 ```{r, message=FALSE}
