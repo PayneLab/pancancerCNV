@@ -4,6 +4,9 @@ author: "Caleb Lindgren"
 output:
   pdf_document: default
 ---
+# \*\*\*WARNING\*\*\*: Bad analysis technique
+
+I realized that this folder of analyses falls prey to the fallacy of indirect comparison. We compare with_event_tumor to normal, and without_event_tumor to normal, and then compare the with_tumor and without_tumor results from that to each other. It's better to just directly compare with_tumor to without_tumor, which we do with a t-test in the finished analyses.
 
 # Enrichment NB 02: Using rSEA to analyze pathway enrichment for CPTAC CNV data
 
