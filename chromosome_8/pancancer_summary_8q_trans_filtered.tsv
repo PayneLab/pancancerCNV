@@ -1,0 +1,16 @@
+protein	cancers	num_cancers
+PCM1	brca_colon_hnscc_lscc_luad	5
+ALDH1B1	colon	1
+LAMP1	colon	1
+SDF4	colon	1
+UBA5	colon	1
+DEF6	hnscc	1
+GNG2	hnscc	1
+HSP90AA1	hnscc	1
+CBL	luad	1
+FGR	luad	1
+HSPB1	luad	1
+RCC1	luad	1
+TNIP2	luad	1
+TRAPPC12	luad	1
+ZYG11B	luad	1
