@@ -13,17 +13,21 @@ def get_gene_locations():
 
     return df
 
-def mark_event_genes(chrm, event_start, event_end):
+def get_event_genes(chrm, event_start, event_end, cis_or_trans):
     """Based on an event's start and end locations on a given chromosome, mark which genes are in the event and which ones aren't.
     
     Parameters:
     chrm (str): The chromosome the event is on.
     event_start (int): The base pair location of the event start.
     event_end (int): The base pair location of the event end.
+    cis_or_trans (str): Either "cis" or "trans"; indicates whether you want proteins inside the event (cis) or outside the event (trans).
 
     Returns:
     pandas.Series: A boolean array indicating which genes are in the event and which ones aren't.
     """
+
+    # Parameter processing
+    cis_or_trans = cis_or_trans.lower()
     
     # Get locations
     locs = get_gene_locations()
@@ -48,9 +52,23 @@ def mark_event_genes(chrm, event_start, event_end):
             )
         )
     )
-    
-    return in_event
 
+    if cis_or_trans == "cis":
+        ret = in_event[in_event]
+    elif cis_or_trans == "trans":
+        ret = in_event[~in_event]
+    else:
+        raise ValueError("Invalid value for 'cis_or_trans' parameter.")
+
+    ret.name = "membership"
+
+    ret = ret.\
+    reset_index(drop=False).\
+    drop(columns="membership").\
+    drop_duplicates(keep="first").\
+    sort_values(by=["Name", "Database_ID"])
+
+    return ret
 
 # def get_counts_table(cancer_type, dropna=True):
 #     """
