@@ -13,23 +13,17 @@ def get_gene_locations():
 
     return df
 
-def classify_event_genes(chrm, event_start, event_end, cis_or_trans):
-    """Based on an event's start and end locations on a given chromosome, get either the cis or trans genes for the event.
+def mark_event_genes(chrm, event_start, event_end):
+    """Based on an event's start and end locations on a given chromosome, mark which genes are in the event and which ones aren't.
     
     Parameters:
     chrm (str): The chromosome the event is on.
     event_start (int): The base pair location of the event start.
     event_end (int): The base pair location of the event end.
-    cis_or_trans (str): "cis" to get the cis genes (genes contained in the event), or "trans" to get the trans genes (genes outside of the event)
 
     Returns:
     pandas.Series: A boolean array indicating which genes are in the event and which ones aren't.
     """
-    
-    # Parameter checking
-    cis_or_trans = cis_or_trans.lower()
-    if cis_or_trans != "cis" and cis_or_trans != "trans":
-        raise ValueError(f"Valid options for cis_or_trans parameter are 'cis' or 'trans'. You passed '{cis_or_trans}'.")
     
     # Get locations
     locs = get_gene_locations()
