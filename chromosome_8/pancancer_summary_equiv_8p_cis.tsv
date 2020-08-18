@@ -1,0 +1,60 @@
+protein	cancers	num_cancers
+LOXL2	['brca', 'colon', 'hnscc', 'lscc', 'luad', 'ovarian']	6
+MSR1	['brca', 'colon', 'hnscc', 'lscc', 'luad', 'ovarian']	6
+POLR3D	['brca', 'colon', 'hnscc', 'lscc', 'luad', 'ovarian']	6
+CLU	['brca', 'colon', 'hnscc', 'lscc', 'luad']	5
+ADAMDEC1	['brca', 'colon', 'hnscc', 'lscc', 'ovarian']	5
+RBPMS	['brca', 'colon', 'hnscc', 'lscc', 'ovarian']	5
+DOK2	['brca', 'colon', 'lscc', 'luad', 'ovarian']	5
+PDLIM2	['brca', 'colon', 'lscc', 'luad', 'ovarian']	5
+ANGPT2	['brca', 'hnscc', 'lscc', 'luad', 'ovarian']	5
+LZTS1	['brca', 'hnscc', 'lscc', 'luad', 'ovarian']	5
+PDGFRL	['brca', 'hnscc', 'lscc', 'luad', 'ovarian']	5
+DEFA3	['brca', 'colon', 'hnscc', 'lscc']	4
+DEFA4	['brca', 'colon', 'hnscc', 'lscc']	4
+NEFL	['brca', 'colon', 'hnscc', 'lscc']	4
+KBTBD11	['brca', 'colon', 'lscc', 'ovarian']	4
+SORBS3	['brca', 'colon', 'lscc', 'ovarian']	4
+LPL	['brca', 'hnscc', 'lscc', 'ovarian']	4
+MFHAS1	['brca', 'hnscc', 'luad', 'ovarian']	4
+BMP1	['brca', 'lscc', 'luad', 'ovarian']	4
+BIN3	['hnscc', 'lscc', 'luad', 'ovarian']	4
+CTSB	['brca', 'hnscc', 'lscc']	3
+PNMA2	['brca', 'hnscc', 'lscc']	3
+BLK	['brca', 'hnscc', 'ovarian']	3
+DLC1	['brca', 'lscc', 'luad']	3
+PEBP4	['brca', 'lscc', 'luad']	3
+DCTN6	['brca', 'lscc', 'ovarian']	3
+TDRP	['brca', 'luad', 'ovarian']	3
+KCTD9	['colon', 'hnscc', 'ovarian']	3
+PBK	['colon', 'hnscc', 'ovarian']	3
+ARHGEF10	['colon', 'lscc', 'ovarian']	3
+BNIP3L	['hnscc', 'lscc', 'luad']	3
+TNKS	['hnscc', 'luad', 'ovarian']	3
+GSR	['brca', 'hnscc']	2
+STC1	['brca', 'lscc']	2
+PPP3CC	['brca', 'ovarian']	2
+GTF2E2	['colon', 'hnscc']	2
+MTMR9	['colon', 'lscc']	2
+PSD3	['hnscc', 'luad']	2
+CDCA2	['hnscc', 'ovarian']	2
+MYOM2	['hnscc', 'ovarian']	2
+NUDT18	['hnscc', 'ovarian']	2
+SLC7A2	['hnscc', 'ovarian']	2
+ASAH1	['lscc', 'luad']	2
+NEIL2	['lscc', 'ovarian']	2
+DUSP4	['brca']	1
+STMN4	['brca']	1
+SLC39A14	['hnscc']	1
+HMBOX1	['lscc']	1
+KIF13B	['lscc']	1
+MSRA	['lscc']	1
+MTMR7	['lscc']	1
+PCM1	['lscc']	1
+PTK2B	['lscc']	1
+CNOT7	['ovarian']	1
+DOCK5	['ovarian']	1
+ELP3	['ovarian']	1
+EPHX2	['ovarian']	1
+FAM160B2	['ovarian']	1
+SH2D4A	['ovarian']	1
