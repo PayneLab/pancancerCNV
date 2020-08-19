@@ -1,85 +1,72 @@
 protein	cancers	num_cancers
-ASAP1	['brca', 'colon', 'hnscc', 'lscc', 'luad', 'ovarian']	6
-CA3	['brca', 'colon', 'hnscc', 'lscc', 'luad', 'ovarian']	6
-EMC2	['brca', 'colon', 'hnscc', 'lscc', 'luad', 'ovarian']	6
-INTS8	['brca', 'colon', 'hnscc', 'lscc', 'luad', 'ovarian']	6
-PAG1	['brca', 'colon', 'hnscc', 'lscc', 'luad', 'ovarian']	6
-RPL30	['brca', 'colon', 'hnscc', 'lscc', 'luad', 'ovarian']	6
-CPQ	['brca', 'colon', 'hnscc', 'lscc', 'luad']	5
-DEPTOR	['brca', 'colon', 'hnscc', 'lscc', 'ovarian']	5
+INTS8	['brca', 'colon', 'hnscc', 'lscc', 'ovarian']	5
 NCALD	['brca', 'colon', 'hnscc', 'lscc', 'ovarian']	5
-SNTB1	['brca', 'colon', 'hnscc', 'lscc', 'ovarian']	5
-ZHX2	['brca', 'colon', 'hnscc', 'lscc', 'ovarian']	5
-FABP4	['brca', 'colon', 'lscc', 'luad', 'ovarian']	5
-ANKRD46	['brca', 'hnscc', 'lscc', 'luad', 'ovarian']	5
-SYBU	['brca', 'hnscc', 'lscc', 'luad', 'ovarian']	5
-COL14A1	['colon', 'hnscc', 'lscc', 'luad', 'ovarian']	5
-DSCC1	['colon', 'hnscc', 'lscc', 'luad', 'ovarian']	5
-MED30	['colon', 'hnscc', 'lscc', 'luad', 'ovarian']	5
-NDUFB9	['colon', 'hnscc', 'lscc', 'luad', 'ovarian']	5
-RIPK2	['colon', 'hnscc', 'lscc', 'luad', 'ovarian']	5
-WWP1	['brca', 'colon', 'hnscc', 'luad']	4
-SDC2	['brca', 'colon', 'hnscc', 'ovarian']	4
+EMC2	['brca', 'colon', 'lscc', 'luad', 'ovarian']	5
+RPL30	['colon', 'hnscc', 'lscc', 'luad', 'ovarian']	5
+DEPTOR	['brca', 'colon', 'hnscc', 'lscc']	4
 FABP5	['brca', 'colon', 'luad', 'ovarian']	4
-SNX16	['brca', 'colon', 'luad', 'ovarian']	4
-LRRCC1	['brca', 'hnscc', 'lscc', 'luad']	4
-PMP2	['brca', 'hnscc', 'lscc', 'luad']	4
 TBC1D31	['brca', 'hnscc', 'lscc', 'luad']	4
-C8orf37	['brca', 'hnscc', 'lscc', 'ovarian']	4
-CHMP4C	['brca', 'hnscc', 'lscc', 'ovarian']	4
-RAD54B	['brca', 'hnscc', 'lscc', 'ovarian']	4
-RALYL	['brca', 'lscc', 'luad', 'ovarian']	4
-ATP6V1C1	['colon', 'hnscc', 'lscc', 'luad']	4
-RRM2B	['colon', 'hnscc', 'lscc', 'luad']	4
-ATAD2	['colon', 'hnscc', 'lscc', 'ovarian']	4
-ENY2	['colon', 'hnscc', 'lscc', 'ovarian']	4
-NSMCE2	['colon', 'hnscc', 'lscc', 'ovarian']	4
-POLR2K	['colon', 'hnscc', 'lscc', 'ovarian']	4
-UBR5	['colon', 'hnscc', 'lscc', 'ovarian']	4
+ASAP1	['colon', 'hnscc', 'lscc', 'luad']	4
+PAG1	['colon', 'hnscc', 'lscc', 'ovarian']	4
+CA3	['colon', 'hnscc', 'luad', 'ovarian']	4
+COL14A1	['colon', 'lscc', 'luad', 'ovarian']	4
+FABP4	['colon', 'lscc', 'luad', 'ovarian']	4
+NDUFB9	['colon', 'lscc', 'luad', 'ovarian']	4
 COX6C	['hnscc', 'lscc', 'luad', 'ovarian']	4
-PDP1	['hnscc', 'lscc', 'luad', 'ovarian']	4
-PLEKHF2	['brca', 'colon', 'lscc']	3
-COLEC10	['brca', 'colon', 'luad']	3
-MTSS1	['brca', 'colon', 'ovarian']	3
-RNF139	['brca', 'hnscc', 'lscc']	3
-CA13	['brca', 'hnscc', 'ovarian']	3
-EXT1	['brca', 'hnscc', 'ovarian']	3
+SNTB1	['brca', 'colon', 'lscc']	3
+CPQ	['brca', 'colon', 'luad']	3
+LRRCC1	['brca', 'hnscc', 'luad']	3
+PMP2	['brca', 'hnscc', 'luad']	3
 FER1L6	['brca', 'lscc', 'luad']	3
-RGS22	['brca', 'lscc', 'luad']	3
-SAMD12	['brca', 'lscc', 'ovarian']	3
-IMPA1	['colon', 'hnscc', 'lscc']	3
-GEM	['hnscc', 'lscc', 'luad']	3
+SYBU	['brca', 'lscc', 'luad']	3
+RIPK2	['colon', 'hnscc', 'lscc']	3
+DSCC1	['colon', 'hnscc', 'ovarian']	3
+MED30	['colon', 'lscc', 'ovarian']	3
+NSMCE2	['colon', 'lscc', 'ovarian']	3
 RAD21	['hnscc', 'lscc', 'ovarian']	3
-TSPYL5	['hnscc', 'lscc', 'ovarian']	3
-UQCRB	['hnscc', 'lscc', 'ovarian']	3
-TRPS1	['hnscc', 'luad', 'ovarian']	3
-WDYHV1	['hnscc', 'luad', 'ovarian']	3
-DPYS	['lscc', 'luad', 'ovarian']	3
-ENPP2	['lscc', 'luad', 'ovarian']	3
-MRPL13	['lscc', 'luad', 'ovarian']	3
-NBN	['brca', 'hnscc']	2
-DERL1	['brca', 'lscc']	2
-PTDSS1	['brca', 'lscc']	2
-VPS13B	['brca', 'ovarian']	2
+RAD54B	['hnscc', 'lscc', 'ovarian']	3
+COLEC10	['brca', 'colon']	2
+RNF139	['brca', 'hnscc']	2
+SDC2	['brca', 'hnscc']	2
+RGS22	['brca', 'lscc']	2
+IMPA1	['colon', 'hnscc']	2
 ZFAND1	['colon', 'hnscc']	2
+ATP6V1C1	['colon', 'lscc']	2
 GRHL2	['colon', 'lscc']	2
-NDUFAF6	['colon', 'lscc']	2
-PABPC1	['colon', 'lscc']	2
-SLC25A32	['colon', 'lscc']	2
-RBM12B	['hnscc', 'lscc']	2
-ZHX1	['hnscc', 'ovarian']	2
-CNGB3	['lscc', 'luad']	2
-ZNF706	['lscc', 'luad']	2
-DCAF13	['lscc', 'ovarian']	2
-TAF2	['lscc', 'ovarian']	2
-UTP23	['lscc', 'ovarian']	2
-FZD6	['brca']	1
-TMEM65	['hnscc']	1
+MTSS1	['colon', 'ovarian']	2
+ANKRD46	['hnscc', 'lscc']	2
+RRM2B	['hnscc', 'lscc']	2
+TSPYL5	['hnscc', 'lscc']	2
+C8orf37	['hnscc', 'ovarian']	2
+WDYHV1	['hnscc', 'ovarian']	2
+MRPL13	['lscc', 'luad']	2
+ATAD2	['lscc', 'ovarian']	2
+CHMP4C	['lscc', 'ovarian']	2
+UBR5	['lscc', 'ovarian']	2
+ZHX2	['lscc', 'ovarian']	2
+EXT1	['brca']	1
+PABPC1	['colon']	1
+SLC25A32	['colon']	1
+CA13	['hnscc']	1
+NBN	['hnscc']	1
+TRPS1	['hnscc']	1
+UQCRB	['hnscc']	1
+WWP1	['hnscc']	1
+CNGB3	['lscc']	1
 CSMD3	['lscc']	1
-DECR1	['lscc']	1
-EBAG9	['lscc']	1
-MTERF3	['lscc']	1
-SPAG1	['lscc']	1
+DCAF13	['lscc']	1
+ENY2	['lscc']	1
+GEM	['lscc']	1
+PDP1	['lscc']	1
+POLR2K	['lscc']	1
+PTDSS1	['lscc']	1
+RBM12B	['lscc']	1
+SAMD12	['lscc']	1
 CA2	['luad']	1
-E2F5	['ovarian']	1
-FAM91A1	['ovarian']	1
+ZNF706	['luad']	1
+DPYS	['ovarian']	1
+ENPP2	['ovarian']	1
+RALYL	['ovarian']	1
+SNX16	['ovarian']	1
+UTP23	['ovarian']	1
+VPS13B	['ovarian']	1
