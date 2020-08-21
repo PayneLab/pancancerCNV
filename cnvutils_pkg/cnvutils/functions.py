@@ -21,21 +21,21 @@ def get_cytoband_info():
     return df
 
 
-def make_cytoband_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=None, show_labels=True, title=None):
-    """ Create a cytoband plot and mark genes 
-    
+def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=None, show_labels=True, title=None):
+    """ Create a cytoband plot and mark genes
+
     Parameters:
-    chromo (str) The chromosome to be plotted
-    arm (str) The chromosome arm to be plotted
-    start_bp (int) the base pair to start plotting at
-    end_bp (int) the base pair to end the plot
-    genes (list) a list of genes to mark on the plot
-    show_labels (bool) whether to show the gene names
-    title (str) the title to show on the plot
-    
+    chromo (str): The chromosome to be plotted
+    arm (str): The chromosome arm to be plotted
+    start_bp (int): the base pair to start plotting at
+    end_bp (int): the base pair to end the plot
+    genes (list): a list of genes to mark on the plot
+    show_labels (bool): whether to show the gene names
+    title (str): the title to show on the plot
+
     Results:
     Plot
-    
+
     """
     cytoband_info = get_cytoband_info()
     data = cytoband_info[cytoband_info['#chromosome'] == chromo]
@@ -87,7 +87,7 @@ def make_cytoband_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=None,
 
 def get_event_genes(chrm, event_start, event_end, cis_or_trans):
     """Based on an event's start and end locations on a given chromosome, mark which genes are in the event and which ones aren't.
-    
+
     Parameters:
     chrm (str): The chromosome the event is on.
     event_start (int): The base pair location of the event start.
@@ -100,24 +100,24 @@ def get_event_genes(chrm, event_start, event_end, cis_or_trans):
 
     # Parameter processing
     cis_or_trans = cis_or_trans.lower()
-    
+
     # Get locations
     locs = get_gene_locations()
-    
+
     # Account for genes that go the opposite direction
     locs = locs.assign(
         first=locs[["start_bp", "end_bp"]].min(axis="columns"),
         last=locs[["start_bp", "end_bp"]].max(axis="columns")
     )
-    
+
     # Create a filter for being in the event or not
     in_event = (
-        (locs["chromosome"] == chrm) & 
+        (locs["chromosome"] == chrm) &
         (
             (
                 (locs["first"] >= event_start) &
                 (locs["first"] <= event_end)
-            ) | 
+            ) |
             (
                 (locs["last"] >= event_start) &
                 (locs["last"] <= event_end)
