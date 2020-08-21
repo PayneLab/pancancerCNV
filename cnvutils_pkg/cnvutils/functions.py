@@ -2,6 +2,7 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
 import os
 
@@ -12,6 +13,77 @@ def get_gene_locations():
     df = pd.read_csv(file, sep='\t', dtype={"chromosome": "O"}, index_col=[0,1], usecols=['Name', 'Database_ID', 'chromosome', 'start_bp', 'end_bp', 'arm'])
 
     return df
+
+def get_cytoband_info():
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    file = os.path.join(BASE_DIR, 'cnvutils', 'NCBI_ideogram.csv')
+    df = pd.read_csv(file)
+    return df
+
+
+def make_cytoband_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=None, show_labels=True, title=None):
+    """ Create a cytoband plot and mark genes 
+    
+    Parameters:
+    chromo (str) The chromosome to be plotted
+    arm (str) The chromosome arm to be plotted
+    start_bp (int) the base pair to start plotting at
+    end_bp (int) the base pair to end the plot
+    genes (list) a list of genes to mark on the plot
+    show_labels (bool) whether to show the gene names
+    title (str) the title to show on the plot
+    
+    Results:
+    Plot
+    
+    """
+    cytoband_info = get_cytoband_info()
+    data = cytoband_info[cytoband_info['#chromosome'] == chromo]
+    locations = get_gene_locations()
+    if arm:
+        data = data[data.arm == arm]
+    if start_bp:
+        data = data[data.bp_stop > start_bp]
+    else:
+        start_bp = np.min(data.bp_start)
+    if end_bp:
+        data = data[data.bp_start < end_bp]
+    else:
+        end_bp = np.max(data.bp_stop)
+    colors = list()
+    sections = list()
+    for index, row in data.iterrows():
+        sections.append((row['bp_start'], row['bp_stop']-row['bp_start']))
+        if row['stain'] == 'gneg':
+            colors.append('white')
+        elif row['stain'] == 'gpos':
+            if row['density'] == 25.0:
+                colors.append('lightgray')
+            elif row['density'] == 50.0:
+                colors.append('gray')
+            elif row['density'] == 75.0:
+                colors.append('darkgray')
+            else:
+                colors.append('black')
+        elif row['stain'] == 'acen':
+            colors.append('red')
+        else:
+            colors.append('lightgray')
+    fig, ax = plt.subplots()
+    fig.set_figheight(0.5)
+    fig.set_figwidth(30)
+    plt.broken_barh(sections, (50,15), facecolors=colors, edgecolor="black")
+    plt.axis('off')
+    if title:
+        fig.suptitle(title, y=2.0, size='xx-large')
+    for gene in genes:
+        loc = list(locations.loc[gene, 'start_bp'])[0]
+        if loc > start_bp and loc < end_bp:
+            ax.axvline(loc, 0, 15, color='r')
+            if show_labels:
+                ax.text(loc, 75, gene, rotation=90)
+    return plt
+
 
 def get_event_genes(chrm, event_start, event_end, cis_or_trans):
     """Based on an event's start and end locations on a given chromosome, mark which genes are in the event and which ones aren't.
