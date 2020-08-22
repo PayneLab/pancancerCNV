@@ -142,6 +142,31 @@ def get_event_genes(chrm, event_start, event_end, cis_or_trans):
 
     return ret
 
+def get_normal_expr_table():
+    """Load the table of normal protein expression levels for different tissues. This table was downloaded from:
+    https://www.embopress.org/action/downloadSupplement?doi=10.15252%2Fmsb.20188503&file=msb188503-sup-0007-TableEV5.zip
+
+    It was produced as part of this paper:
+    Wang D, Eraslan B, Wieland T, et al. A deep proteome and transcriptome abundance atlas of 29 healthy human 
+    tissues. Mol Syst Biol. 2019;15(2):e8503. Published 2019 Feb 18. doi:10.15252/msb.20188503
+    """
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    file_path = os.path.join(BASE_DIR, "cnvutils", "Table_EV5.xlsx")
+
+    df = pd.read_excel(
+        file_path,
+        sheet_name="A. Protein copies"
+    ).\
+    rename(columns={
+        "Gene name": "Gene_name",
+        "Gene ID": "Gene_ID",
+        "Protein ID": "Protein_ID"
+    }).\
+    set_index(["Gene_name", "Gene_ID", "Protein_ID"]).\
+    sort_index()
+
+    return df
+
 # def get_counts_table(cancer_type, dropna=True):
 #     """
 #     Returns the requested counts table from the data directory
