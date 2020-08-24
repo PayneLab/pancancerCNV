@@ -1,50 +1,50 @@
 protein	cancers	num_cancers
-MSR1	['brca', 'colon', 'hnscc', 'lscc', 'luad', 'ovarian']	6
-ADAMDEC1	['brca', 'colon', 'hnscc', 'lscc']	4
-CLU	['brca', 'colon', 'hnscc', 'lscc']	4
-DOK2	['brca', 'colon', 'lscc', 'ovarian']	4
-LZTS1	['brca', 'hnscc', 'lscc', 'ovarian']	4
-DEFA4	['brca', 'colon', 'hnscc']	3
-LOXL2	['brca', 'colon', 'lscc']	3
-POLR3D	['brca', 'colon', 'luad']	3
-ANGPT2	['brca', 'hnscc', 'lscc']	3
-CTSB	['brca', 'hnscc', 'lscc']	3
-LPL	['brca', 'hnscc', 'lscc']	3
-RBPMS	['brca', 'hnscc', 'lscc']	3
-DCTN6	['brca', 'lscc', 'ovarian']	3
-PDGFRL	['brca', 'lscc', 'ovarian']	3
-PDLIM2	['brca', 'lscc', 'ovarian']	3
-KCTD9	['colon', 'hnscc', 'ovarian']	3
-MFHAS1	['brca', 'hnscc']	2
-STC1	['brca', 'lscc']	2
-KBTBD11	['brca', 'ovarian']	2
-ARHGEF10	['colon', 'lscc']	2
-BIN3	['hnscc', 'lscc']	2
-BNIP3L	['hnscc', 'lscc']	2
-PNMA2	['hnscc', 'lscc']	2
-MYOM2	['hnscc', 'ovarian']	2
-NUDT18	['hnscc', 'ovarian']	2
-DEFA3	['brca']	1
-DLC1	['brca']	1
-DUSP4	['brca']	1
-NEFL	['brca']	1
-PEBP4	['brca']	1
-STMN4	['brca']	1
-TDRP	['brca']	1
-MTMR9	['colon']	1
-SORBS3	['colon']	1
-PSD3	['hnscc']	1
-SLC7A2	['hnscc']	1
-ASAH1	['lscc']	1
-BMP1	['lscc']	1
-HMBOX1	['lscc']	1
-KIF13B	['lscc']	1
-MSRA	['lscc']	1
-MTMR7	['lscc']	1
-PCM1	['lscc']	1
-PTK2B	['lscc']	1
-BLK	['ovarian']	1
-CDCA2	['ovarian']	1
-NEIL2	['ovarian']	1
-PPP3CC	['ovarian']	1
-TNKS	['ovarian']	1
+MSR1	brca_colon_hnscc_lscc_luad_ovarian	6
+ADAMDEC1	brca_colon_hnscc_lscc	4
+CLU	brca_colon_hnscc_lscc	4
+DOK2	brca_colon_lscc_ovarian	4
+LZTS1	brca_hnscc_lscc_ovarian	4
+DEFA4	brca_colon_hnscc	3
+LOXL2	brca_colon_lscc	3
+POLR3D	brca_colon_luad	3
+ANGPT2	brca_hnscc_lscc	3
+CTSB	brca_hnscc_lscc	3
+LPL	brca_hnscc_lscc	3
+RBPMS	brca_hnscc_lscc	3
+DCTN6	brca_lscc_ovarian	3
+PDGFRL	brca_lscc_ovarian	3
+PDLIM2	brca_lscc_ovarian	3
+KCTD9	colon_hnscc_ovarian	3
+MFHAS1	brca_hnscc	2
+STC1	brca_lscc	2
+KBTBD11	brca_ovarian	2
+ARHGEF10	colon_lscc	2
+BIN3	hnscc_lscc	2
+BNIP3L	hnscc_lscc	2
+PNMA2	hnscc_lscc	2
+MYOM2	hnscc_ovarian	2
+NUDT18	hnscc_ovarian	2
+DEFA3	brca	1
+DLC1	brca	1
+DUSP4	brca	1
+NEFL	brca	1
+PEBP4	brca	1
+STMN4	brca	1
+TDRP	brca	1
+MTMR9	colon	1
+SORBS3	colon	1
+PSD3	hnscc	1
+SLC7A2	hnscc	1
+ASAH1	lscc	1
+BMP1	lscc	1
+HMBOX1	lscc	1
+KIF13B	lscc	1
+MSRA	lscc	1
+MTMR7	lscc	1
+PCM1	lscc	1
+PTK2B	lscc	1
+BLK	ovarian	1
+CDCA2	ovarian	1
+NEIL2	ovarian	1
+PPP3CC	ovarian	1
+TNKS	ovarian	1

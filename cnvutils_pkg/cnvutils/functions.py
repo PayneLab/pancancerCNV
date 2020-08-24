@@ -163,7 +163,8 @@ def get_normal_expr_table():
         "Protein ID": "Protein_ID"
     }).\
     set_index(["Gene_name", "Gene_ID", "Protein_ID"]).\
-    sort_index()
+    sort_index().\
+    reset_index(drop=False)
 
     return df
 
