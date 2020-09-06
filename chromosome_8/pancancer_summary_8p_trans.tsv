@@ -1,58 +1,58 @@
-protein	cancers	num_cancers
-CNOT8	brca_luad	2
-ATP6V1A	colon_luad	2
-ATP6V1E1	colon_luad	2
-ATP6V1H	colon_luad	2
-HIST1H1D	hnscc_luad	2
-ATP6V1G1	colon	1
-CRELD2	colon	1
-DNAJC19	colon	1
-ERP29	colon	1
-NDUFAF2	colon	1
-NUCB2	colon	1
-PDIA3	colon	1
-RAD50	colon	1
-BAG5	hnscc	1
-CD5	hnscc	1
-CLSTN1	hnscc	1
-CYP7B1	hnscc	1
-FAHD1	hnscc	1
-FKBP3	hnscc	1
-FZD6	hnscc	1
-GPNMB	hnscc	1
-HSP90AA1	hnscc	1
-SMAP2	hnscc	1
-TRAPPC6A	hnscc	1
-AASS	luad	1
-ATP6V1C2	luad	1
-ATP9A	luad	1
-BLVRA	luad	1
-CAPRIN1	luad	1
-CHIT1	luad	1
-CYB5R4	luad	1
-DHCR24	luad	1
-DPY19L1	luad	1
-EGFR	luad	1
-EMD	luad	1
-GTF2E1	luad	1
-LEMD2	luad	1
-LMTK2	luad	1
-MCC	luad	1
-MGST1	luad	1
-MTMR6	luad	1
-NCOA2	luad	1
-NUP50	luad	1
-PLCL2	luad	1
-PLEKHA2	luad	1
-PPIB	luad	1
-PRKCB	luad	1
-RASGRP2	luad	1
-RCC1	luad	1
-SELP	luad	1
-SIRT7	luad	1
-STK3	luad	1
-TMEM209	luad	1
-TNIP2	luad	1
-TRAPPC12	luad	1
-WASL	luad	1
-YIPF1	luad	1
+protein	cancers	mean_simp_change	num_cancers
+CNOT8	brca_luad	1	2
+ATP6V1A	colon_luad	-1	2
+ATP6V1E1	colon_luad	-1	2
+ATP6V1H	colon_luad	-1	2
+HIST1H1D	hnscc_luad	-1	2
+ATP6V1G1	colon	-1	1
+CRELD2	colon	-1	1
+DNAJC19	colon	1	1
+ERP29	colon	-1	1
+NDUFAF2	colon	1	1
+NUCB2	colon	-1	1
+PDIA3	colon	-1	1
+RAD50	colon	1	1
+BAG5	hnscc	1	1
+CD5	hnscc	-1	1
+CLSTN1	hnscc	1	1
+CYP7B1	hnscc	-1	1
+FAHD1	hnscc	1	1
+FKBP3	hnscc	1	1
+FZD6	hnscc	1	1
+GPNMB	hnscc	1	1
+HSP90AA1	hnscc	1	1
+SMAP2	hnscc	-1	1
+TRAPPC6A	hnscc	-1	1
+AASS	luad	-1	1
+ATP6V1C2	luad	-1	1
+ATP9A	luad	1	1
+BLVRA	luad	1	1
+CAPRIN1	luad	1	1
+CHIT1	luad	-1	1
+CYB5R4	luad	-1	1
+DHCR24	luad	1	1
+DPY19L1	luad	1	1
+EGFR	luad	1	1
+EMD	luad	1	1
+GTF2E1	luad	-1	1
+LEMD2	luad	1	1
+LMTK2	luad	1	1
+MCC	luad	-1	1
+MGST1	luad	1	1
+MTMR6	luad	-1	1
+NCOA2	luad	1	1
+NUP50	luad	-1	1
+PLCL2	luad	-1	1
+PLEKHA2	luad	-1	1
+PPIB	luad	-1	1
+PRKCB	luad	-1	1
+RASGRP2	luad	-1	1
+RCC1	luad	1	1
+SELP	luad	-1	1
+SIRT7	luad	-1	1
+STK3	luad	1	1
+TMEM209	luad	1	1
+TNIP2	luad	-1	1
+TRAPPC12	luad	-1	1
+WASL	luad	1	1
+YIPF1	luad	1	1
