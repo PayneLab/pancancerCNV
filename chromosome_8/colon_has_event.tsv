@@ -8,7 +8,7 @@
 01CO015	True	False
 01CO019	True	False
 01CO022	False	False
-05CO002	False	True
+05CO002	True	False
 05CO003	False	False
 05CO005	False	True
 05CO006	True	False
@@ -30,7 +30,7 @@
 05CO044	False	False
 05CO047	False	True
 05CO048	True	False
-05CO049	False	True
+05CO049	False	False
 05CO050	False	False
 05CO053	False	False
 05CO054	False	False
@@ -49,7 +49,7 @@
 09CO022	True	False
 11CO005	False	False
 11CO007	False	False
-11CO008	True	True
+11CO008	False	True
 11CO010	True	False
 11CO018	False	False
 11CO019	False	False

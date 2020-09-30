@@ -1,6 +1,6 @@
 	gain_event	loss_event
 CPT000814	True	True
-CPT001846	True	False
+CPT001846	False	False
 X01BR001	True	True
 X01BR008	True	False
 X01BR009	True	False
@@ -18,8 +18,8 @@ X01BR031	True	False
 X01BR032	False	False
 X01BR033	False	True
 X01BR040	True	False
-X01BR042	False	False
-X01BR043	True	True
+X01BR042	True	False
+X01BR043	False	True
 X03BR002	True	True
 X03BR004	True	True
 X03BR005	True	True
@@ -32,7 +32,7 @@ X05BR003	False	True
 X05BR004	False	False
 X05BR005	True	False
 X05BR009	False	False
-X05BR016	True	False
+X05BR016	False	False
 X05BR026	False	False
 X05BR029	True	True
 X05BR038	False	False
@@ -53,7 +53,7 @@ X11BR004	True	True
 X11BR006	True	True
 X11BR009	False	False
 X11BR010	False	False
-X11BR011	True	True
+X11BR011	False	True
 X11BR012	False	True
 X11BR013	True	False
 X11BR014	False	False
@@ -95,7 +95,7 @@ X11BR074	False	False
 X11BR075	True	True
 X11BR080	True	False
 X13BR009	True	False
-X14BR005	True	True
+X14BR005	False	True
 X14BR008	False	False
 X14BR014	True	True
 X15BR003	False	False
@@ -110,13 +110,13 @@ X18BR010	True	True
 X18BR016	False	False
 X18BR017	False	False
 X18BR019	False	False
-X20BR001	True	False
-X20BR002	True	True
+X20BR001	False	False
+X20BR002	False	True
 X20BR005	False	False
 X20BR006	True	False
 X20BR007	False	True
 X20BR008	False	True
-X21BR001	True	True
+X21BR001	False	False
 X21BR002	False	False
 X21BR010	False	False
 X22BR005	False	False

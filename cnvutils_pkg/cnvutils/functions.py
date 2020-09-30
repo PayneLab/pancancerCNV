@@ -21,7 +21,7 @@ def get_cytoband_info():
     return df
 
 
-def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=None, show_labels=True, title=None):
+def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=None, show_labels=True, title=None, ax=None):
     """ Create a cytoband plot and mark genes
 
     Parameters:
@@ -29,7 +29,7 @@ def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=Non
     arm (str): The chromosome arm to be plotted
     start_bp (int): the base pair to start plotting at
     end_bp (int): the base pair to end the plot
-    genes (list): a list of genes to mark on the plot
+    genes (list or dict): a list of genes to mark on the plot; if using a dict, the key should be the color with the value as a list of genes to be marked in the given color.
     show_labels (bool): whether to show the gene names
     title (str): the title to show on the plot
 
@@ -69,19 +69,29 @@ def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=Non
             colors.append('red')
         else:
             colors.append('lightgray')
-    fig, ax = plt.subplots()
-    fig.set_figheight(0.5)
-    fig.set_figwidth(30)
-    plt.broken_barh(sections, (50,15), facecolors=colors, edgecolor="black")
+    if ax is None:
+        fig, ax = plt.subplots()
+        fig.set_figheight(0.5)
+        fig.set_figwidth(30)
+    ax.broken_barh(sections, (50,15), facecolors=colors, edgecolor="black")
     plt.axis('off')
     if title:
-        fig.suptitle(title, y=2.0, size='xx-large')
-    for gene in genes:
-        loc = list(locations.loc[gene, 'start_bp'])[0]
-        if loc > start_bp and loc < end_bp:
-            ax.axvline(loc, 0, 15, color='r')
-            if show_labels:
-                ax.text(loc, 75, gene, rotation=90)
+        ax.set_title(title, y=3.0, size='xx-large')
+    if isinstance(genes, list):
+        for gene in genes:
+            loc = list(locations.loc[gene, 'start_bp'])[0]
+            if loc > start_bp and loc < end_bp:
+                ax.axvline(loc, 0, 15, color='r')
+                if show_labels:
+                    ax.text(loc, 75, gene, rotation=90)
+    elif isinstance(genes, dict):
+        for color in genes.keys():
+            for gene in genes[color]:
+                loc = list(locations.loc[gene, 'start_bp'])[0]
+                if loc > start_bp and loc < end_bp:
+                    ax.axvline(loc, 0, 15, color=color)
+                    if show_labels:
+                        ax.text(loc, 75, gene, rotation=90)
     return plt
 
 

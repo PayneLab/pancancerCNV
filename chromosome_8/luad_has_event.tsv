@@ -1,5 +1,5 @@
 	gain_event	loss_event
-C3L-00001	True	True
+C3L-00001	False	True
 C3L-00009	False	False
 C3L-00080	True	True
 C3L-00083	False	False
@@ -15,7 +15,7 @@ C3L-00412	False	False
 C3L-00422	False	False
 C3L-00510	False	False
 C3L-00604	False	False
-C3L-00893	True	False
+C3L-00893	False	False
 C3L-00913	False	False
 C3L-00973	False	False
 C3L-01330	False	True
@@ -24,7 +24,7 @@ C3L-01682	False	False
 C3L-01683	False	False
 C3L-01862	False	False
 C3L-01889	False	False
-C3L-01924	True	True
+C3L-01924	False	True
 C3L-02219	False	False
 C3L-02345	False	True
 C3L-02348	False	False
@@ -34,7 +34,7 @@ C3L-02508	False	False
 C3L-02549	False	False
 C3N-00167	False	True
 C3N-00169	False	True
-C3N-00175	True	False
+C3N-00175	False	False
 C3N-00180	False	False
 C3N-00199	False	False
 C3N-00203	False	True
@@ -51,7 +51,7 @@ C3N-00551	True	False
 C3N-00552	False	False
 C3N-00556	True	True
 C3N-00559	True	True
-C3N-00560	True	True
+C3N-00560	True	False
 C3N-00572	False	False
 C3N-00574	True	True
 C3N-00578	False	True
@@ -70,7 +70,7 @@ C3N-01071	False	False
 C3N-01072	False	False
 C3N-01074	True	False
 C3N-01405	True	False
-C3N-01410	False	False
+C3N-01410	True	False
 C3N-01413	False	False
 C3N-01414	True	False
 C3N-01415	False	True
@@ -106,5 +106,5 @@ C3N-02588	False	False
 C3N-02729	True	False
 X11LU013	True	True
 X11LU016	False	False
-X11LU022	True	False
+X11LU022	False	False
 X11LU035	False	False
