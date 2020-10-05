@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import warnings
 import os
 
 def get_gene_locations():
@@ -21,7 +22,7 @@ def get_cytoband_info():
     return df
 
 
-def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=None, show_labels=True, title=None, ax=None):
+def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=None, show_labels=True, title=None, ax=None, above=True):
     """ Create a cytoband plot and mark genes
 
     Parameters:
@@ -32,6 +33,8 @@ def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=Non
     genes (list or dict): a list of genes to mark on the plot; if using a dict, the key should be the color with the value as a list of genes to be marked in the given color.
     show_labels (bool): whether to show the gene names
     title (str): the title to show on the plot
+    ax (Axes): the axes the plot should be generated on
+    above (bool): If true labels will be placed above the plot. If false labels will be placed below.
 
     Results:
     Plot
@@ -50,6 +53,10 @@ def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=Non
         data = data[data.bp_start < end_bp]
     else:
         end_bp = np.max(data.bp_stop)
+    if above:
+        label_location = 75
+    else:
+        label_location = 20
     colors = list()
     sections = list()
     for index, row in data.iterrows():
@@ -77,21 +84,33 @@ def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=Non
     plt.axis('off')
     if title:
         ax.set_title(title, y=3.0, size='xx-large')
+    not_found = list()
     if isinstance(genes, list):
         for gene in genes:
+            
             loc = list(locations.loc[gene, 'start_bp'])[0]
-            if loc > start_bp and loc < end_bp:
+            chromosome = list(locations.loc[gene, 'chromosome'])[0]
+            if loc > start_bp and loc < end_bp and chromosome == chromo:
                 ax.axvline(loc, 0, 15, color='r')
                 if show_labels:
-                    ax.text(loc, 75, gene, rotation=90)
+                    ax.text(loc, label_location, gene, rotation=90)
+
+            else:
+                not_found.append(gene)
     elif isinstance(genes, dict):
         for color in genes.keys():
             for gene in genes[color]:
                 loc = list(locations.loc[gene, 'start_bp'])[0]
-                if loc > start_bp and loc < end_bp:
+                chromosome = list(locations.loc[gene, 'chromosome'])[0]
+                if loc > start_bp and loc < end_bp and chromosome == chromo:
                     ax.axvline(loc, 0, 15, color=color)
                     if show_labels:
-                        ax.text(loc, 75, gene, rotation=90)
+                        ax.text(loc, label_location, gene, rotation=90)
+                else:
+                    not_found.append(gene)
+    if len(not_found) > 0:
+        warnings.warn(f'The following genes were not found within the event: {not_found}')
+    
     return plt
 
 
