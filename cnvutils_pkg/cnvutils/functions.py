@@ -113,6 +113,66 @@ def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=Non
     
     return plt
 
+def make_pvalue_plot(df, label_column, value_column, group_column=None, sort_column=None, sort_ascending=True, sig=0.05, show_sig=True, labels_per_plot=30):
+    """
+    @param df:
+        The dataframe with pvalue information
+    @param label_column:
+        The name of the column that contains the labels for the x-axis of the figure
+    @param value_column: 
+        The name of the column that contains the pvalues to be plotted
+    @param group_column (optional):
+        The name of the column that contains a grouping category. If provided, the groups will be indicated by color and
+        a legend will be added to the figure
+    @param sort_column (optional):
+        The name of the column to sort the values on before plotting.
+    @param sort_ascending
+        Sort ascending vs. descending. This variable will only be used if sort_column is not None. Otherwise values will be
+        plotted by position in the dataframe provided.
+    @param sig:
+        The significance value (before log transformation) to be plotted for comparison. The line can be turned off using the
+        show_sig parameter.
+    @param show_sig:
+        Determines whether the significance line is shown in the plot.
+    @param labels_per_plot:
+        The number of labels on each plot. If there are more labels than fit on a single plot, additional plots will
+        be created.
+    """
+    
+    df_copy = df.copy()
+    df_copy['log_val'] = df_copy[value_column].apply(lambda x: -np.log10(x))
+    if sort_column:
+        df_copy = df_copy.sort_values(sort_column, ascending=sort_ascending)
+    def chunks(lst, n):
+        """Yield successive n-sized chunks from lst."""
+        x = list()
+        for i in range(0, len(lst), n):
+            x.append(lst[i:i + n])
+        return x
+    split_results = chunks(df_copy[label_column].unique(), labels_per_plot)
+    def set_group(row):
+        for i in range(len(split_results)):
+            if row[label_column] in split_results[i]:
+                return i
+    df_copy['group_num'] = df_copy.apply(set_group, axis=1)
+    if group_column:
+        df_copy = df_copy.drop_duplicates(subset=[label_column, value_column, group_column])
+    else:
+        df_copy = df_copy.drop_duplicates(subset=[label_column, value_column])
+    g = sns.FacetGrid(df_copy, row="group_num", aspect=4, sharex=False, sharey=False, legend_out=True)
+    if group_column:
+        g.map_dataframe(sns.swarmplot, x=label_column, y="log_val", hue=group_column, palette='muted')
+        g.add_legend()
+    else:
+        g.map_dataframe(sns.swarmplot, x=label_column, y="log_val", palette="muted")
+    for ax in g.axes.ravel():
+        ax.hlines(-np.log10(sig),*ax.get_xlim())
+        ax.set_title("")
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=90)
+    plt.subplots_adjust(hspace=0.8, wspace=0.4)
+    return g
+
+
 
 def get_event_genes(chrm, event_start, event_end, cis_or_trans):
     """Based on an event's start and end locations on a given chromosome, mark which genes are in the event and which ones aren't.
