@@ -15,6 +15,20 @@ def get_gene_locations():
 
     return df
 
+def get_counts_table():
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    file = os.path.join(BASE_DIR, 'cnvutils', 'cnv_counts.tsv')
+    df = pd.read_csv(file, sep='\t', usecols=['Name', 'Database_ID', 'start_bp', 'end_bp', 'variable', 'value','chromosome','arm', 'cancer'])
+    return df
+
+
+def get_driver_genes():
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    file = os.path.join(BASE_DIR, 'cnvutils', 'bailey_driver_genes.csv')
+    df = pd.read_csv(file, skiprows=3)
+    return df
+
+
 def get_cytoband_info():
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     file = os.path.join(BASE_DIR, 'cnvutils', 'NCBI_ideogram.csv')
@@ -87,7 +101,7 @@ def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=Non
     not_found = list()
     if isinstance(genes, list):
         for gene in genes:
-            
+
             loc = list(locations.loc[gene, 'start_bp'])[0]
             chromosome = list(locations.loc[gene, 'chromosome'])[0]
             if loc > start_bp and loc < end_bp and chromosome == chromo:
@@ -110,7 +124,7 @@ def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=Non
                     not_found.append(gene)
     if len(not_found) > 0:
         warnings.warn(f'The following genes were not found within the event: {not_found}')
-    
+
     return plt
 
 def make_pvalue_plot(df, label_column, value_column, group_column=None, sort_column=None, sort_ascending=True, sig=0.05, show_sig=True, labels_per_plot=30):
@@ -119,7 +133,7 @@ def make_pvalue_plot(df, label_column, value_column, group_column=None, sort_col
         The dataframe with pvalue information
     @param label_column:
         The name of the column that contains the labels for the x-axis of the figure
-    @param value_column: 
+    @param value_column:
         The name of the column that contains the pvalues to be plotted
     @param group_column (optional):
         The name of the column that contains a grouping category. If provided, the groups will be indicated by color and
@@ -138,7 +152,7 @@ def make_pvalue_plot(df, label_column, value_column, group_column=None, sort_col
         The number of labels on each plot. If there are more labels than fit on a single plot, additional plots will
         be created.
     """
-    
+
     df_copy = df.copy()
     df_copy['log_val'] = df_copy[value_column].apply(lambda x: -np.log10(x))
     if sort_column:
@@ -236,7 +250,7 @@ def get_normal_expr_table():
     https://www.embopress.org/action/downloadSupplement?doi=10.15252%2Fmsb.20188503&file=msb188503-sup-0007-TableEV5.zip
 
     It was produced as part of this paper:
-    Wang D, Eraslan B, Wieland T, et al. A deep proteome and transcriptome abundance atlas of 29 healthy human 
+    Wang D, Eraslan B, Wieland T, et al. A deep proteome and transcriptome abundance atlas of 29 healthy human
     tissues. Mol Syst Biol. 2019;15(2):e8503. Published 2019 Feb 18. doi:10.15252/msb.20188503
     """
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
