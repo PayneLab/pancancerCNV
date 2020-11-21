@@ -1,0 +1,94 @@
+protein	cancers	mean_simp_change	num_cancers
+XRN2	brca_gbm_ovarian	1.0	3
+ZCCHC3	brca_gbm_ovarian	1.0	3
+MGME1	brca_gbm	1.0	2
+NSFL1C	brca_gbm	1.0	2
+NFS1	brca_ovarian	1.0	2
+ADNP	gbm_ovarian	1.0	2
+APMAP	gbm_ovarian	1.0	2
+C20orf27	gbm_ovarian	1.0	2
+CPNE1	gbm_ovarian	1.0	2
+CRNKL1	gbm_ovarian	1.0	2
+CSNK2A1	gbm_ovarian		2
+CST3	gbm_ovarian	1.0	2
+FITM2	gbm_ovarian		2
+GGT7	gbm_ovarian		2
+GPCPD1	gbm_ovarian	1.0	2
+NCOA5	gbm_ovarian	1.0	2
+PANK2	gbm_ovarian	1.0	2
+PCIF1	gbm_ovarian	1.0	2
+PIGU	gbm_ovarian		2
+POFUT1	gbm_ovarian	1.0	2
+RBBP9	gbm_ovarian	1.0	2
+RPRD1B	gbm_ovarian	1.0	2
+TOP1	gbm_ovarian	1.0	2
+TRMT6	gbm_ovarian	1.0	2
+TTI1	gbm_ovarian	1.0	2
+YWHAB	gbm_ovarian	1.0	2
+CTSA	brca	1.0	1
+FASTKD5	brca	1.0	1
+PCNA	brca	1.0	1
+AAR2	gbm	1.0	1
+ACSS1	gbm	1.0	1
+AHCY	gbm	1.0	1
+ARFGEF2	gbm	1.0	1
+ARFRP1	gbm	1.0	1
+BCL2L1	gbm	1.0	1
+CD93	gbm	-1.0	1
+CDS2	gbm	1.0	1
+CHD6	gbm	1.0	1
+DLGAP4	gbm	1.0	1
+DNAJC5	gbm	1.0	1
+EEF1A2	gbm	1.0	1
+ESF1	gbm	1.0	1
+FKBP1A	gbm	1.0	1
+HCK	gbm	-1.0	1
+HELZ2	gbm	1.0	1
+ITCH	gbm	1.0	1
+KIF3B	gbm	1.0	1
+MAPRE1	gbm	1.0	1
+MAVS	gbm	1.0	1
+MOCS3	gbm	1.0	1
+NPEPL1	gbm	1.0	1
+NXT1	gbm	1.0	1
+OGFR	gbm	1.0	1
+OSBPL2	gbm	1.0	1
+PDRG1	gbm	-1.0	1
+PLCG1	gbm	1.0	1
+PREX1	gbm	1.0	1
+PRNP	gbm	1.0	1
+PTPRA	gbm	1.0	1
+RAB22A	gbm	1.0	1
+RASSF2	gbm	1.0	1
+RRBP1	gbm	1.0	1
+SIRPA	gbm	1.0	1
+SNTA1	gbm	1.0	1
+SNX21	gbm	1.0	1
+SOGA1	gbm	1.0	1
+SS18L1	gbm	1.0	1
+TCEA2	gbm		1
+UBOX5	gbm	1.0	1
+VAPB	gbm	1.0	1
+YTHDF1	gbm	1.0	1
+ZGPAT	gbm	1.0	1
+ZHX3	gbm	1.0	1
+CHMP4B	ovarian	1.0	1
+CSE1L	ovarian	1.0	1
+CTNNBL1	ovarian	1.0	1
+DDX27	ovarian	1.0	1
+DSN1	ovarian	1.0	1
+MACROD2	ovarian		1
+PIGT	ovarian	1.0	1
+PLTP	ovarian	1.0	1
+PRPF6	ovarian	1.0	1
+PSMA7	ovarian	-1.0	1
+PYGB	ovarian	1.0	1
+RAD21L1	ovarian		1
+RAE1	ovarian		1
+RBM12	ovarian		1
+RBM39	ovarian	1.0	1
+SRXN1	ovarian	1.0	1
+STAU1	ovarian	1.0	1
+TASP1	ovarian	1.0	1
+ZMYND8	ovarian	1.0	1
+ZNF512B	ovarian	1.0	1
