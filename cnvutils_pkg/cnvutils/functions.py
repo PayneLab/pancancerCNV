@@ -152,7 +152,11 @@ def make_pvalue_plot(df, label_column, value_column, group_column=None, sort_col
         The number of labels on each plot. If there are more labels than fit on a single plot, additional plots will
         be created.
     """
-
+    all_cancer_types = ['BRCA', 'COLON', 'CCRCC', 'ENDO', 'GBM', 'HNSCC', 'LUAD', 'LSCC', 'OVARIAN']
+    colors = sns.color_palette('tab10', n_colors=9)
+    color_dict = dict()
+    for i in range(9):
+        color_dict[all_cancer_types[i]] = colors[i]
     df_copy = df.copy()
     df_copy['log_val'] = df_copy[value_column].apply(lambda x: -np.log10(x))
     if sort_column:
@@ -173,12 +177,13 @@ def make_pvalue_plot(df, label_column, value_column, group_column=None, sort_col
         df_copy = df_copy.drop_duplicates(subset=[label_column, value_column, group_column])
     else:
         df_copy = df_copy.drop_duplicates(subset=[label_column, value_column])
+#     palette = [color_dict[x] for x in df_copy.cancer.unique()]
     g = sns.FacetGrid(df_copy, row="group_num", aspect=4, sharex=False, sharey=False, legend_out=True)
     if group_column:
-        g.map_dataframe(sns.swarmplot, x=label_column, y="log_val", hue=group_column, palette='muted')
+        plot = g.map_dataframe(sns.swarmplot, x=label_column, y="log_val", hue=group_column, palette=color_dict)
         g.add_legend()
     else:
-        g.map_dataframe(sns.swarmplot, x=label_column, y="log_val", palette="muted")
+        g.map_dataframe(sns.swarmplot, x=label_column, y="log_val", palette=color_dict)
     for ax in g.axes.ravel():
         ax.hlines(-np.log10(sig),*ax.get_xlim())
         ax.set_title("")
