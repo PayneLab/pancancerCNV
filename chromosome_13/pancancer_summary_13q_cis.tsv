@@ -1,0 +1,92 @@
+protein	cancers	mean_simp_change	num_cancers
+ALG5	brca_gbm_hnscc_lscc_luad_ovarian	-1.0	6
+ESD	brca_gbm_hnscc_lscc_luad_ovarian	-1.0	6
+FNDC3A	brca_gbm_hnscc_lscc_luad_ovarian	-1.0	6
+MTMR6	brca_gbm_hnscc_lscc_luad_ovarian	-1.0	6
+XPO4	brca_gbm_hnscc_lscc_luad_ovarian	-1.0	6
+PAN3	brca_gbm_hnscc_luad_ovarian	-1.0	5
+SUCLA2	brca_gbm_hnscc_luad_ovarian	-1.0	5
+CLN5	brca_gbm_lscc_luad_ovarian	-1.0	5
+TPT1	brca_gbm_lscc_luad_ovarian	-1.0	5
+ALG11	gbm_hnscc_lscc_luad_ovarian	-1.0	5
+COG3	gbm_hnscc_lscc_luad_ovarian	-1.0	5
+MTIF3	brca_gbm_hnscc_luad	-1.0	4
+CRYL1	brca_gbm_lscc_luad	-1.0	4
+RASA3	brca_gbm_lscc_luad	-1.0	4
+SPATA13	brca_gbm_lscc_luad	-1.0	4
+HMGB1	brca_gbm_luad_ovarian	-1.0	4
+MYCBP2	brca_gbm_luad_ovarian	-1.0	4
+ELF1	brca_hnscc_lscc_luad	-1.0	4
+LIG4	brca_hnscc_lscc_luad	-1.0	4
+PARP4	brca_hnscc_lscc_luad	-1.0	4
+TDRD3	gbm_hnscc_lscc_luad	-1.0	4
+GTF3A	brca_gbm_hnscc	-1.0	3
+ARHGEF7	brca_gbm_lscc	-1.0	3
+KPNA3	brca_gbm_luad	-1.0	3
+NAA16	brca_gbm_luad	-1.0	3
+UCHL3	brca_gbm_luad	-1.0	3
+ZMYM2	brca_gbm_luad	-1.0	3
+GPALPP1	brca_gbm_ovarian	-1.0	3
+MIPEP	brca_gbm_ovarian	-1.0	3
+STK24	brca_gbm_ovarian	-1.0	3
+AKAP11	brca_lscc_luad	-1.0	3
+LCP1	brca_lscc_luad	-1.0	3
+COG6	gbm_lscc_luad	-1.0	3
+RB1	gbm_luad_ovarian	-1.0	3
+VWA8	gbm_luad_ovarian	-1.0	3
+KCTD12	hnscc_lscc_luad	-1.0	3
+ZDHHC20	lscc_luad_ovarian		3
+CUL4A	brca_gbm	-1.0	2
+FARP1	brca_gbm	-1.0	2
+NAXD	brca_gbm	-1.0	2
+PCCA	brca_gbm	-1.0	2
+RAB20	brca_gbm	-1.0	2
+B3GLCT	brca_luad	-1.0	2
+SPRYD7	gbm_luad	-1.0	2
+VPS36	gbm_luad	-1.0	2
+WBP4	gbm_luad	-1.0	2
+LAMP1	gbm_ovarian	-1.0	2
+SLC7A1	gbm_ovarian	-1.0	2
+DNAJC3	lscc_luad	-1.0	2
+NHLRC3	lscc_luad	-1.0	2
+RFC3	lscc_luad	1.0	2
+SPART	lscc_luad		2
+PDS5B	luad_ovarian	-1.0	2
+DGKH	brca	-1.0	1
+DIS3	brca	-1.0	1
+ERCC5	brca	-1.0	1
+F10	brca	-1.0	1
+PABPC3	brca	1.0	1
+POMP	brca	-1.0	1
+STARD13	brca	-1.0	1
+TFDP1	brca	-1.0	1
+TMCO3	brca	-1.0	1
+CARS2	gbm	-1.0	1
+CDC16	gbm	-1.0	1
+DCLK1	gbm	-1.0	1
+IPO5	gbm	-1.0	1
+IRS2	gbm	-1.0	1
+MBNL2	gbm	-1.0	1
+MCF2L	gbm	-1.0	1
+MPHOSPH8	gbm	-1.0	1
+NBEA	gbm	-1.0	1
+NUDT15	gbm	-1.0	1
+SLC25A15	gbm	-1.0	1
+TUBGCP3	gbm	-1.0	1
+ALOX5AP	lscc		1
+BIVM-ERCC5	lscc		1
+EPSTI1	lscc	-1.0	1
+LACC1	lscc		1
+MICU2	lscc	-1.0	1
+MRPS31	lscc	1.0	1
+RCBTB2	lscc		1
+SAP18	lscc	1.0	1
+TM9SF2	lscc	-1.0	1
+ATP8A2	luad		1
+CLYBL	luad	-1.0	1
+FOXO1	luad		1
+ITM2B	luad	-1.0	1
+N4BP2L2	luad		1
+RPL21	luad	-1.0	1
+RBM26	ovarian		1
+UFM1	ovarian	-1.0	1
