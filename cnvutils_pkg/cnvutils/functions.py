@@ -276,6 +276,62 @@ def get_normal_expr_table():
 
     return df
 
+def get_reshaped_ttest_results(chromosome, arm, trans_or_cis, path="."):
+    """Reshape the ttest results dataframe to be in long format.
+
+    Parameters:
+    chromosome (str): The chromosome number of the file to read
+    arm (str): 'p' or 'q'--the chromosome arm of the file to read
+    trans_or_cis (str): 'trans' or 'cis'--whether to read the trans or cis file
+    path (str, optional): If the file isn't in the current working directory, the path to the directory where it is.
+
+    Returns:
+    pandas.DataFrame: The table in long format.
+    """
+
+    ttest_results_file = os.path.join(path, f"{chromosome}{arm}_{trans_or_cis}effects_ttest.tsv")
+
+    ttest_results = pd.\
+    read_csv(ttest_results_file, sep="\t").\
+    rename(columns={"Name": "protein"}).\
+    set_index("protein")
+
+    cancer_types = sorted(ttest_results.columns.to_series().str.split("_", n=1, expand=True)[0].unique())
+
+    long_results = pd.DataFrame()
+
+    for cancer_type in cancer_types:
+        cancer_df = ttest_results.\
+        loc[:, ttest_results.columns.str.startswith(cancer_type)].\
+        dropna(axis="index", how="all").\
+        reset_index(drop=False)
+        
+        # If the cancer type has database IDs, make a separate column that has them.
+        # If not, create a column of NaNs (so that the tables all match)
+        if f"{cancer_type}_Database_ID" in cancer_df.columns:
+            cancer_df = cancer_df.rename(columns={f"{cancer_type}_Database_ID": "Database_ID"})
+        else:
+            cancer_df = cancer_df.assign(Database_ID=np.nan)
+            
+        # Rename the pvalue and diff columns to not have the cancer type
+        cancer_df = cancer_df.rename(columns={
+            f"{cancer_type}_pvalue": "adj_p",
+            f"{cancer_type}_diff": "change"
+        }).\
+        assign(cancer_type=cancer_type)
+        
+        # Reorder the columns
+        cancer_df = cancer_df[["cancer_type", "protein", "Database_ID", "adj_p", "change"]]
+        
+        # Append to the overall dataframe
+        long_results = long_results.append(cancer_df)
+
+    # Drop duplicate rows and reset the index
+    long_results = long_results[~long_results.duplicated(keep=False)].\
+    reset_index(drop=True)
+
+    return long_results
+
 # def get_counts_table(cancer_type, dropna=True):
 #     """
 #     Returns the requested counts table from the data directory
