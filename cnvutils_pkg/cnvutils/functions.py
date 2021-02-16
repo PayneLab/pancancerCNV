@@ -276,7 +276,7 @@ def get_normal_expr_table():
 
     return df
 
-def get_reshaped_ttest_results(chromosome, arm, trans_or_cis, path="."):
+def get_reshaped_ttest_results(chromosome, arm, trans_or_cis, path=".", rna=False):
     """Reshape the ttest results dataframe to be in long format.
 
     Parameters:
@@ -284,12 +284,18 @@ def get_reshaped_ttest_results(chromosome, arm, trans_or_cis, path="."):
     arm (str): 'p' or 'q'--the chromosome arm of the file to read
     trans_or_cis (str): 'trans' or 'cis'--whether to read the trans or cis file
     path (str, optional): If the file isn't in the current working directory, the path to the directory where it is.
+    rna (bool, optional): Whether to read the transcriptomics file. Default False. Else read the proteomics file.
 
     Returns:
     pandas.DataFrame: The table in long format.
     """
 
-    ttest_results_file = os.path.join(path, f"{chromosome}{arm}_{trans_or_cis}effects_ttest.tsv")
+    if rna:
+        rna_str = "RNA"
+    else:
+        rna_str = ""
+
+    ttest_results_file = os.path.join(path, f"{chromosome}{arm}_{trans_or_cis}{rna_str}effects_ttest.tsv")
 
     ttest_results = pd.\
     read_csv(ttest_results_file, sep="\t").\
