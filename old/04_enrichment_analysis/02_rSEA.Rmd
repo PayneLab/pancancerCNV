@@ -1,0 +1,93 @@
+---
+title: "Enrichment NB 02: Using rSEA to analyze pathway enrichment for CPTAC CNV data"
+author: "Caleb Lindgren"
+output:
+  pdf_document: default
+---
+# \*\*\*WARNING\*\*\*: Bad analysis technique
+
+I realized that this folder of analyses falls prey to the fallacy of indirect comparison. We compare with_event_tumor to normal, and without_event_tumor to normal, and then compare the with_tumor and without_tumor results from that to each other. It's better to just directly compare with_tumor to without_tumor, which we do with a t-test in the finished analyses.
+
+# Enrichment NB 02: Using rSEA to analyze pathway enrichment for CPTAC CNV data
+
+## Instructions for running:
+
+The best way to run this R Markdown notebook is using the RStudio IDE. Start RStudio, open this file, and then press the green play buttons in the top right corners of the code cells. Alternatively, you can run it from the R command line interface using the `rmarkdown` package.
+
+## Setup
+
+```{r, message=FALSE}
+library(tidyverse)
+library(rSEA)
+
+THRESHOLD <- 0.99 # Since we've filtered our feature sets to include only truly active ones; but there's a bug such that
+# a threshold of 1 causes an exception
+
+INPUT_DIR <- "results_01_grouped_expr"
+INPUT_FILE <- "unique_results.tsv.gz"
+INPUT_FILE_PATH <- file.path(INPUT_DIR, INPUT_FILE)
+
+GENE_SETS_DIR <- "gene_set_libraries"
+GENE_SET_FILES <- c("GO_Biological_Process_2018.gmt", "ReactomePathways.gmt")
+
+OUTPUT_DIR <- "results_02_rSEA"
+
+# Create the output directory if it doesn't already exist
+dir.create(OUTPUT_DIR, showWarnings = FALSE)
+```
+
+## Step 1: Load expression data and divide by cancer type and group
+
+```{r, message=FALSE, warning=FALSE}
+all_expr_data <- read_tsv(INPUT_FILE_PATH)
+groups <- distinct(all_expr_data, cancer_type_group)$cancer_type_group
+split_expr_data <- lapply(groups, function(x) filter(all_expr_data, cancer_type_group == x))
+names(split_expr_data) <- groups
+```
+
+## Step 2: Load pathway lists
+
+GO downloaded on 25 Jul 2020 from: https://amp.pharm.mssm.edu/Enrichr/geneSetLibrary?mode=text&libraryName=GO_Biological_Process_2018
+Reactome downloaded on 27 Jul 2020 from: https://reactome.org/download/current/ReactomePathways.gmt.zip
+
+Each line of the Reactome file was reformatted to have the pathway ID and name both in the first field, using the find regex `"^([^\t]*)\t(R-HSA-\d+)\t"` and then the replace string `"\1 (\2)\t\t"`.
+
+## Step 3: Run rSEA and save the results
+
+For some reason, our data was generating an error when the threshold was set to 1. Some problem in the `hommel` package. Since the threshold is set to 1 whenever the competitive hypothesis is tested, we set the optional `competitive` parameter to `FALSE`, to override the default behavior of automatically testing the competitive hypothesis.
+
+```{r}
+for (gene_set_file in GENE_SET_FILES) {
+  
+  # Step 2
+  gene_set_file_path <- file.path(GENE_SETS_DIR, gene_set_file)
+  
+  pathways <- gene_set_file_path %>%
+    readLines() %>% # Read in each line of the file as a string
+    sapply(strsplit, split = "\t") # Split each line on the tab character
+  
+  pathway_ids <- sapply(pathways, function(x) x[[1]]) # Save the pathway name and id field for later
+  pathways <- sapply(pathways, function(x) x[-(1:2)]) # Cut out the pathway names and blank field from the lists
+  names(pathways) <- pathway_ids # Set the pathway ids as the names
+  
+  # Step 3
+  results <- lapply(split_expr_data, function(x) SEA(
+    pvalue = x$adj_p,
+    featureIDs = x$protein_str,
+    pathlist = pathways,
+    thresh = THRESHOLD,
+    competitive = FALSE))
+  
+  names(results) <- groups
+  
+  results <- groups %>%
+    lapply(function(x) results[[x]] %>% add_column(cancer_type_group = x)) %>% # Add each table's cancer type group as a column
+    bind_rows() # Combine all the tables into one table
+  
+  OUTPUT_FILE_PATH <- file.path(
+    OUTPUT_DIR,
+    paste("enrichment_rsea_thresh_", THRESHOLD, "_lib_", strsplit(gene_set_file, "\\.")[[1]][[1]], ".tsv", sep = ""))
+  
+  write_tsv(results, OUTPUT_FILE_PATH)
+}
+```
