@@ -8,5 +8,5 @@ We include a small utility package called `cnvutils` that simplifies the code fo
 
 1. Clone this repository
 2. Open a terminal and navigate to the same directory that this README is stored in.
-3. Run the command `pip install cnvutils_pkg/`. This will follow the last argument, which is a relative path to the package setup information, and install the package in your currently active Python environment.
+3. Run the command `pip install cnvutils_pkg/`. This will follow the relative path in the last argument to find the package setup information, and install the package in your currently active Python environment.
 4. To access the package, simply add `import cnvutils` to your Python code.
