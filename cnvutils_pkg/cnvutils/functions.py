@@ -18,7 +18,7 @@ def get_gene_locations():
 def get_counts_table():
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     file = os.path.join(BASE_DIR, 'cnvutils', 'cnv_counts.tsv')
-    df = pd.read_csv(file, sep='\t', usecols=['Name', 'Database_ID', 'start_bp', 'end_bp', 'variable', 'value','chromosome','arm', 'cancer'])
+    df = pd.read_csv(file, sep='\t', usecols=['Name', 'Database_ID', 'start_bp', 'end_bp', 'variable', 'value','chromosome','arm', 'cancer'], dtype={"Database_ID": "object"})
     return df
 
 
