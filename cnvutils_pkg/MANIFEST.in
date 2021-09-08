@@ -1,5 +1,4 @@
 include cnvutils/gene_locations.tsv
 include cnvutils/Table_EV5.xlsx
 include cnvutils/NCBI_ideogram.csv
-include cnvutils/cnv_counts.tsv
 include cnvutils/bailey_driver_genes.csv

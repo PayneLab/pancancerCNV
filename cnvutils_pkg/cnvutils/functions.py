@@ -1,11 +1,107 @@
 # All the functions
 
-import pandas as pd
+import cptac
+import json
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import pandas as pd
 import seaborn as sns
 import warnings
-import os
+
+def load_params(path):
+    """Load parameters for CNV analysis from the parameters file, created in the set_parameters_RUN_FIRST.ipynb notebook of the analysis folder for the current chromosome.
+
+    Parameters:
+    path (str): The path to the parameters file
+    
+    Returns:
+    dict: The parameters
+    """
+    with open(path, "r") as file_obj:
+        params = json.load(file_obj)
+
+    return params
+
+def load_tables(cancer_types, data_types):
+    """Get the tables for the specified data types from the specified cancer types.
+
+    Parameters:
+    cancer_types (list of str): The cancer types to get data from
+    data_types (list of str): The data types to get from each cancer, e.g. proteomics, CNV, transcriptomics, etc.
+
+    Returns:
+    dict of str: dict of str: pd.DataFrame: A dict where the keys are data types and the values are dicts where the keys are cancer types and the values are dataframes of the proper data type.
+    """
+    # Initialize the dict we'll use to return tables
+    all_tables = {}
+    for data_type in data_types:
+        all_tables[data_type] = {}
+
+    # Load and save tables
+    for cancer_type in cancer_types:
+        cancer_type_tables = _load_cancer_type_tables(cancer_type, data_types)
+        for data_type, df in cancer_type_tables.items():
+            all_tables[data_type][cancer_type] = df
+
+    return all_tables
+
+
+def _load_cancer_type_tables(cancer_type, data_types):
+    """Load the specified data tables from the given cancer type. We have this as a separate function instead of as part of load_tables so that the cancer dataset object will be allowed to be garbage collected after we're done with it, instead of sticking around and wasting RAM.
+
+    Parameters:
+    cancer_type (str): The cancer type to load
+    data_types (list of str): The tables to get
+
+    Returns:
+    dict of str: pd.DataFrame: The requested tables from the given cancer type, indexed by name.
+    """
+
+    # Load the cancer type
+    if cancer_type == "brca":
+        ds = cptac.Brca()
+    elif cancer_type == "ccrcc":
+        ds = cptac.Ccrcc()
+    elif cancer_type == "colon":
+        ds = cptac.Colon()
+    elif cancer_type == "endometrial":
+        ds = cptac.Endometrial()
+    elif cancer_type == "gbm":
+        ds = cptac.Gbm()
+    elif cancer_type == "hnscc":
+        ds = cptac.Hnscc()
+    elif cancer_type == "lscc":
+        ds = cptac.Lscc()
+    elif cancer_type == "luad":
+        ds = cptac.Luad()
+    elif cancer_type == "ovarian":
+        ds = cptac.Ovarian()
+    else:
+        raise ValueError(f"Invalid cancer type name '{cancer_type}'")
+
+    # Get the tables
+    tables = {}
+
+    for data_type in data_types:
+        tables[data_type] = ds._get_dataframe(data_type, tissue_type="both")
+
+    return tables
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def get_gene_locations():
 
@@ -14,13 +110,6 @@ def get_gene_locations():
     df = pd.read_csv(file, sep='\t', dtype={"chromosome": "O"}, index_col=[0,1], usecols=['Name', 'Database_ID', 'chromosome', 'start_bp', 'end_bp', 'arm'])
 
     return df
-
-def get_counts_table():
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    file = os.path.join(BASE_DIR, 'cnvutils', 'cnv_counts.tsv')
-    df = pd.read_csv(file, sep='\t', usecols=['Name', 'Database_ID', 'start_bp', 'end_bp', 'variable', 'value','chromosome','arm', 'cancer'], dtype={"Database_ID": "object"})
-    return df
-
 
 def get_driver_genes():
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

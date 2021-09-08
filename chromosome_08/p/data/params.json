@@ -1,0 +1,1 @@
+{"CHROMOSOME": "8", "ARM": "p", "CANCER_TYPES": ["brca", "colon", "hnscc", "lscc", "luad", "ovarian"], "GENE_CNV_MAGNITUDE_CUTOFF": 0.2, "GENE_CNV_PROPORTION_CUTOFF": 0.2, "PROPORTION_WITH_EVENT_CUTOFF": 0.8}
