@@ -88,21 +88,6 @@ def _load_cancer_type_tables(cancer_type, data_types):
 
     return tables
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def get_gene_locations():
 
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -110,6 +95,78 @@ def get_gene_locations():
     df = pd.read_csv(file, sep='\t', dtype={"chromosome": "O"}, index_col=[0,1], usecols=['Name', 'Database_ID', 'chromosome', 'start_bp', 'end_bp', 'arm'])
 
     return df
+
+def get_event_genes(chrm, event_start, event_end, cis_or_trans):
+    """Based on an event's start and end locations on a given chromosome, mark which genes are in the event and which ones aren't.
+
+    Parameters:
+    chrm (str): The chromosome the event is on.
+    event_start (int): The base pair location of the event start.
+    event_end (int): The base pair location of the event end.
+    cis_or_trans (str): Either "cis" or "trans"; indicates whether you want proteins inside the event (cis) or outside the event (trans).
+
+    Returns:
+    pandas.Series: A boolean array indicating which genes are in the event and which ones aren't.
+    """
+
+    # Parameter processing
+    cis_or_trans = cis_or_trans.lower()
+
+    # Get locations
+    locs = get_gene_locations()
+
+    # Account for genes that go the opposite direction
+    locs = locs.assign(
+        first=locs[["start_bp", "end_bp"]].min(axis="columns"),
+        last=locs[["start_bp", "end_bp"]].max(axis="columns")
+    )
+
+    # Create a filter for being in the event or not
+    in_event = (
+        (locs["chromosome"] == chrm) &
+        (
+            (
+                (locs["first"] >= event_start) &
+                (locs["first"] <= event_end)
+            ) |
+            (
+                (locs["last"] >= event_start) &
+                (locs["last"] <= event_end)
+            )
+        )
+    )
+
+    if cis_or_trans == "cis":
+        ret = in_event[in_event]
+    elif cis_or_trans == "trans":
+        ret = in_event[~in_event]
+    else:
+        raise ValueError("Invalid value for 'cis_or_trans' parameter.")
+
+    ret.name = "membership"
+
+    ret = ret.\
+    reset_index(drop=False).\
+    drop(columns="membership").\
+    drop_duplicates(keep="first").\
+    sort_values(by=["Name", "Database_ID"])
+
+    return ret
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def get_driver_genes():
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -281,63 +338,6 @@ def make_pvalue_plot(df, label_column, value_column, group_column=None, sort_col
     return g
 
 
-
-def get_event_genes(chrm, event_start, event_end, cis_or_trans):
-    """Based on an event's start and end locations on a given chromosome, mark which genes are in the event and which ones aren't.
-
-    Parameters:
-    chrm (str): The chromosome the event is on.
-    event_start (int): The base pair location of the event start.
-    event_end (int): The base pair location of the event end.
-    cis_or_trans (str): Either "cis" or "trans"; indicates whether you want proteins inside the event (cis) or outside the event (trans).
-
-    Returns:
-    pandas.Series: A boolean array indicating which genes are in the event and which ones aren't.
-    """
-
-    # Parameter processing
-    cis_or_trans = cis_or_trans.lower()
-
-    # Get locations
-    locs = get_gene_locations()
-
-    # Account for genes that go the opposite direction
-    locs = locs.assign(
-        first=locs[["start_bp", "end_bp"]].min(axis="columns"),
-        last=locs[["start_bp", "end_bp"]].max(axis="columns")
-    )
-
-    # Create a filter for being in the event or not
-    in_event = (
-        (locs["chromosome"] == chrm) &
-        (
-            (
-                (locs["first"] >= event_start) &
-                (locs["first"] <= event_end)
-            ) |
-            (
-                (locs["last"] >= event_start) &
-                (locs["last"] <= event_end)
-            )
-        )
-    )
-
-    if cis_or_trans == "cis":
-        ret = in_event[in_event]
-    elif cis_or_trans == "trans":
-        ret = in_event[~in_event]
-    else:
-        raise ValueError("Invalid value for 'cis_or_trans' parameter.")
-
-    ret.name = "membership"
-
-    ret = ret.\
-    reset_index(drop=False).\
-    drop(columns="membership").\
-    drop_duplicates(keep="first").\
-    sort_values(by=["Name", "Database_ID"])
-
-    return ret
 
 def get_normal_expr_table():
     """Load the table of normal protein expression levels for different tissues. This table was downloaded from:
