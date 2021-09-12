@@ -68,9 +68,9 @@ def _load_cancer_type_tables(cancer_type, data_types, pancan):
         elif cancer_type == "ccrcc":
             ds = cptac.pancan.PancanCcrcc()
         elif cancer_type == "colon":
-            ds = cptac.pancan.PancanColon()
+            ds = cptac.pancan.PancanCoad()
         elif cancer_type == "endometrial":
-            ds = cptac.pancan.PancanEndometrial()
+            ds = cptac.pancan.PancanUcec()
         elif cancer_type == "gbm":
             ds = cptac.pancan.PancanGbm()
         elif cancer_type == "hnscc":
@@ -80,7 +80,7 @@ def _load_cancer_type_tables(cancer_type, data_types, pancan):
         elif cancer_type == "luad":
             ds = cptac.pancan.PancanLuad()
         elif cancer_type == "ovarian":
-            ds = cptac.pancan.PancanOvarian()
+            ds = cptac.pancan.PancanOv()
         elif cancer_type == "pdac":
             ds = cptac.pancan.PancanPdac()
         else:
@@ -114,7 +114,18 @@ def _load_cancer_type_tables(cancer_type, data_types, pancan):
     tables = {}
 
     for data_type in data_types:
-        tables[data_type] = ds._get_dataframe(data_type, tissue_type="both")
+        if pancan:
+            if data_type == "CNV":
+                tables[data_type] = ds.get_CNV()
+            elif data_type == "proteomics":
+                tables[data_type] = ds.get_proteomics()
+            elif data_type == "transcriptomics":
+                tables[data_type] = ds.get_transcriptomics()
+            else:
+                raise ValueError(f"Invalid data type name '{data_type}'")
+                
+        else:
+            tables[data_type] = ds._get_dataframe(data_type, tissue_type="both")
 
     return tables
     
