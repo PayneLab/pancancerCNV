@@ -1,1 +1,1 @@
-{"PANCAN": true}
+{"PANCAN": true, "GENE_CNV_MAGNITUDE_CUTOFF": 0.2, "CHART_FORMAT": "svg"}
