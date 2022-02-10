@@ -294,20 +294,25 @@ def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=Non
     cytoband_info = get_cytoband_info()
     data = cytoband_info[cytoband_info['#chromosome'] == chromo]
     locations = get_gene_locations()
+
     if arm:
         data = data[data.arm == arm]
+
     if start_bp:
         data = data[data.bp_stop > start_bp]
     else:
         start_bp = np.min(data.bp_start)
+
     if end_bp:
         data = data[data.bp_start < end_bp]
     else:
         end_bp = np.max(data.bp_stop)
+
     if above:
         label_location = 75
     else:
         label_location = 20
+
     colors = list()
     sections = list()
     for index, row in data.iterrows():
