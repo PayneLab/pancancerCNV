@@ -120,9 +120,9 @@ def _load_cancer_type_tables(cancer_type, data_types, pancan):
             if data_type == "CNV":
                 tables[data_type] = ds.get_CNV()
             elif data_type == "proteomics":
-                tables[data_type] = ds.get_proteomics()
+                tables[data_type] = ds.get_proteomics(source="umich")
             elif data_type == "transcriptomics":
-                tables[data_type] = ds.get_transcriptomics()
+                tables[data_type] = ds.get_transcriptomics(source="bcm")
             else:
                 raise ValueError(f"Invalid data type name '{data_type}'")
                 
