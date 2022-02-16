@@ -1,5 +1,6 @@
 # All the functions
 
+import altair as alt
 import gseapy as gp
 import gprofiler
 import cptac
@@ -245,7 +246,70 @@ def run_gprofiler(input_file):
     
     return results
 
+def make_cytoband_plot(chrm, show_xlabel=True, height=800):
+    """Create a cytoband plot"""
+    
+    # Get cytoband info
+    cytoband_data = get_cytoband_info()
+    if chrm not in cytoband_data['#chromosome'].values:
+        raise ValueError(f"Chromosome '{chrm}' not found in cytoband data. Make sure it's a string, not an int.")
+    cytoband_data = cytoband_data[cytoband_data['#chromosome'] == chrm]
+    
+    # Create a column for colors
+    cytoband_data = cytoband_data.assign(
+        color=cytoband_data["stain"] + np.where(
+            cytoband_data["density"].notna(),
+            cytoband_data["density"].fillna(0).astype(int).astype(str),
+            "",
+        ),
+    )
 
+    # Make the chart
+    bars = alt.Chart(cytoband_data).mark_bar().encode(
+        x=alt.X(
+            "#chromosome",
+            title="Chromosome" if show_xlabel else None,
+            axis=alt.Axis(
+                labelAngle=0,
+                labels=show_xlabel,
+                ticks=show_xlabel,
+                grid=False,
+            ),
+        ),
+        y=alt.Y(
+            "bp_start",
+            stack=None,
+            scale=alt.Scale(
+                domain=[cytoband_data["bp_stop"].max(), 0],
+                nice=False,
+            ),
+            title=None,
+            axis=alt.Axis(
+                # Hide the grid
+                grid=False,
+                
+                # Set the tick frequency
+                values=list(range(0, cytoband_data["bp_stop"].max(), 5000000)),
+                
+                # Below is a Vega expression that uses nested ternary if statements to return 0 if the
+                # current tick mark's label is 0, otherwise check if it's a multiple of 10 million, and 
+                # if so to trim off the first 8 characters (six zeros and two commas) and append "M" as 
+                # an abbreviation for million base pairs, otherwise don't print a label for that tick mark
+                labelExpr="datum.value == 0 ? 0 : datum.value % 10000000 ? null : slice(datum.label, -length(datum.label), -8) + 'Mb'",
+            )
+        ),
+        color=alt.Color(
+            "color",
+            scale=alt.Scale(
+                domain=["acen", "gneg",  "gpos25",    "gpos50",   "gpos75",  "gpos100", "gvar"],
+                range=[ "crimson",  "white", "lightgray", "darkgray", "dimgray", "black",   "plum"],
+            ),
+            legend=None,
+        ),
+        order=alt.Order("bp_start", sort="ascending"),
+    ).properties(height=height)
+    
+    return bars
 
 
 
