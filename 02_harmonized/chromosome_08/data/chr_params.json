@@ -1,1 +1,1 @@
-{"CHROMOSOME": "8", "CHR_CANCER_TYPES": ["brca", "ccrcc", "colon", "endometrial", "gbm", "hnscc", "lscc", "luad", "ovarian"], "GENE_CNV_PROPORTION_CUTOFF": 0.2}
+{"CHROMOSOME": "8", "CHR_CANCER_TYPES": ["brca", "ccrcc", "coad", "gbm", "hnscc", "lscc", "luad", "ov", "pdac", "ucec"], "GENE_CNV_PROPORTION_CUTOFF": 0.2}

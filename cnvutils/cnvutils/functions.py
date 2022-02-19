@@ -27,13 +27,14 @@ def load_params(path):
 
     return params
 
-def load_tables(cancer_types, data_types, pancan):
+def load_tables(cancer_types, data_types, pancan, no_internet=False):
     """Get the tables for the specified data types from the specified cancer types.
 
     Parameters:
     cancer_types (list of str): The cancer types to get data from
     data_types (list of str): The data types to get from each cancer, e.g. proteomics, CNV, transcriptomics, etc.
     pancan (bool): If False, use the regular cptac datasets. If true, use the cptac.pancan (harmonized) datasets.
+    no_internet (bool): If True, don't try to update indices. Default False.
 
     Returns:
     dict of str: dict of str: pd.DataFrame: A dict where the keys are data types and the values are dicts where the keys are cancer types and the values are dataframes of the proper data type.
@@ -45,20 +46,21 @@ def load_tables(cancer_types, data_types, pancan):
 
     # Load and save tables
     for cancer_type in cancer_types:
-        cancer_type_tables = _load_cancer_type_tables(cancer_type, data_types, pancan)
+        cancer_type_tables = _load_cancer_type_tables(cancer_type, data_types, pancan, no_internet)
         for data_type, df in cancer_type_tables.items():
             all_tables[data_type][cancer_type] = df
 
     return all_tables
 
 
-def _load_cancer_type_tables(cancer_type, data_types, pancan):
+def _load_cancer_type_tables(cancer_type, data_types, pancan, no_internet=False):
     """Load the specified data tables from the given cancer type. We have this as a separate function instead of as part of load_tables so that the cancer dataset object will be allowed to be garbage collected after we're done with it, instead of sticking around and wasting RAM.
 
     Parameters:
     cancer_type (str): The cancer type to load
     data_types (list of str): The tables to get
     pancan (bool): If False, use the regular cptac datasets. If true, use the cptac.pancan (harmonized) datasets.
+    no_internet (bool): If True, don't try to update indices. Default False.
 
     Returns:
     dict of str: pd.DataFrame: The requested tables from the given cancer type, indexed by name.
@@ -67,49 +69,49 @@ def _load_cancer_type_tables(cancer_type, data_types, pancan):
     # Load the cancer type
     if pancan:
         if cancer_type == "brca":
-            ds = cptac.pancan.PancanBrca()
+            ds = cptac.pancan.PancanBrca(no_internet=no_internet)
         elif cancer_type == "ccrcc":
-            ds = cptac.pancan.PancanCcrcc()
-        elif cancer_type == "colon":
-            ds = cptac.pancan.PancanCoad()
-        elif cancer_type == "endometrial":
-            ds = cptac.pancan.PancanUcec()
+            ds = cptac.pancan.PancanCcrcc(no_internet=no_internet)
+        elif cancer_type == "coad":
+            ds = cptac.pancan.PancanCoad(no_internet=no_internet)
         elif cancer_type == "gbm":
-            ds = cptac.pancan.PancanGbm()
+            ds = cptac.pancan.PancanGbm(no_internet=no_internet)
         elif cancer_type == "hnscc":
-            ds = cptac.pancan.PancanHnscc()
+            ds = cptac.pancan.PancanHnscc(no_internet=no_internet)
         elif cancer_type == "lscc":
-            ds = cptac.pancan.PancanLscc()
+            ds = cptac.pancan.PancanLscc(no_internet=no_internet)
         elif cancer_type == "luad":
-            ds = cptac.pancan.PancanLuad()
-        elif cancer_type == "ovarian":
-            ds = cptac.pancan.PancanOv()
+            ds = cptac.pancan.PancanLuad(no_internet=no_internet)
+        elif cancer_type == "ov":
+            ds = cptac.pancan.PancanOv(no_internet=no_internet)
         elif cancer_type == "pdac":
-            ds = cptac.pancan.PancanPdac()
+            ds = cptac.pancan.PancanPdac(no_internet=no_internet)
+        elif cancer_type == "ucec":
+            ds = cptac.pancan.PancanUcec(no_internet=no_internet)
         else:
             raise ValueError(f"Invalid cancer type name '{cancer_type}'")
 
     else:
         if cancer_type == "brca":
-            ds = cptac.Brca()
+            ds = cptac.Brca(no_internet=no_internet)
         elif cancer_type == "ccrcc":
-            ds = cptac.Ccrcc()
+            ds = cptac.Ccrcc(no_internet=no_internet)
         elif cancer_type == "colon":
-            ds = cptac.Colon()
+            ds = cptac.Colon(no_internet=no_internet)
         elif cancer_type == "endometrial":
-            ds = cptac.Endometrial()
+            ds = cptac.Endometrial(no_internet=no_internet)
         elif cancer_type == "gbm":
-            ds = cptac.Gbm()
+            ds = cptac.Gbm(no_internet=no_internet)
         elif cancer_type == "hnscc":
-            ds = cptac.Hnscc()
+            ds = cptac.Hnscc(no_internet=no_internet)
         elif cancer_type == "lscc":
-            ds = cptac.Lscc()
+            ds = cptac.Lscc(no_internet=no_internet)
         elif cancer_type == "luad":
-            ds = cptac.Luad()
+            ds = cptac.Luad(no_internet=no_internet)
         elif cancer_type == "ovarian":
-            ds = cptac.Ovarian()
+            ds = cptac.Ovarian(no_internet=no_internet)
         elif cancer_type == "pdac":
-            ds = cptac.Pdac()
+            ds = cptac.Pdac(no_internet=no_internet)
         else:
             raise ValueError(f"Invalid cancer type name '{cancer_type}'")
 
