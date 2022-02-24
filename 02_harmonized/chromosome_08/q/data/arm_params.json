@@ -1,1 +1,1 @@
-{"ARM": "q", "ARM_CANCER_TYPES": ["brca", "colon", "hnscc", "lscc", "luad", "ovarian"], "START": 48710789, "END": 145052465, "TYPE": "gain"}
+{"ARM": "q", "ARM_CANCER_TYPES": ["brca", "coad", "hnscc", "lscc", "luad", "ov"], "START": 48710789, "END": 145052465, "TYPE": "gain"}
