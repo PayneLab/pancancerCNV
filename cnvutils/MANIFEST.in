@@ -1,6 +1,6 @@
-include cnvutils/gene_locations.tsv
-include cnvutils/Table_EV5.xlsx
-include cnvutils/NCBI_ideogram.csv
-include cnvutils/bailey_driver_genes.csv
-include cnvutils/gene_set_libraries/ReactomePathways.gmt
-include cnvutils/gene_set_libraries/GO_Biological_Process_2018.gmt
+include cnvutils/data/NCBI_ideogram.csv
+include cnvutils/data/Table_EV5.xlsx
+include cnvutils/data/bailey_driver_genes.csv
+include cnvutils/data/gene_locations.tsv
+include cnvutils/data/gene_set_libraries/GO_Biological_Process_2018.gmt
+include cnvutils/data/gene_set_libraries/ReactomePathways.gmt
