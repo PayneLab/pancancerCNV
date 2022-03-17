@@ -9,9 +9,9 @@ import pyensembl
 import requests
 import sys
 
-from .constants import ALL_CANCERS, ALL_CHROMOSOMES
+from .constants import ALL_CANCERS
 
-def save_input_tables(base_dir, pancan):
+def save_input_tables(pancan, base_dir=os.getcwd()):
     """Load CNV, transcriptomics, and proteomics tables for all cancers, create
     gene locations table, and save all of them.
     """
@@ -36,7 +36,7 @@ def save_input_tables(base_dir, pancan):
             genes = genes.union(df.columns)
 
     genes = genes.to_frame()
-    gene_locations, not_found_genes = get_gene_locations(genes)
+    gene_locations, not_found_genes = query_gene_locations_database(genes)
 
     # Create a data directory in the directory the function was called from
     input_data_dir = os.path.join(base_dir, "data", "input_tables")
@@ -57,26 +57,56 @@ def save_input_tables(base_dir, pancan):
             save_path = os.path.join(cptac_data_dir, file_name)
             df.to_csv(save_path, sep="\t")
 
-def load_input_tables(base_dir):
+def load_input_tables(base_dir, data_types=["CNV", "proteomics", "transcriptomics"], cancer_types=ALL_CANCERS[0]):
+
+    # Standardize data_types and cancer_types
+    data_types = [data_type.lower() for data_type in data_types]
+    cancer_types = [cancer_type.lower() for cancer_type in cancer_types]
 
     # Get the data tables directory
     cptac_tables_dir = os.path.join(base_dir, "data", "input_tables", "cptac_tables")
 
-    # Load the tables
-    table_paths = glob.glob(os.path.join(cptac_tables_dir, "*"))
-
-    tables = {}
-    for path in table_paths:
+    # Get list of tables to load
+    all_table_paths = sorted(glob.glob(os.path.join(cptac_tables_dir, "*")))
+    load_table_paths = []
+    for path in all_table_paths:
         cancer_type, data_type = path.split(os.sep)[-1].split(".")[0].split("_")
+        if cancer_type.lower() in cancer_types and data_type.lower() in data_types:
+            load_table_paths.append(path)
+
+    # Load the tables
+    tables = {}
+    for i, path in enumerate(load_table_paths):
+        cancer_type, data_type = path.split(os.sep)[-1].split(".")[0].split("_")
+
+        print(f"Loading {cancer_type} {data_type} ({i + 1}/{len(load_table_paths)})...{' ' * 30}", end="\r")
 
         if data_type not in tables.keys():
             tables[data_type] = {}
 
-        tables[data_type][cancer_type] = pd.read_csv(path, sep="\t", index_col=[0, 1])
+        tables[data_type][cancer_type] = pd.read_csv(
+            path,
+            sep="\t",
+            index_col=0,
+            header=[0, 1]
+        )
+
+    # Clear last loading message
+    print(" " * 60, end="\r")
 
     return tables
 
-def get_gene_locations(genes):
+def load_gene_locations(base_dir=os.getcwd()):
+
+    gene_locations_path = os.path.join(base_dir, "data", "input_tables", "gene_locations.tsv.gz")
+
+    # Temporary fix until gene locations table is saved without numeric index
+    #gene_locations = pd.read_csv(gene_locations_path, sep="\t", index_col=[0, 1])
+    gene_locations = pd.read_csv(gene_locations_path, sep="\t", usecols=lambda x: x != "Unnamed: 0", index_col=[0, 1])
+
+    return gene_locations
+
+def query_gene_locations_database(genes):
 
     # Find latest Ensembl release supported by pyensembl
     latest_release = 100
@@ -199,7 +229,7 @@ def get_gene_locations(genes):
         "end_bp": end_bp
     })
 
-    # Add arm locations
+    # Add arms
     cytoband = get_cytoband_info()
 
     p_arm_max = cytoband[cytoband["arm"] == "p"].\
@@ -217,6 +247,12 @@ def get_gene_locations(genes):
     gene_locations = gene_locations.assign(
         arm=np.where(gene_locations["start_bp"] <= gene_locations["p_arm_max"], "p", "q")
     )
+
+    # Drop the p_arm_max column now that we have arms
+    gene_locations = gene_locations.drop(columns="p_arm_max")
+
+    # Set index as gene name and database ID
+    gene_locations = gene_locations.set_index(["Name", "Database_ID"], drop=True, append=False)
 
     # Package these extra lists
     not_found_genes = {

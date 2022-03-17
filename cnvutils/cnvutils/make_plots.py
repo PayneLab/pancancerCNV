@@ -51,7 +51,7 @@ def make_cytoband_plot(chrm, show_xlabel=True, height=800):
                 
                 # Below is a Vega expression that uses nested ternary if statements to return 0 if the
                 # current tick mark's label is 0, otherwise check if it's a multiple of 10 million, and 
-                # if so to trim off the first 8 characters (six zeros and two commas) and append "M" as 
+                # if so to trim off the last 8 characters (six zeros and two commas) and append "Mb" as 
                 # an abbreviation for million base pairs, otherwise don't print a label for that tick mark
                 labelExpr="datum.value == 0 ? 0 : datum.value % 10000000 ? null : slice(datum.label, -length(datum.label), -8) + 'Mb'",
             )
