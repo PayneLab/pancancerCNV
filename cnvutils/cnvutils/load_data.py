@@ -99,10 +99,7 @@ def load_input_tables(base_dir, data_types=["CNV", "proteomics", "transcriptomic
 def load_gene_locations(base_dir=os.getcwd()):
 
     gene_locations_path = os.path.join(base_dir, "data", "input_tables", "gene_locations.tsv.gz")
-
-    # Temporary fix until gene locations table is saved without numeric index
-    #gene_locations = pd.read_csv(gene_locations_path, sep="\t", index_col=[0, 1])
-    gene_locations = pd.read_csv(gene_locations_path, sep="\t", usecols=lambda x: x != "Unnamed: 0", index_col=[0, 1])
+    gene_locations = pd.read_csv(gene_locations_path, sep="\t", index_col=[0, 1])
 
     return gene_locations
 
@@ -204,6 +201,9 @@ def query_gene_locations_database(genes):
                 chromosome.append(info.contig)
                 start_bp.append(info.start)
                 end_bp.append(info.end)
+
+    # Clear message
+    print(" " * 80, end="\r")
 
     # If we couldn't find the database ID in an older version, we'll last try looking it up by name
     name_and_db_not_found = []
