@@ -93,12 +93,16 @@ def make_has_event_table(
     arm,
     event_start,
     event_end,
-    loss_or_gain,
+    gain_or_loss,
     cancer_types,
     base_dir=os.getcwd(),
 ):
     # Get tables
-    tables = load_input_tables(base_dir, data_types=["CNV"])
+    tables = load_input_tables(
+        base_dir,
+        data_types=["CNV"],
+        cancer_types=cancer_types,
+    )
     cnv_tables = tables["CNV"]
     
     # Get gene locations
@@ -107,16 +111,16 @@ def make_has_event_table(
     for cancer_type in cnv_tables.keys():
 
         # Join in locations
-        df = cnv_tables[cancer_type]
-        df = df.transpose()
-        if not isinstance(df.index, pd.MultiIndex):
-            df = df.join(gene_locations.droplevel(1).drop_duplicates(keep="first"))
+        event_df = cnv_tables[cancer_type]
+        event_df = event_df.transpose()
+        if not isinstance(event_df.index, pd.MultiIndex):
+            event_df = event_df.join(gene_locations.droplevel(1).drop_duplicates(keep="first"))
         else:
-            df = df.join(gene_locations)
+            event_df = event_df.join(gene_locations)
         
         # Slice out just the genes within the event
         event_df = select_genes_for_event(
-            gene_locations=gene_locations,
+            gene_locations=event_df,
             chromosome=chromosome,
             event_start=event_start,
             event_end=event_end,
@@ -127,15 +131,13 @@ def make_has_event_table(
         gene_lengths = event_df["end_bp"] - event_df["start_bp"]
         event_df = event_df.drop(columns=['chromosome', 'start_bp', 'end_bp', 'arm'])
 
-        import pdb; pdb.set_trace()
-        
         # Binarize all values to whether greater than/less than cutoff
-        if loss_or_gain == "gain":
+        if gain_or_loss == "gain":
             bin_df = event_df.ge(INDIVIDUAL_GENE_CNV_MAGNITUDE_CUTOFF).astype(int)
-        elif loss_or_gain == "loss":
+        elif gain_or_loss == "loss":
             bin_df = event_df.le(-INDIVIDUAL_GENE_CNV_MAGNITUDE_CUTOFF).astype(int)
         else:
-            raise ValueError(f"Invalid input '{loss_or_gain}' for loss_or_gain parameter")
+            raise ValueError(f"Invalid input '{gain_or_loss}' for gain_or_loss parameter")
         
         # Multiply every column by gene lengths
         scaled_df = bin_df.multiply(gene_lengths, axis="index")
@@ -153,7 +155,7 @@ def make_has_event_table(
         has_event.to_csv(os.path.join(
             base_dir,
             "data", 
-            f"chr{chromosome:0>2}{arm}_{loss_or_gain}_{cancer_type}_has_event.tsv"
+            f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cancer_type}_has_event.tsv"
         ), sep='\t')
 
 def event_effects_ttest(
@@ -161,14 +163,18 @@ def event_effects_ttest(
     arm,
     event_start,
     event_end,
-    loss_or_gain,
+    gain_or_loss,
     cis_or_trans,
     proteomics_or_transcriptomics,
     cancer_types,
     base_dir=os.getcwd(),
 ):
     # Get data_tables
-    data_tables = load_input_tables(base_dir, data_types=[proteomics_or_transcriptomics])
+    data_tables = load_input_tables(
+        base_dir,
+        data_types=[proteomics_or_transcriptomics],
+        cancer_types=cancer_types,
+    )
     data_tables = data_tables[proteomics_or_transcriptomics]
     
     # Get gene locations
@@ -205,11 +211,12 @@ def event_effects_ttest(
         event = pd.read_csv(os.path.join(
             base_dir,
             "data", 
-            f"chr{chromosome:0>2}{arm}_{loss_or_gain}_{cancer_type}_has_event.tsv"
+            f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cancer_type}_has_event.tsv"
         ), sep='\t', index_col=0)
         event.index.rename('Name')
         df = df.join(event)
         df = df.dropna(subset=["event"])
+        df = df.drop(columns="proportion")
         has_event[cancer_type] = df["event"]
         data_tables[cancer_type] = df
     
@@ -265,7 +272,7 @@ def event_effects_ttest(
 
     long_results = pd.DataFrame()
 
-    for cancer_type in CANCER_TYPES:
+    for cancer_type in data_tables.keys():
         cancer_df = results_df.\
         loc[:, results_df.columns.str.startswith(cancer_type)].\
         dropna(axis="index", how="all").\
@@ -298,7 +305,7 @@ def event_effects_ttest(
     save_path = os.path.join(
         base_dir,
         "data", 
-        f"chr{CHROMOSOME}{ARM}_{CIS_OR_TRANS}_ttest.tsv"
+        f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_ttest.tsv"
     )
     long_results.to_csv(save_path, sep='\t', index=False)
 

@@ -1,8 +1,117 @@
 import altair as alt
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import pandas as pd
 import seaborn as sns
 import warnings
+
+def make_ttest_plot(
+    chromosome,
+    arm,
+    gain_or_loss,
+    cis_or_trans,
+    proteomics_or_transcriptomics,
+    #cancer_types,
+    base_dir=os.getcwd(),
+):
+
+    ttest_results = pd.\
+    read_csv(os.path.join(
+        base_dir,
+        "data",
+        f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_ttest.tsv"
+    ), sep="\t").\
+    rename(columns={"Name": "protein"})
+
+    prots = ttest_results[ttest_results["adj_p"] <= 0.05].reset_index(drop=True)
+    prots_cts = prots.groupby("cancer_type").count()[["protein"]]
+
+    fail_prots = ttest_results[ttest_results["adj_p"] > 0.05].reset_index(drop=True)
+    fail_cts = fail_prots.groupby("cancer_type").count()[["protein"]]
+
+    prots_cts.insert(0, "count_type", "Significant difference")
+    fail_cts.insert(0, "count_type", "No significant difference")
+
+    counts = prots_cts.append(fail_cts).sort_index().reset_index(drop=False)
+
+    event_effects_barchart = alt.Chart(counts).mark_bar().encode(
+        x=alt.X(
+            "count_type",
+            axis=alt.Axis(
+                title=None,
+                labels=False,
+                ticks=False,
+            ),
+            sort=["Significant difference"]
+        ),
+        y=alt.Y(
+            "protein",
+            axis=alt.Axis(
+                title="Number of proteins"
+            )
+        ),
+        color=alt.Color(
+            "count_type",
+            title=None,
+            sort=["Significant difference"],
+            scale=alt.Scale(
+                domain=["Significant difference", "No significant difference"],
+                range=["#2d3da4", "#d1d1d1"]
+            )
+        )
+    ).facet(
+        column=alt.Column(
+            "cancer_type",
+            title="Cancer type",
+        )
+    ).properties(
+        title=f"Chr {chromosome}{arm} {cis_or_trans} {'protein' if proteomics_or_transcriptomics == 'proteomics' else 'RNA'} effects"
+    ).configure_title(
+        anchor="middle"
+    ).configure_header(
+        titleOrient="bottom",
+        titlePadding=2,
+        labelOrient="bottom",
+    )
+
+    return event_effects_barchart
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def make_cytoband_plot(chrm, show_xlabel=True, height=800):
     """Create a cytoband plot"""

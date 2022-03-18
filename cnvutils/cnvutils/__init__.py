@@ -10,3 +10,7 @@ from .load_data import (
     load_input_tables,
     load_gene_locations,
 )
+
+from .make_plots import (
+    make_ttest_plot
+)
