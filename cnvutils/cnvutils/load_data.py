@@ -17,7 +17,7 @@ def save_input_tables(pancan, base_dir=os.getcwd()):
     """
 
     # Load tables
-    tables = _load_tables(
+    tables = _load_cptac_tables(
         cancer_types=ALL_CANCERS[0],
         data_types=[
             "CNV",
@@ -296,7 +296,7 @@ def _lookup_old_release(gene_db_id):
 
     return int(response.json()["release"])
 
-def _load_tables(cancer_types, data_types, pancan, no_internet=False):
+def _load_cptac_tables(cancer_types, data_types, pancan, no_internet=False):
     """Get the tables for the specified data types from the specified cancer types.
 
     Parameters:
@@ -315,15 +315,15 @@ def _load_tables(cancer_types, data_types, pancan, no_internet=False):
 
     # Load and save tables
     for cancer_type in cancer_types:
-        cancer_type_tables = _load_cancer_type_tables(cancer_type, data_types, pancan, no_internet)
+        cancer_type_tables = _load_cancer_type_cptac_tables(cancer_type, data_types, pancan, no_internet)
         for data_type, df in cancer_type_tables.items():
             all_tables[data_type][cancer_type] = df
 
     return all_tables
 
 
-def _load_cancer_type_tables(cancer_type, data_types, pancan, no_internet=False):
-    """Load the specified data tables from the given cancer type. We have this as a separate function instead of as part of _load_tables so that the cancer dataset object will be allowed to be garbage collected after we're done with it, instead of sticking around and wasting RAM.
+def _load_cancer_type_cptac_tables(cancer_type, data_types, pancan, no_internet=False):
+    """Load the specified data tables from the given cancer type. We have this as a separate function instead of as part of _load_cptac_tables so that the cancer dataset object will be allowed to be garbage collected after we're done with it, instead of sticking around and wasting RAM.
 
     Parameters:
     cancer_type (str): The cancer type to load
@@ -402,6 +402,16 @@ def _load_cancer_type_tables(cancer_type, data_types, pancan, no_internet=False)
             tables[data_type] = ds._get_dataframe(data_type, tissue_type="both")
 
     return tables
+
+def _load_gistic_tables(base_dir=os.getcwd())
+
+    gistic_dir = os.path.join(base_dir, "data", "sources", "Broad_pipeline_wxs")
+    data_files = [
+        "all_lesions.txt",
+        "all_data_by_genes.txt",
+    ]
+
+    mapping_file_path = os.path.join(base_dir, "data", "sources", "GISTIC_Matched_Samples_Updated.txt")
 
 # Old
 
