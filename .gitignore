@@ -5,3 +5,6 @@ __pycache__/
 dist/
 build/
 .DS_Store
+
+00_functions/data/sources/cptac_tables/
+00_functions/data/sources/Broad_pipeline_wxs/

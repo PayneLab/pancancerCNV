@@ -39,14 +39,13 @@ def save_input_tables(pancan, base_dir=os.getcwd()):
     gene_locations, not_found_genes = query_gene_locations_database(genes)
 
     # Create a data directory in the directory the function was called from
-    input_data_dir = os.path.join(base_dir, "data", "input_tables")
+    input_data_dir = os.path.join(base_dir, "data", "sources")
     cptac_data_dir = os.path.join(input_data_dir, "cptac_tables")
     os.makedirs(input_data_dir, exist_ok=True)
     os.makedirs(cptac_data_dir, exist_ok=True)
 
     # Save the gene locations
-    gene_locations_file_name = "gene_locations.tsv.gz"
-    gene_locations_save_path = os.path.join(input_data_dir, gene_locations_file_name)
+    gene_locations_save_path = os.path.join(input_data_dir, "gene_locations.tsv.gz")
     gene_locations.to_csv(gene_locations_save_path, sep="\t")
 
     # Save the omics tables
@@ -64,7 +63,7 @@ def load_input_tables(base_dir, data_types=["CNV", "proteomics", "transcriptomic
     cancer_types = [cancer_type.lower() for cancer_type in cancer_types]
 
     # Get the data tables directory
-    cptac_tables_dir = os.path.join(base_dir, "data", "input_tables", "cptac_tables")
+    cptac_tables_dir = os.path.join(base_dir, "data", "sources", "cptac_tables")
 
     # Get list of tables to load
     all_table_paths = sorted(glob.glob(os.path.join(cptac_tables_dir, "*")))
@@ -92,13 +91,13 @@ def load_input_tables(base_dir, data_types=["CNV", "proteomics", "transcriptomic
         )
 
     # Clear last loading message
-    print(" " * 60, end="\r")
+    print(" " * 80, end="\r")
 
     return tables
 
 def load_gene_locations(base_dir=os.getcwd()):
 
-    gene_locations_path = os.path.join(base_dir, "data", "input_tables", "gene_locations.tsv.gz")
+    gene_locations_path = os.path.join(base_dir, "data", "sources", "gene_locations.tsv.gz")
     gene_locations = pd.read_csv(gene_locations_path, sep="\t", index_col=[0, 1])
 
     return gene_locations
@@ -274,7 +273,7 @@ def load_ensembl_release(release_number):
         ensembl.download()
         print(f"Indexing Ensembl release {release_number} data...   ", end="\r")
         ensembl.index()
-        print("                                                 ", end="\r")
+        print(" " * 80, end="\r") # Clear the message
     return ensembl
 
 def get_cytoband_info():
@@ -395,7 +394,7 @@ def _load_cancer_type_tables(cancer_type, data_types, pancan, no_internet=False)
             elif data_type == "proteomics":
                 tables[data_type] = ds.get_proteomics(source="umich")
             elif data_type == "transcriptomics":
-                tables[data_type] = ds.get_transcriptomics(source="bcm")
+                tables[data_type] = ds.get_transcriptomics(source="washu")
             else:
                 raise ValueError(f"Invalid data type name '{data_type}'")
                 
@@ -403,21 +402,6 @@ def _load_cancer_type_tables(cancer_type, data_types, pancan, no_internet=False)
             tables[data_type] = ds._get_dataframe(data_type, tissue_type="both")
 
     return tables
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # Old
 
