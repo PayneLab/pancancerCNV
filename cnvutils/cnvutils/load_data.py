@@ -11,7 +11,7 @@ import sys
 
 from .constants import ALL_CANCERS
 
-def save_input_tables(pancan, data_dir=os.path.join(os.getcwd, "..", "data")):
+def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data")):
     """Load CNV, transcriptomics, and proteomics tables for all cancers, create
     gene locations table, and save all of them.
     """
@@ -95,7 +95,7 @@ def load_input_tables(data_dir, data_types=["CNV", "proteomics", "transcriptomic
 
     return tables
 
-def load_gene_locations(data_dir=os.path.join(os.getcwd, "..", "data")):
+def load_gene_locations(data_dir=os.path.join(os.getcwd(), "..", "data")):
 
     gene_locations_path = os.path.join(data_dir, "sources", "gene_locations.tsv.gz")
     gene_locations = pd.read_csv(gene_locations_path, sep="\t", index_col=[0, 1])
@@ -403,7 +403,7 @@ def _load_cancer_type_cptac_tables(cancer_type, data_types, pancan, no_internet=
 
     return tables
 
-def _load_gistic_tables(data_dir=os.path.join(os.getcwd, "..", "data"))
+def _load_gistic_tables(data_dir=os.path.join(os.getcwd(), "..", "data")):
 
     gistic_dir = os.path.join(data_dir, "sources", "Broad_pipeline_wxs")
     data_files = [

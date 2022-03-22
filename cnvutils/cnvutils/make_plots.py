@@ -13,7 +13,7 @@ def make_ttest_plot(
     cis_or_trans,
     proteomics_or_transcriptomics,
     #cancer_types,
-    data_dir=os.path.join(os.getcwd, "..", "data"),
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
 
     ttest_results = pd.\

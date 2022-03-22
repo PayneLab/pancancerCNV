@@ -7,7 +7,7 @@ from .load_data import load_gene_locations, load_input_tables
 
 def make_counts_table(
     chromosome,
-    data_dir=os.path.join(os.getcwd, "..", "data"),
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
     cancer_types=ALL_CANCERS[0]
 ):
     # Get tables
@@ -95,7 +95,7 @@ def make_has_event_table(
     event_end,
     gain_or_loss,
     cancer_types,
-    data_dir=os.path.join(os.getcwd, "..", "data"),
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
     # Get tables
     tables = load_input_tables(
@@ -167,7 +167,7 @@ def event_effects_ttest(
     cis_or_trans,
     proteomics_or_transcriptomics,
     cancer_types,
-    data_dir=os.path.join(os.getcwd, "..", "data"),
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
     # Get data_tables
     data_tables = load_input_tables(
