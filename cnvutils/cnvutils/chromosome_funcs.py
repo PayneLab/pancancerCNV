@@ -69,17 +69,14 @@ def select_genes_for_event(
         last=gene_locations[["start_bp", "end_bp"]].max(axis="columns")
     )
 
-    # Select genes on the chromosome
-    chr_genes = gene_locations[gene_locations["chromosome"] == chromosome]
-
     # Create a filter for genes fully within the event
-    in_event = ((chr_genes["first"] >= event_start) & (chr_genes["last"] <= event_end))
+    in_event = ((gene_locations["chromosome"] == chromosome) & (gene_locations["first"] >= event_start) & (gene_locations["last"] <= event_end))
 
     # Select genes in the event for cis, or outside for trans
     if cis_or_trans == "cis":
-        event_genes = chr_genes[in_event]
+        event_genes = gene_locations[in_event]
     elif cis_or_trans == "trans":
-        event_genes = chr_genes[~in_event]
+        event_genes = gene_locations[~in_event]
     else:
         raise ValueError("Invalid value for 'cis_or_trans' parameter.")
 
@@ -154,7 +151,6 @@ def make_has_event_table(
         # Write to tsv
         has_event.to_csv(os.path.join(
             data_dir,
-            "data", 
             f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cancer_type}_has_event.tsv"
         ), sep='\t')
 
@@ -210,7 +206,6 @@ def event_effects_ttest(
         df = df.transpose()
         event = pd.read_csv(os.path.join(
             data_dir,
-            "data", 
             f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cancer_type}_has_event.tsv"
         ), sep='\t', index_col=0)
         event.index.rename('Name')
@@ -304,7 +299,6 @@ def event_effects_ttest(
 
     save_path = os.path.join(
         data_dir,
-        "data", 
         f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_ttest.tsv"
     )
     long_results.to_csv(save_path, sep='\t', index=False)

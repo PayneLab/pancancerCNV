@@ -19,7 +19,6 @@ def make_ttest_plot(
     ttest_results = pd.\
     read_csv(os.path.join(
         data_dir,
-        "data",
         f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_ttest.tsv"
     ), sep="\t").\
     rename(columns={"Name": "protein"})
