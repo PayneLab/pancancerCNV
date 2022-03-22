@@ -7,15 +7,15 @@ from .load_data import load_gene_locations, load_input_tables
 
 def make_counts_table(
     chromosome,
-    base_dir=os.getcwd(),
+    data_dir=os.path.join(os.getcwd, "..", "data"),
     cancer_types=ALL_CANCERS[0]
 ):
     # Get tables
-    tables = load_input_tables(base_dir, data_types=["CNV"])
+    tables = load_input_tables(data_dir, data_types=["CNV"])
     cnv = tables["CNV"]
     
     # Get gene locations
-    gene_locations = load_gene_locations(base_dir)
+    gene_locations = load_gene_locations(data_dir)
     chr_gene_locations = gene_locations[gene_locations["chromosome"] == chromosome]
 
     # Compile counts
@@ -53,7 +53,7 @@ def make_counts_table(
     cnv_long = cnv_long.reset_index()
 
     # Save table
-    cnv_long.to_csv(os.path.join(base_dir, "data", f"chr{chromosome:0>2}_cnv_counts.tsv"), sep='\t', index=False)
+    cnv_long.to_csv(os.path.join(data_dir, f"chr{chromosome:0>2}_cnv_counts.tsv"), sep='\t', index=False)
 
 def select_genes_for_event(
     gene_locations,
@@ -95,18 +95,18 @@ def make_has_event_table(
     event_end,
     gain_or_loss,
     cancer_types,
-    base_dir=os.getcwd(),
+    data_dir=os.path.join(os.getcwd, "..", "data"),
 ):
     # Get tables
     tables = load_input_tables(
-        base_dir,
+        data_dir,
         data_types=["CNV"],
         cancer_types=cancer_types,
     )
     cnv_tables = tables["CNV"]
     
     # Get gene locations
-    gene_locations = load_gene_locations(base_dir)
+    gene_locations = load_gene_locations(data_dir)
 
     for cancer_type in cnv_tables.keys():
 
@@ -153,7 +153,7 @@ def make_has_event_table(
 
         # Write to tsv
         has_event.to_csv(os.path.join(
-            base_dir,
+            data_dir,
             "data", 
             f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cancer_type}_has_event.tsv"
         ), sep='\t')
@@ -167,18 +167,18 @@ def event_effects_ttest(
     cis_or_trans,
     proteomics_or_transcriptomics,
     cancer_types,
-    base_dir=os.getcwd(),
+    data_dir=os.path.join(os.getcwd, "..", "data"),
 ):
     # Get data_tables
     data_tables = load_input_tables(
-        base_dir,
+        data_dir,
         data_types=[proteomics_or_transcriptomics],
         cancer_types=cancer_types,
     )
     data_tables = data_tables[proteomics_or_transcriptomics]
     
     # Get gene locations
-    gene_locations = load_gene_locations(base_dir)
+    gene_locations = load_gene_locations(data_dir)
 
     # Select proteins
     # Note that the cnvutils.get_event_genes function uses Ensembl gene IDs for the 
@@ -209,7 +209,7 @@ def event_effects_ttest(
         df = data_tables[cancer_type]
         df = df.transpose()
         event = pd.read_csv(os.path.join(
-            base_dir,
+            data_dir,
             "data", 
             f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cancer_type}_has_event.tsv"
         ), sep='\t', index_col=0)
@@ -303,7 +303,7 @@ def event_effects_ttest(
     reset_index(drop=True)
 
     save_path = os.path.join(
-        base_dir,
+        data_dir,
         "data", 
         f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_ttest.tsv"
     )

@@ -13,12 +13,12 @@ def make_ttest_plot(
     cis_or_trans,
     proteomics_or_transcriptomics,
     #cancer_types,
-    base_dir=os.getcwd(),
+    data_dir=os.path.join(os.getcwd, "..", "data"),
 ):
 
     ttest_results = pd.\
     read_csv(os.path.join(
-        base_dir,
+        data_dir,
         "data",
         f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_ttest.tsv"
     ), sep="\t").\
