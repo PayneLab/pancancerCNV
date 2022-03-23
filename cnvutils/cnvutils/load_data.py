@@ -403,15 +403,47 @@ def _load_cancer_type_cptac_tables(cancer_type, data_types, pancan, no_internet=
 
     return tables
 
-def _load_gistic_tables(data_dir=os.path.join(os.getcwd(), "..", "data")):
+def _load_gistic_tables(level, data_dir=os.path.join(os.getcwd(), "..", "data")):
 
     gistic_dir = os.path.join(data_dir, "sources", "Broad_pipeline_wxs")
-    data_files = [
-        "all_lesions.txt",
-        "all_data_by_genes.txt",
-    ]
+    data_file_paths = {
+        "segment_level": os.path.join(gistic_dir, "all_lesions.txt"),
+        "gene_level": os.path.join(gistic_dir, "all_data_by_genes.txt"),
+        "arm_level": os.path.join(gistic_dir, "broad_values_by_arm.txt"),
+    }
 
     mapping_file_path = os.path.join(data_dir, "sources", "GISTIC_Matched_Samples_Updated.txt")
+    id_map = pd.read_csv(mapping_file_path, sep="\t")
+
+    if level == "segment":
+        pass
+
+    elif level == "gene":
+        df = pd.read_csv(data_file_paths["gene_level"], sep="\t")
+        df = df.\
+        drop(columns="Cytoband").\
+        assign(**{"Gene Symbol": df["Gene Symbol"].str.split("|", expand=True)[0]}).\
+        rename(columns={
+            "Gene Symbol": "Name",
+            "Gene ID": "NCBI_ID",
+        }).\
+        set_index(["Name", "NCBI_ID"]).\
+        transpose().\
+        reset_index()
+
+    elif level == "arm":
+        pass
+
+    else:
+        raise ValueError(f"Invalid GISTIC data level: '{level}'")
+
+    import pdb; pdb.set_trace()
+    df = df.merge(
+        id_map,
+
+    )
+
+    return df
 
 # Old
 
