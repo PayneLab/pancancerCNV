@@ -405,6 +405,32 @@ def _load_cancer_type_cptac_tables(cancer_type, data_types, pancan, no_internet=
 
 def _load_gistic_tables(level, data_dir=os.path.join(os.getcwd(), "..", "data")):
 
+    # Load and format mapping file
+    mapping_file_path = os.path.join(data_dir, "sources", "GISTIC_Matched_Samples_Updated.txt")
+
+    id_map = pd.\
+    read_csv(mapping_file_path, sep="\t").\
+    rename(columns={"Case_ID": "Patient_ID"}).\
+    melt(
+        id_vars=["Patient_ID", "Tumor_Type", "Sample_Type", "Category"],
+        var_name="other_id_type",
+        value_name="other_id",
+        ignore_index=True,
+    ).\
+    drop(columns=["Sample_Type", "Category", "other_id_type"]).\
+    drop_duplicates(keep="first")
+
+    # Add an empty level to the columns index to match the format of the data table
+    id_map = id_map.\
+    transpose().\
+    assign(NCBI_ID=[""] * id_map.shape[1]).\
+    set_index("NCBI_ID", append=True).\
+    transpose()
+
+    # Set the column multiindex level names
+    id_map.columns.names = ["Name", "NCBI_ID"]
+
+    # Load data file
     gistic_dir = os.path.join(data_dir, "sources", "Broad_pipeline_wxs")
     data_file_paths = {
         "segment_level": os.path.join(gistic_dir, "all_lesions.txt"),
@@ -412,24 +438,34 @@ def _load_gistic_tables(level, data_dir=os.path.join(os.getcwd(), "..", "data"))
         "arm_level": os.path.join(gistic_dir, "broad_values_by_arm.txt"),
     }
 
-    mapping_file_path = os.path.join(data_dir, "sources", "GISTIC_Matched_Samples_Updated.txt")
-    id_map = pd.read_csv(mapping_file_path, sep="\t")
-
     if level == "segment":
-        pass
+        import pdb; pdb.set_trace()
+        df = pd.read_csv(data_file_paths["segment_level"], sep="\t")
+
+        # Drop empty last row. It must have been a formatting error when the file was generated.
+        df = df.drop(columns="Unnamed: 1092")
+
+        # Select the rows with raw CNV values, not thresholded
+        df = df[df["Unique Name"].str.endswith("values")]
+
+        df = df.drop(columns=[ #TODO: which of these columns to keep?
+            "Wide Peak Limits",
+            "Peak Limits",
+            "Region Limits",
+        ])
 
     elif level == "gene":
         df = pd.read_csv(data_file_paths["gene_level"], sep="\t")
         df = df.\
         drop(columns="Cytoband").\
-        assign(**{"Gene Symbol": df["Gene Symbol"].str.split("|", expand=True)[0]}).\
         rename(columns={
             "Gene Symbol": "Name",
             "Gene ID": "NCBI_ID",
         }).\
         set_index(["Name", "NCBI_ID"]).\
-        transpose().\
-        reset_index()
+        transpose()
+        
+        #assign(**{"Gene Symbol": df["Gene Symbol"].str.split("|", expand=True)[0]}).
 
     elif level == "arm":
         pass
@@ -437,11 +473,32 @@ def _load_gistic_tables(level, data_dir=os.path.join(os.getcwd(), "..", "data"))
     else:
         raise ValueError(f"Invalid GISTIC data level: '{level}'")
 
-    import pdb; pdb.set_trace()
-    df = df.merge(
-        id_map,
+    # Merge in mapping index
+    df = df.\
+    merge(
+        right=id_map,
+        how="left",
+        left_index=True,
+        right_on="other_id",
+    ).\
+    drop(columns=("other_id", ""))
 
-    )
+    df = df.\
+    assign(Tumor_Type=df["Tumor_Type"].replace({
+        "BR": "brca",
+        "CCRCC": "ccrcc",
+        "CO": "coad",
+        "GBM": "gbm",
+        "HNSCC": "hnscc",
+        "LSCC": "lscc",
+        "LUAD": "luad",
+        "OV": "ov",
+        "PDA": "pdac",
+        "UCEC": "ucec",
+    })).\
+    rename(columns={"Tumor_Type": "cancer_type"}).\
+    sort_values(by=["cancer_type", "Patient_ID"]).\
+    set_index(["Patient_ID", "cancer_type"])
 
     return df
 
