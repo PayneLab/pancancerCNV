@@ -1,3 +1,4 @@
+import collections
 import cptac
 import cptac.pancan
 import glob
@@ -6,8 +7,10 @@ import numpy as np
 import os
 import pandas as pd
 import pyensembl
+import re
 import requests
 import sys
+import xmltodict
 
 from .constants import ALL_CANCERS
 
@@ -17,7 +20,7 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data")):
     """
 
     # Load tables
-    tables = _load_cptac_tables(
+    cptac_tables = _load_cptac_tables(
         cancer_types=ALL_CANCERS[0],
         data_types=[
             "CNV",
@@ -29,7 +32,7 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data")):
 
     # Get list of all genes we have CNV data for. These are the ones we'll need the locations of.
     genes = None
-    for df in tables["CNV"].values():
+    for df in cptac_tables["CNV"].values():
         if genes is None:
             genes = df.columns.copy(deep=True) # Just for the first one
         else:
@@ -48,13 +51,16 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data")):
     gene_locations_save_path = os.path.join(input_data_dir, "gene_locations.tsv.gz")
     gene_locations.to_csv(gene_locations_save_path, sep="\t")
 
-    # Save the omics tables
-    for data_type, cancer_types in tables.items():
+    # Save the cptac omics tables
+    for data_type, cancer_types in cptac_tables.items():
         for cancer_type, df in cancer_types.items():
 
             file_name = f"{cancer_type}_{data_type}.tsv.gz"
             save_path = os.path.join(cptac_data_dir, file_name)
             df.to_csv(save_path, sep="\t")
+
+    # Load, reformat, and save the GISTIC tables
+    gistic_tables = _load_gistic_tables()
 
 def load_input_tables(data_dir, data_types=["CNV", "proteomics", "transcriptomics"], cancer_types=ALL_CANCERS[0]):
 
@@ -74,16 +80,16 @@ def load_input_tables(data_dir, data_types=["CNV", "proteomics", "transcriptomic
             load_table_paths.append(path)
 
     # Load the tables
-    tables = {}
+    cptac_tables = {}
     for i, path in enumerate(load_table_paths):
         cancer_type, data_type = path.split(os.sep)[-1].split(".")[0].split("_")
 
         print(f"Loading {cancer_type} {data_type} ({i + 1}/{len(load_table_paths)})...{' ' * 30}", end="\r")
 
-        if data_type not in tables.keys():
-            tables[data_type] = {}
+        if data_type not in cptac_tables.keys():
+            cptac_tables[data_type] = {}
 
-        tables[data_type][cancer_type] = pd.read_csv(
+        cptac_tables[data_type][cancer_type] = pd.read_csv(
             path,
             sep="\t",
             index_col=0,
@@ -93,7 +99,7 @@ def load_input_tables(data_dir, data_types=["CNV", "proteomics", "transcriptomic
     # Clear last loading message
     print(" " * 80, end="\r")
 
-    return tables
+    return cptac_tables
 
 def load_gene_locations(data_dir=os.path.join(os.getcwd(), "..", "data")):
 
@@ -286,7 +292,7 @@ def get_cytoband_info():
 
 # Helper functions
 
-def _lookup_old_release(gene_db_id):
+def _lookup_old_ensembl_release(gene_db_id):
 
     url = f"https://rest.ensembl.org/archive/id/{gene_db_id}"
     params = {"content-type": "application/json"}
@@ -403,7 +409,7 @@ def _load_cancer_type_cptac_tables(cancer_type, data_types, pancan, no_internet=
 
     return tables
 
-def _load_gistic_tables(level, data_dir=os.path.join(os.getcwd(), "..", "data")):
+def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")):
 
     # Load and format mapping file
     mapping_file_path = os.path.join(data_dir, "sources", "GISTIC_Matched_Samples_Updated.txt")
@@ -430,7 +436,7 @@ def _load_gistic_tables(level, data_dir=os.path.join(os.getcwd(), "..", "data"))
     # Set the column multiindex level names
     id_map.columns.names = ["Name", "NCBI_ID"]
 
-    # Load data file
+    # Get the requested data types
     gistic_dir = os.path.join(data_dir, "sources", "Broad_pipeline_wxs")
     data_file_paths = {
         "segment_level": os.path.join(gistic_dir, "all_lesions.txt"),
@@ -438,69 +444,220 @@ def _load_gistic_tables(level, data_dir=os.path.join(os.getcwd(), "..", "data"))
         "arm_level": os.path.join(gistic_dir, "broad_values_by_arm.txt"),
     }
 
-    if level == "segment":
-        import pdb; pdb.set_trace()
-        df = pd.read_csv(data_file_paths["segment_level"], sep="\t")
+    for level in levels:
 
-        # Drop empty last row. It must have been a formatting error when the file was generated.
-        df = df.drop(columns="Unnamed: 1092")
+        if level == "segment":
+            df = pd.read_csv(data_file_paths["segment_level"], sep="\t")
 
-        # Select the rows with raw CNV values, not thresholded
-        df = df[df["Unique Name"].str.endswith("values")]
+            # Drop empty last row. It must have been a formatting error when the file was generated.
+            df = df.drop(columns="Unnamed: 1092")
 
-        df = df.drop(columns=[ #TODO: which of these columns to keep?
-            "Wide Peak Limits",
-            "Peak Limits",
-            "Region Limits",
-        ])
+            # Select the rows with raw CNV values, not thresholded
+            df = df[df["Unique Name"].str.endswith("values")]
 
-    elif level == "gene":
-        df = pd.read_csv(data_file_paths["gene_level"], sep="\t")
+            df = df.drop(columns=[ #TODO: which of these columns to keep?
+                "Wide Peak Limits",
+                "Peak Limits",
+                "Region Limits",
+            ])
+
+        elif level == "gene":
+            df = pd.read_csv(data_file_paths["gene_level"], sep="\t").\
+            drop(columns="Cytoband").\
+            rename(columns={
+                "Gene Symbol": "Name",
+                "Gene ID": "NCBI_ID",
+            })
+
+            # Get gene metadata from NCBI Entrez Gene database
+            gene_ids = df["NCBI_ID"].drop_duplicates(keep="first").astype(str)
+            metadata = _lookup_genes_ncbi(gene_ids)
+
+            # Resolve duplicate versions of different genes
+            import pdb; pdb.set_trace()
+
+            # Join in Ensembl identifiers
+            
+            # Set index columns and transpose
+            df = df.set_index(["Name", "NCBI_ID"]).\
+            transpose()
+
+        elif level == "arm":
+            pass
+
+        else:
+            raise ValueError(f"Invalid GISTIC data level: '{level}'")
+
+        # Merge in mapping index
         df = df.\
-        drop(columns="Cytoband").\
-        rename(columns={
-            "Gene Symbol": "Name",
-            "Gene ID": "NCBI_ID",
-        }).\
-        set_index(["Name", "NCBI_ID"]).\
-        transpose()
-        
-        #assign(**{"Gene Symbol": df["Gene Symbol"].str.split("|", expand=True)[0]}).
+        merge(
+            right=id_map,
+            how="left",
+            left_index=True,
+            right_on="other_id",
+        ).\
+        drop(columns=("other_id", ""))
 
-    elif level == "arm":
-        pass
+        df = df.\
+        assign(Tumor_Type=df["Tumor_Type"].replace({
+            "BR": "brca",
+            "CCRCC": "ccrcc",
+            "CO": "coad",
+            "GBM": "gbm",
+            "HNSCC": "hnscc",
+            "LSCC": "lscc",
+            "LUAD": "luad",
+            "OV": "ov",
+            "PDA": "pdac",
+            "UCEC": "ucec",
+        })).\
+        rename(columns={"Tumor_Type": "cancer_type"}).\
+        sort_values(by=["cancer_type", "Patient_ID"]).\
+        set_index(["Patient_ID", "cancer_type"])
 
-    else:
-        raise ValueError(f"Invalid GISTIC data level: '{level}'")
+    levels.append(df)
 
-    # Merge in mapping index
-    df = df.\
-    merge(
-        right=id_map,
-        how="left",
-        left_index=True,
-        right_on="other_id",
-    ).\
-    drop(columns=("other_id", ""))
+    return levels
 
-    df = df.\
-    assign(Tumor_Type=df["Tumor_Type"].replace({
-        "BR": "brca",
-        "CCRCC": "ccrcc",
-        "CO": "coad",
-        "GBM": "gbm",
-        "HNSCC": "hnscc",
-        "LSCC": "lscc",
-        "LUAD": "luad",
-        "OV": "ov",
-        "PDA": "pdac",
-        "UCEC": "ucec",
-    })).\
-    rename(columns={"Tumor_Type": "cancer_type"}).\
-    sort_values(by=["cancer_type", "Patient_ID"]).\
-    set_index(["Patient_ID", "cancer_type"])
+def _lookup_genes_ncbi(gene_ids):
 
-    return df
+    # The NCBI Entrez API won't except query strings that are too long. For this particular query,
+    # the maximum character length of the gene ID portion of the query string is 3122 characters.
+    # So, we'll split our query into batches based on that length.
+    escaped_comma = "%2C" # This is the URL escape character for a comma
+    full_ids_str = escaped_comma.join(gene_ids)
+    max_chars = 4040 # Specifically, this is the maximum number of characters possible for the id parameter of the query URL, while still leaving enough room for the rest of the URL. So the total length of the URL will be a little longer than this. 
+
+    queried = []
+
+    all_genes_info = pd.DataFrame()
+    while len(full_ids_str) > 0:
+
+        # See if what's left is too long
+        if len(full_ids_str) > max_chars:
+
+            # Find the end of the last ID before the query string would be too long
+            last_comma_index = max_chars
+            while full_ids_str[last_comma_index:last_comma_index + len(escaped_comma)] != escaped_comma:
+                last_comma_index -= 1
+
+            # Slice out that much of the query string, and leave the rest for next time, minus the leading comma
+            ids_str_slice = full_ids_str[:last_comma_index]
+            full_ids_str = full_ids_str[last_comma_index + len(escaped_comma) + 1:] # TODO: Do we need the + 1?
+
+        # If it's not to long, just use the whole thing
+        else:
+            ids_str_slice = full_ids_str
+            full_ids_str = ""
+
+        # Print an info message about what we're looking up
+        total_genes = len(gene_ids)
+        end = total_genes - len(full_ids_str.split(escaped_comma))
+        start = end - len(ids_str_slice.split(escaped_comma))
+        print(f"Looking up genes {start + 1} to {end} of {total_genes}...", end="\r")
+
+        # ids_str_slice currently uses %2C as the separator value between ids, which is the URL encoded hexadecimal value 
+        # for a comma. However, the requests library automatically tries to encode the URL for us, and won't recognize this
+        # as an already escaped character. So, it will see the "%" as a standalone character and try to escape that as %25,
+        # which will then mess up our escaped commas by making them read %252C. So, to avoid this double encoding problem,
+        # we're going to replace the %2C values with regular commas before we send the string through the requests library.
+        # You might ask why we didn't just use regular commas in the first place, and not worry about escaping them manually
+        # if that won't work anyways. The reason is because the Entrez API limits the length of URLs it will accept requests
+        # through, and to test the actual length of the URL so we can know how many gene IDs we can send at once, we need to
+        # use the escape sequence that regular commas will be replaced with. So up to this point we've used the %2C escape
+        # sequence, but now we'll replace that with commas before sending the string to the requests.get call.
+        comma = ","
+        ids_str_slice = comma.join(ids_str_slice.split(escaped_comma))
+
+        # Run the query in a separate function so that any variables not returned (including all the text we don't need from
+        # the response body) will be garbage collected when the function ends. This will save RAM.
+        genes_info = _run_ncbi_query(ids_str_slice)
+
+        # TEMP: check
+        queried.extend(ids_str_slice.split(","))
+
+        # Save the results
+        all_genes_info = pd.concat(
+            [all_genes_info, genes_info],
+            axis="index"
+        )
+
+        # Clear the info message
+        print(" " * 100, end="\r")
+
+    # Weird things to look into: 56 of the ids in the 'queried' list start with "2C"--was there a string splitting problem? %2C2C? Wait no, it's we're splitting the list wrong, because the indices match up with where we split the list. So fix that.
+    import pdb; pdb.set_trace()
+
+    return results
+
+def _run_ncbi_query(ids_str_slice):
+
+    url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+
+    # Run the query
+    params = {
+        "db": "gene",
+        "id": ids_str_slice,
+        "retmode": "xml",
+    }
+
+    response = requests.get(url, params=params)
+    response.raise_for_status() # Raises a requests.HTTPError if the response code was unsuccessful
+
+    # Parse XML string as a nested dictionary
+    resp_xml = xmltodict.parse(response.text)
+
+    # Extract needed info for each gene
+    genes = []
+    ncbi_ids = []
+    ensembl_ids = []
+    chrs = []
+    for gene_xml in resp_xml["Entrezgene-Set"]["Entrezgene"]:
+
+        # Get the gene
+        gene = gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_locus"]
+
+        # Get the NCBI Entrez gene ID
+        ncbi_id = gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_geneid"]
+
+        # Get the Ensembl ID
+        ensembl_id = np.nan
+        if "Gene-ref_db" in gene_xml["Entrezgene_gene"]["Gene-ref"].keys():
+            if isinstance(gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"], list):
+                for db_info in gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"]:
+                    if db_info["Dbtag_db"] == "Ensembl":
+                        ensembl_id = db_info["Dbtag_tag"]["Object-id"]["Object-id_str"]
+                        break
+            else:
+                db_info = gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"]
+                if db_info["Dbtag_db"] == "Ensembl":
+                    ensembl_id = db_info["Dbtag_tag"]["Object-id"]["Object-id_str"]
+
+        # Get the chromosome
+        chrm = np.nan
+        if "BioSource_subtype" in gene_xml["Entrezgene_source"]["BioSource"].keys():
+            chrm = gene_xml["Entrezgene_source"]["BioSource"]["BioSource_subtype"]["SubSource"]["SubSource_name"]
+
+        #if isinstance(gene_xml["Entrezgene_location"]["Maps"], list): # Sometimes a gene has multiple locations. They may just usually be duplicates of the same location. They were in the one example that raised this problem.
+        #    cytoband = gene_xml["Entrezgene_location"]["Maps"][0]["Maps_display-str"]
+        #else:
+        #    cytoband = gene_xml["Entrezgene_location"]["Maps"]["Maps_display-str"]
+        #chrm = re.split("[pq]", cytoband)[0]
+
+        # Save the info
+        genes.append(gene)
+        ncbi_ids.append(ncbi_id)
+        ensembl_ids.append(ensembl_id)
+        chrs.append(chrm)
+
+    results = pd.DataFrame({
+        "gene": genes,
+        "chromosome": chrs,
+        "ncbi_id": ncbi_id,
+        "ensembl_id": ensembl_ids,
+    })
+
+    return results
 
 # Old
 
