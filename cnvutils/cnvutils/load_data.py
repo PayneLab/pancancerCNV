@@ -19,7 +19,7 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data")):
     gene locations table, and save all of them.
     """
 
-    # Load tables
+    # Load cptac tables
     cptac_tables = _load_cptac_tables(
         cancer_types=ALL_CANCERS[0],
         data_types=[
@@ -30,9 +30,12 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data")):
         pancan=pancan,
     )
 
+    # Load, reformat, and save the GISTIC tables
+    gistic_tables = _load_gistic_tables()
+
     # Get list of all genes we have CNV data for. These are the ones we'll need the locations of.
     genes = None
-    for df in cptac_tables["CNV"].values():
+    for df in cptac_tables["CNV"].values() + gistic_tables:
         if genes is None:
             genes = df.columns.copy(deep=True) # Just for the first one
         else:
@@ -59,8 +62,6 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data")):
             save_path = os.path.join(cptac_data_dir, file_name)
             df.to_csv(save_path, sep="\t")
 
-    # Load, reformat, and save the GISTIC tables
-    gistic_tables = _load_gistic_tables()
 
 def load_input_tables(data_dir, data_types=["CNV", "proteomics", "transcriptomics"], cancer_types=ALL_CANCERS[0]):
 
@@ -469,12 +470,19 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
                 "Gene ID": "NCBI_ID",
             })
 
-            # Get gene metadata from NCBI Entrez Gene database
-            gene_ids = df["NCBI_ID"].drop_duplicates(keep="first").astype(str)
-            metadata = _lookup_genes_ncbi(gene_ids)
+            # Some NCBI IDs are negative, which are incorrect. Query Entrez with the locus name to get the correct ID, then put those in.
+            neg_ids = df[df["NCBI_ID"] < 0]
+            neg_ids = neg_ids.assign(correct_id=neg_ids["Name"].apply(_lookup_ncbi_id_by_name))
+            df.loc[neg_ids.index, "NCBI_ID"] = neg_ids["correct_id"]
 
-            # Resolve duplicate versions of different genes
-            import pdb; pdb.set_trace()
+            # Get gene metadata from NCBI Entrez Gene database
+            gene_ids = df["NCBI_ID"].drop_duplicates(keep="first").astype(str) # TODO: Do we need to drop duplicates?
+            metadata = _lookup_genes_ncbi_id(gene_ids)
+
+            # TODO: Check that names from query match what names should be
+            # Hopefully the only ones that don't match will be where the given NCBI ID mapped to a new ID, like hsa-mir-3130-3
+
+            # Resolve duplicate versions of different genes shown on different chromosomes
 
             # Join in Ensembl identifiers
             
@@ -519,7 +527,39 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
 
     return levels
 
-def _lookup_genes_ncbi(gene_ids):
+def _lookup_ncbi_id_by_name(name, field="title"):
+
+    url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+
+    # Run the query
+    params = {
+        "db": "gene",
+        "term": name,
+        "field": field,
+        "retmode": "xml",
+        "api_key": _get_entrez_api_key()
+    }
+
+    response = requests.get(url, params=params)
+    response.raise_for_status() # Raises a requests.HTTPError if the response code was unsuccessful
+
+    # Parse XML string as a nested dictionary
+    resp_xml = xmltodict.parse(response.text)
+    if resp_xml["eSearchResult"]["Count"] == "0":
+        if field != "all":
+            ncbi_id = _lookup_ncbi_id_by_name(name, field="all")
+        else:
+            ncbi_id = np.nan
+    elif isinstance(resp_xml["eSearchResult"]["IdList"]["Id"], list):
+        ncbi_id = int(resp_xml["eSearchResult"]["IdList"]["Id"][0])
+    else:
+        ncbi_id = int(resp_xml["eSearchResult"]["IdList"]["Id"])
+
+    # Return the ID
+    return ncbi_id
+
+
+def _lookup_genes_ncbi_id(gene_ids):
 
     # The NCBI Entrez API won't except query strings that are too long. For this particular query,
     # the maximum character length of the gene ID portion of the query string is 3122 characters.
@@ -543,7 +583,7 @@ def _lookup_genes_ncbi(gene_ids):
 
             # Slice out that much of the query string, and leave the rest for next time, minus the leading comma
             ids_str_slice = full_ids_str[:last_comma_index]
-            full_ids_str = full_ids_str[last_comma_index + len(escaped_comma) + 1:] # TODO: Do we need the + 1?
+            full_ids_str = full_ids_str[last_comma_index + len(escaped_comma):]
 
         # If it's not to long, just use the whole thing
         else:
@@ -571,7 +611,7 @@ def _lookup_genes_ncbi(gene_ids):
 
         # Run the query in a separate function so that any variables not returned (including all the text we don't need from
         # the response body) will be garbage collected when the function ends. This will save RAM.
-        genes_info = _run_ncbi_query(ids_str_slice)
+        genes_info = _run_ncbi_id_query(ids_str_slice)
 
         # TEMP: check
         queried.extend(ids_str_slice.split(","))
@@ -585,12 +625,11 @@ def _lookup_genes_ncbi(gene_ids):
         # Clear the info message
         print(" " * 100, end="\r")
 
-    # Weird things to look into: 56 of the ids in the 'queried' list start with "2C"--was there a string splitting problem? %2C2C? Wait no, it's we're splitting the list wrong, because the indices match up with where we split the list. So fix that.
     import pdb; pdb.set_trace()
 
-    return results
+    return all_genes_info
 
-def _run_ncbi_query(ids_str_slice):
+def _run_ncbi_id_query(ids_str_slice):
 
     url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
@@ -610,54 +649,105 @@ def _run_ncbi_query(ids_str_slice):
     # Extract needed info for each gene
     genes = []
     ncbi_ids = []
+    statuses = []
+    new_ids = []
     ensembl_ids = []
     chrs = []
+    starts_bp = []
+    ends_bp = []
     for gene_xml in resp_xml["Entrezgene-Set"]["Entrezgene"]:
 
-        # Get the gene
-        gene = gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_locus"]
+        try:
+            # TODO: Resolve errors here. Check into which IDs are no longer live, and which have NaNs for any values. Then get Ensembl locations info, and compare Ensembl location info to Entrez location info.
 
-        # Get the NCBI Entrez gene ID
-        ncbi_id = gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_geneid"]
+            # Get the gene
+            gene = gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_locus"]
 
-        # Get the Ensembl ID
-        ensembl_id = np.nan
-        if "Gene-ref_db" in gene_xml["Entrezgene_gene"]["Gene-ref"].keys():
-            if isinstance(gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"], list):
-                for db_info in gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"]:
+            # Get the NCBI Entrez gene ID
+            ncbi_id = gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_geneid"]
+
+            # Get the identifier status
+            status = gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_status"]["@value"] 
+
+            # See if there's a different current ID
+            new_id = np.nan 
+            if "Gene-track_current-id" in gene_xml["Entrezgene_track-info"]["Gene-track"].keys():
+                if isinstance(gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_current-id"]["Dbtag"], list):
+                    for db in gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_current-id"]["Dbtag"]:
+                        if db["Dbtag_db"] == "GeneID":
+                            new_id = db["Dbtag_tag"]["Object-id"]["Object-id_id"]
+                            break
+
+            # Get the Ensembl ID
+            ensembl_id = np.nan
+            if "Gene-ref_db" in gene_xml["Entrezgene_gene"]["Gene-ref"].keys():
+                if isinstance(gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"], list):
+                    for db_info in gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"]:
+                        if db_info["Dbtag_db"] == "Ensembl":
+                            ensembl_id = db_info["Dbtag_tag"]["Object-id"]["Object-id_str"]
+                            break
+                else:
+                    db_info = gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"]
                     if db_info["Dbtag_db"] == "Ensembl":
                         ensembl_id = db_info["Dbtag_tag"]["Object-id"]["Object-id_str"]
-                        break
+
+            # Get the chromosome
+            if "BioSource_subtype" in gene_xml["Entrezgene_source"]["BioSource"].keys():
+                chrm = gene_xml["Entrezgene_source"]["BioSource"]["BioSource_subtype"]["SubSource"]["SubSource_name"]
             else:
-                db_info = gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"]
-                if db_info["Dbtag_db"] == "Ensembl":
-                    ensembl_id = db_info["Dbtag_tag"]["Object-id"]["Object-id_str"]
+                chrm = np.nan
 
-        # Get the chromosome
-        chrm = np.nan
-        if "BioSource_subtype" in gene_xml["Entrezgene_source"]["BioSource"].keys():
-            chrm = gene_xml["Entrezgene_source"]["BioSource"]["BioSource_subtype"]["SubSource"]["SubSource_name"]
+            # Get the start and end base pairs
+            start_bp = np.nan
+            end_bp = np.nan
+            if isinstance(gene_xml["Entrezgene_locus"]["Gene-commentary"], list):
+                for comment in gene_xml["Entrezgene_locus"]["Gene-commentary"]:
+                    if comment["Gene-commentary_heading"].endswith("Primary Assembly"):
+                        start_bp = comment["Gene-commentary_seqs"]["Seq-loc"]["Seq-loc_int"]["Seq-interval"]["Seq-interval_from"]
+                        end_bp = comment["Gene-commentary_seqs"]["Seq-loc"]["Seq-loc_int"]["Seq-interval"]["Seq-interval_to"]
+                        break
+            elif "Gene-commentary_seqs" in gene_xml["Entrezgene_locus"]["Gene-commentary"].keys():
+                start_bp = gene_xml["Entrezgene_locus"]["Gene-commentary"]["Gene-commentary_seqs"]["Seq-loc"]["Seq-loc_int"]["Seq-interval"]["Seq-interval_from"]
+                end_bp = gene_xml["Entrezgene_locus"]["Gene-commentary"]["Gene-commentary_seqs"]["Seq-loc"]["Seq-loc_int"]["Seq-interval"]["Seq-interval_to"]
 
-        #if isinstance(gene_xml["Entrezgene_location"]["Maps"], list): # Sometimes a gene has multiple locations. They may just usually be duplicates of the same location. They were in the one example that raised this problem.
-        #    cytoband = gene_xml["Entrezgene_location"]["Maps"][0]["Maps_display-str"]
-        #else:
-        #    cytoband = gene_xml["Entrezgene_location"]["Maps"]["Maps_display-str"]
-        #chrm = re.split("[pq]", cytoband)[0]
+            # Save the info
+            genes.append(gene)
+            ncbi_ids.append(ncbi_id)
+            statuses.append(status)
+            new_ids.append(new_id)
+            ensembl_ids.append(ensembl_id)
+            chrs.append(chrm)
+            starts_bp.append(start_bp)
+            ends_bp.append(end_bp)
 
-        # Save the info
-        genes.append(gene)
-        ncbi_ids.append(ncbi_id)
-        ensembl_ids.append(ensembl_id)
-        chrs.append(chrm)
+        except:
+            import pdb; pdb.set_trace()
 
     results = pd.DataFrame({
-        "gene": genes,
+        "Name": genes,
         "chromosome": chrs,
-        "ncbi_id": ncbi_id,
-        "ensembl_id": ensembl_ids,
+        "status": statuses,
+        "new_id": new_ids,
+        "NCBI_ID": ncbi_ids,
+        "Ensembl_ID": ensembl_ids,
+        "start_bp": starts_bp,
+        "end_bp": ends_bp,
     })
 
     return results
+
+def _get_entrez_api_key():
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    api_key_path = os.path.join(base_dir, "cnvutils", "entrez_api_key.txt")
+
+    if not os.path.isfile(api_key_path):
+        raise ValueError(f"You must create an Entrez API key. You can do this by going to <https://www.ncbi.nlm.nih.gov/account/>, creating an account, and then navigating to NCBI Site Preferences>Account Settings. Then, take the API key and save it in a plaintext file located at '{api_key_path}'.")
+
+    with open(api_key_path, "r") as file:
+        api_key = file.read().strip()
+
+    return api_key
 
 # Old
 

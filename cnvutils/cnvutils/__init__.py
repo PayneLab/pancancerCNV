@@ -9,6 +9,7 @@ from .load_data import (
     save_input_tables,
     load_input_tables,
     load_gene_locations,
+    _load_gistic_tables,
 )
 
 from .make_plots import (
