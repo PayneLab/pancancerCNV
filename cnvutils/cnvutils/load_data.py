@@ -35,7 +35,7 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data")):
 
     # Get list of all genes we have CNV data for. These are the ones we'll need the locations of.
     genes = None
-    for df in cptac_tables["CNV"].values() + gistic_tables:
+    for df in cptac_tables["CNV"].values() + gistic_tables["gene"].values():
         if genes is None:
             genes = df.columns.copy(deep=True) # Just for the first one
         else:
@@ -44,11 +44,17 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data")):
     genes = genes.to_frame()
     gene_locations, not_found_genes = query_gene_locations_database(genes)
 
+    # TODO
+    # Do some comparisons of the Entrez and Ensembl gene location data
+
     # Create a data directory in the directory the function was called from
     input_data_dir = os.path.join(data_dir, "sources")
     cptac_data_dir = os.path.join(input_data_dir, "cptac_tables")
+    gistic_data_dir = os.path.join(input_data_dir, "gistic_tables_formatted")
+
     os.makedirs(input_data_dir, exist_ok=True)
     os.makedirs(cptac_data_dir, exist_ok=True)
+    os.makedirs(gistic_data_dir, exist_ok=True)
 
     # Save the gene locations
     gene_locations_save_path = os.path.join(input_data_dir, "gene_locations.tsv.gz")
@@ -62,6 +68,13 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data")):
             save_path = os.path.join(cptac_data_dir, file_name)
             df.to_csv(save_path, sep="\t")
 
+    # Save GISTIC CNV tables
+    for data_level, cancer_types in gistic_tables.items():
+        for cancer_type, df in cancer_types.items():
+
+            file_name = f"{cancer_type}_{data_level}.tsv.gz"
+            save_path = os.path.join(gistic_data_dir, file_name)
+            df.to_csv(save_path, sep="\t")
 
 def load_input_tables(data_dir, data_types=["CNV", "proteomics", "transcriptomics"], cancer_types=ALL_CANCERS[0]):
 
@@ -445,6 +458,7 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
         "arm_level": os.path.join(gistic_dir, "broad_values_by_arm.txt"),
     }
 
+    tables = {}
     for level in levels:
 
         if level == "segment":
@@ -456,11 +470,20 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
             # Select the rows with raw CNV values, not thresholded
             df = df[df["Unique Name"].str.endswith("values")]
 
-            df = df.drop(columns=[ #TODO: which of these columns to keep?
-                "Wide Peak Limits",
-                "Peak Limits",
-                "Region Limits",
+            df = df.drop(columns=[
+                "Unique Name",
+                "Descriptor",
+                "q values",
+                "Residual q values after removing segments shared with higher peaks",
+                "Broad or Focal",
+                "Amplitude Threshold",
+                #"Wide Peak Limits", # TODO: Which limits to use? Region?
+                #"Peak Limits",
+                #"Region Limits",
             ])
+
+            import pdb; pdb.set_trace()
+            print(1)
 
         elif level == "gene":
             df = pd.read_csv(data_file_paths["gene_level"], sep="\t").\
@@ -476,15 +499,93 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
             df.loc[neg_ids.index, "NCBI_ID"] = neg_ids["correct_id"]
 
             # Get gene metadata from NCBI Entrez Gene database
-            gene_ids = df["NCBI_ID"].drop_duplicates(keep="first").astype(str) # TODO: Do we need to drop duplicates?
+            gene_ids = df["NCBI_ID"].drop_duplicates(keep="first").astype(str)
             metadata = _lookup_genes_ncbi_id(gene_ids)
 
-            # TODO: Check that names from query match what names should be
-            # Hopefully the only ones that don't match will be where the given NCBI ID mapped to a new ID, like hsa-mir-3130-3
+            # Look up data for new IDs for any genes listed as "secondary" (meaning they've been replaced by another gene)
+            secondary = metadata[metadata["status"] == "secondary"]
+            new_meta = _lookup_genes_ncbi_id(secondary["new_id"])
+
+            # TODO
+            # Do we drop discontinued genes that still have start and end bp?
+            # For genes with the wrong names, replace the names in df with the new names
+            # For secondary genes, replace the IDs ad names in df with the new names and IDs from new_meta
+            # Split into a CNV data table and a location table
+
+            import pdb; pdb.set_trace()
+
+            # (Pdb) live.shape
+            # (25739, 8)
+
+            # (Pdb) sec.shape
+            # (74, 8)
+
+            # (Pdb) dead.shape
+            # (45, 8)
+
+            # (Pdb) new_meta.isna().sum()
+            # Name           0
+            # chromosome     0
+            # status         0
+            # new_id        74
+            # NCBI_ID        0
+            # Ensembl_ID    11
+            # start_bp       0
+            # end_bp         0
+            # dtype: int64
+
+            # (Pdb) metadata.isna().sum()
+            # Name              0
+            # chromosome        0
+            # status            0
+            # new_id        25784
+            # NCBI_ID           0
+            # Ensembl_ID     1896
+            # start_bp         95
+            # end_bp           95
+            # dtype: int64
+            
+            # (Pdb) live.isna().sum()
+            # Name              0
+            # chromosome        0
+            # status            0
+            # new_id        25739
+            # NCBI_ID           0
+            # Ensembl_ID     1777
+            # start_bp         16
+            # end_bp           16
+            # dtype: int64
+
+            # (Pdb) sec.isna().sum()
+            # Name           0
+            # chromosome     0
+            # status         0
+            # new_id         0
+            # NCBI_ID        0
+            # Ensembl_ID    74
+            # start_bp      72
+            # end_bp        72
+            # dtype: int64
+            
+            # (Pdb) dead.isna().sum()
+            # Name           0
+            # chromosome     0
+            # status         0
+            # new_id        45
+            # NCBI_ID        0
+            # Ensembl_ID    45
+            # start_bp       7
+            # end_bp         7
+            # dtype: int64
 
             # Resolve duplicate versions of different genes shown on different chromosomes
 
             # Join in Ensembl identifiers
+
+            # TODO: When the Broad gives us the new tables without duplicated genes or negative IDs, see if we still have any duplicated NCBI IDs. Hopefully we won't.
+
+            # Save the gene metadata for later
+            tables["gene_metadata"] = metadata
             
             # Set index columns and transpose
             df = df.set_index(["Name", "NCBI_ID"]).\
@@ -506,6 +607,7 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
         ).\
         drop(columns=("other_id", ""))
 
+        # Standardize cancer types
         df = df.\
         assign(Tumor_Type=df["Tumor_Type"].replace({
             "BR": "brca",
@@ -523,9 +625,12 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
         sort_values(by=["cancer_type", "Patient_ID"]).\
         set_index(["Patient_ID", "cancer_type"])
 
-    levels.append(df)
+        # Split into a separate table for each cancer type
+        cancer_types_dict = {cancer_type: df for cancer_type, df in df.groupby("cancer_type")}
 
-    return levels
+        tables[level] = cancer_types_dict
+
+    return tables
 
 def _lookup_ncbi_id_by_name(name, field="title"):
 
@@ -557,7 +662,6 @@ def _lookup_ncbi_id_by_name(name, field="title"):
 
     # Return the ID
     return ncbi_id
-
 
 def _lookup_genes_ncbi_id(gene_ids):
 
@@ -625,8 +729,6 @@ def _lookup_genes_ncbi_id(gene_ids):
         # Clear the info message
         print(" " * 100, end="\r")
 
-    import pdb; pdb.set_trace()
-
     return all_genes_info
 
 def _run_ncbi_id_query(ids_str_slice):
@@ -657,71 +759,65 @@ def _run_ncbi_id_query(ids_str_slice):
     ends_bp = []
     for gene_xml in resp_xml["Entrezgene-Set"]["Entrezgene"]:
 
-        try:
-            # TODO: Resolve errors here. Check into which IDs are no longer live, and which have NaNs for any values. Then get Ensembl locations info, and compare Ensembl location info to Entrez location info.
+        # Get the gene
+        gene = gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_locus"]
 
-            # Get the gene
-            gene = gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_locus"]
+        # Get the NCBI Entrez gene ID
+        ncbi_id = gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_geneid"]
 
-            # Get the NCBI Entrez gene ID
-            ncbi_id = gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_geneid"]
+        # Get the identifier status
+        status = gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_status"]["@value"] 
 
-            # Get the identifier status
-            status = gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_status"]["@value"] 
+        # See if there's a different current ID
+        new_id = np.nan 
+        if "Gene-track_current-id" in gene_xml["Entrezgene_track-info"]["Gene-track"].keys():
+            if isinstance(gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_current-id"]["Dbtag"], list):
+                for db in gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_current-id"]["Dbtag"]:
+                    if db["Dbtag_db"] == "GeneID":
+                        new_id = db["Dbtag_tag"]["Object-id"]["Object-id_id"]
+                        break
 
-            # See if there's a different current ID
-            new_id = np.nan 
-            if "Gene-track_current-id" in gene_xml["Entrezgene_track-info"]["Gene-track"].keys():
-                if isinstance(gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_current-id"]["Dbtag"], list):
-                    for db in gene_xml["Entrezgene_track-info"]["Gene-track"]["Gene-track_current-id"]["Dbtag"]:
-                        if db["Dbtag_db"] == "GeneID":
-                            new_id = db["Dbtag_tag"]["Object-id"]["Object-id_id"]
-                            break
-
-            # Get the Ensembl ID
-            ensembl_id = np.nan
-            if "Gene-ref_db" in gene_xml["Entrezgene_gene"]["Gene-ref"].keys():
-                if isinstance(gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"], list):
-                    for db_info in gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"]:
-                        if db_info["Dbtag_db"] == "Ensembl":
-                            ensembl_id = db_info["Dbtag_tag"]["Object-id"]["Object-id_str"]
-                            break
-                else:
-                    db_info = gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"]
+        # Get the Ensembl ID
+        ensembl_id = np.nan
+        if "Gene-ref_db" in gene_xml["Entrezgene_gene"]["Gene-ref"].keys():
+            if isinstance(gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"], list):
+                for db_info in gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"]:
                     if db_info["Dbtag_db"] == "Ensembl":
                         ensembl_id = db_info["Dbtag_tag"]["Object-id"]["Object-id_str"]
-
-            # Get the chromosome
-            if "BioSource_subtype" in gene_xml["Entrezgene_source"]["BioSource"].keys():
-                chrm = gene_xml["Entrezgene_source"]["BioSource"]["BioSource_subtype"]["SubSource"]["SubSource_name"]
-            else:
-                chrm = np.nan
-
-            # Get the start and end base pairs
-            start_bp = np.nan
-            end_bp = np.nan
-            if isinstance(gene_xml["Entrezgene_locus"]["Gene-commentary"], list):
-                for comment in gene_xml["Entrezgene_locus"]["Gene-commentary"]:
-                    if comment["Gene-commentary_heading"].endswith("Primary Assembly"):
-                        start_bp = comment["Gene-commentary_seqs"]["Seq-loc"]["Seq-loc_int"]["Seq-interval"]["Seq-interval_from"]
-                        end_bp = comment["Gene-commentary_seqs"]["Seq-loc"]["Seq-loc_int"]["Seq-interval"]["Seq-interval_to"]
                         break
-            elif "Gene-commentary_seqs" in gene_xml["Entrezgene_locus"]["Gene-commentary"].keys():
-                start_bp = gene_xml["Entrezgene_locus"]["Gene-commentary"]["Gene-commentary_seqs"]["Seq-loc"]["Seq-loc_int"]["Seq-interval"]["Seq-interval_from"]
-                end_bp = gene_xml["Entrezgene_locus"]["Gene-commentary"]["Gene-commentary_seqs"]["Seq-loc"]["Seq-loc_int"]["Seq-interval"]["Seq-interval_to"]
+            else:
+                db_info = gene_xml["Entrezgene_gene"]["Gene-ref"]["Gene-ref_db"]["Dbtag"]
+                if db_info["Dbtag_db"] == "Ensembl":
+                    ensembl_id = db_info["Dbtag_tag"]["Object-id"]["Object-id_str"]
 
-            # Save the info
-            genes.append(gene)
-            ncbi_ids.append(ncbi_id)
-            statuses.append(status)
-            new_ids.append(new_id)
-            ensembl_ids.append(ensembl_id)
-            chrs.append(chrm)
-            starts_bp.append(start_bp)
-            ends_bp.append(end_bp)
+        # Get the chromosome
+        if "BioSource_subtype" in gene_xml["Entrezgene_source"]["BioSource"].keys():
+            chrm = gene_xml["Entrezgene_source"]["BioSource"]["BioSource_subtype"]["SubSource"]["SubSource_name"]
+        else:
+            chrm = np.nan
 
-        except:
-            import pdb; pdb.set_trace()
+        # Get the start and end base pairs
+        start_bp = np.nan
+        end_bp = np.nan
+        if isinstance(gene_xml["Entrezgene_locus"]["Gene-commentary"], list):
+            for comment in gene_xml["Entrezgene_locus"]["Gene-commentary"]:
+                if "Gene-commentary_heading" in comment.keys() and comment["Gene-commentary_heading"].endswith("Primary Assembly"):
+                    start_bp = comment["Gene-commentary_seqs"]["Seq-loc"]["Seq-loc_int"]["Seq-interval"]["Seq-interval_from"]
+                    end_bp = comment["Gene-commentary_seqs"]["Seq-loc"]["Seq-loc_int"]["Seq-interval"]["Seq-interval_to"]
+                    break
+        elif "Gene-commentary_seqs" in gene_xml["Entrezgene_locus"]["Gene-commentary"].keys():
+            start_bp = gene_xml["Entrezgene_locus"]["Gene-commentary"]["Gene-commentary_seqs"]["Seq-loc"]["Seq-loc_int"]["Seq-interval"]["Seq-interval_from"]
+            end_bp = gene_xml["Entrezgene_locus"]["Gene-commentary"]["Gene-commentary_seqs"]["Seq-loc"]["Seq-loc_int"]["Seq-interval"]["Seq-interval_to"]
+
+        # Save the info
+        genes.append(gene)
+        ncbi_ids.append(ncbi_id)
+        statuses.append(status)
+        new_ids.append(new_id)
+        ensembl_ids.append(ensembl_id)
+        chrs.append(chrm)
+        starts_bp.append(start_bp)
+        ends_bp.append(end_bp)
 
     results = pd.DataFrame({
         "Name": genes,
