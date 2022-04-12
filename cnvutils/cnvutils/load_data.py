@@ -504,88 +504,95 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
 
             # Look up data for new IDs for any genes listed as "secondary" (meaning they've been replaced by another gene)
             secondary = metadata[metadata["status"] == "secondary"]
-            new_meta = _lookup_genes_ncbi_id(secondary["new_id"])
-
-            # TODO
-            # Do we drop discontinued genes that still have start and end bp?
-            # For genes with the wrong names, replace the names in df with the new names
-            # For secondary genes, replace the IDs ad names in df with the new names and IDs from new_meta
-            # Split into a CNV data table and a location table
+            new_meta = _lookup_genes_ncbi_id(secondary["new_id"].drop_duplicates(keep="first"))
 
             import pdb; pdb.set_trace()
 
-            # (Pdb) live.shape
-            # (25739, 8)
+            # Join in all our metadata
+            df = df.\
+            merge(
+                right=metadata,
+                how="left",
+                on="NCBI_ID",
+                suffixes=(None, "_Entrez"),
+            ).\
+            merge(
+                right=new_meta,
+                how="left",
+                left_on="new_id",
+                right_on="NCBI_ID",
+                suffixes=(None, "_new"),
+            )
 
-            # (Pdb) sec.shape
-            # (74, 8)
+            # Replace old genes with their new names
+            replacements = df.loc[
+                (df["status"] == "secondary") & df["new_id"].notna(),
+                [
+                    "Name_new",
+                    "chromosome_new",
+                    "status_new",
+                    "new_id_new",
+                    "new_id",
+                    "Ensembl_ID_new",
+                    "start_bp_new",
+                    "end_bp_new",
+                ]
+            ].\
+            rename(columns={ # We have to rename the columns so that we can map replacements using .loc, because .loc is label-based
+                "Name_new": "Name_Entrez",
+                "chromosome_new": "chromosome",
+                "status_new": "status",
+                "new_id_new": "new_id",
+                "new_id": "NCBI_ID",
+                "Ensembl_ID_new": "Ensembl_ID",
+                "start_bp_new": "start_bp",
+                "end_bp_new": "end_bp",
+            })
 
-            # (Pdb) dead.shape
-            # (45, 8)
-
-            # (Pdb) new_meta.isna().sum()
-            # Name           0
-            # chromosome     0
-            # status         0
-            # new_id        74
-            # NCBI_ID        0
-            # Ensembl_ID    11
-            # start_bp       0
-            # end_bp         0
-            # dtype: int64
-
-            # (Pdb) metadata.isna().sum()
-            # Name              0
-            # chromosome        0
-            # status            0
-            # new_id        25784
-            # NCBI_ID           0
-            # Ensembl_ID     1896
-            # start_bp         95
-            # end_bp           95
-            # dtype: int64
-            
-            # (Pdb) live.isna().sum()
-            # Name              0
-            # chromosome        0
-            # status            0
-            # new_id        25739
-            # NCBI_ID           0
-            # Ensembl_ID     1777
-            # start_bp         16
-            # end_bp           16
-            # dtype: int64
-
-            # (Pdb) sec.isna().sum()
-            # Name           0
-            # chromosome     0
-            # status         0
-            # new_id         0
-            # NCBI_ID        0
-            # Ensembl_ID    74
-            # start_bp      72
-            # end_bp        72
-            # dtype: int64
-            
-            # (Pdb) dead.isna().sum()
-            # Name           0
-            # chromosome     0
-            # status         0
-            # new_id        45
-            # NCBI_ID        0
-            # Ensembl_ID    45
-            # start_bp       7
-            # end_bp         7
-            # dtype: int64
-
-            # Resolve duplicate versions of different genes shown on different chromosomes
-
-            # Join in Ensembl identifiers
+            df.loc[
+                (df["status"] == "secondary") & df["new_id"].notna(),
+                [
+                    "Name_Entrez",
+                    "chromosome",
+                    "status",
+                    "new_id",
+                    "NCBI_ID",
+                    "Ensembl_ID",
+                    "start_bp",
+                    "end_bp",
+                ]
+            ] = replacements
 
             # TODO: When the Broad gives us the new tables without duplicated genes or negative IDs, see if we still have any duplicated NCBI IDs. Hopefully we won't.
 
+            # Drop the columns we don't need now, after joining in the replacement gene info
+            df = df.drop(columns=df.columns[df.columns.str.endswith("_new")].tolist() + ["new_id", "status"])
+
+            # Resolve duplicate versions of different genes shown on different chromosomes. Right now their names from the GISTIC table look like "FAM138A|chr1", with the "|" separating the gene name and the chromosome
+            df = df.reset_index(drop=True) # Let's make sure our dataframe has a unique index
+            gistic_names_split = df["Name"].str.split("|", expand=True)
+            df = df.assign(
+                Name=gistic_names_split[0],
+                name_chr=gistic_names_split[1].str.split("chr", expand=True)[1].astype(np.float64), # This will get just the chromosome number, cutting off the "chr" characters
+            )
+
+            two_locations = df[df["name_chr"].notna()] # These are the genes that are listed on multiple chromosomes
+            to_drop_idx = two_locations[two_locations["chromosome"] != two_locations["name_chr"]].index # If the chromosome from the name doesn't match the actual chromosome, we'll drop it. This is about 100 genes.
+            df = df.drop(index=to_drop_idx, columns="name_chr") # Drop all the bad rows, and that extra column
+
+            # Replace the GISTIC table names with updated names from Entrez
+            df = df.drop(columns="Name").rename(columns={"Name_Entrez": "Name"})
+
+            # Drop duplicates
+            df = df.drop_duplicates(keep="first")
+            # TODO: Fun fact: We still have duplicated genes, but some values differ between the duplicates. Not usually very many. Not sure what to do about that.
+
+            # Split out the data and location metadata
+            metadata_cleaned = df[["Name", "NCBI_ID", "Ensembl_ID", "chromosome", "start_bp", "end_bp"]]
+            df = df[["Name", "NCBI_ID"] + df.columns[~df.columns.isin(["Name", "NCBI_ID", "Ensembl_ID", "chromosome", "start_bp", "end_bp"])].tolist()]
+
             # Save the gene metadata for later
-            tables["gene_metadata"] = metadata
+            tables["gene_metadata"] = metadata_cleaned
             
             # Set index columns and transpose
             df = df.set_index(["Name", "NCBI_ID"]).\
@@ -820,14 +827,14 @@ def _run_ncbi_id_query(ids_str_slice):
         ends_bp.append(end_bp)
 
     results = pd.DataFrame({
-        "Name": genes,
-        "chromosome": chrs,
-        "status": statuses,
-        "new_id": new_ids,
-        "NCBI_ID": ncbi_ids,
-        "Ensembl_ID": ensembl_ids,
-        "start_bp": starts_bp,
-        "end_bp": ends_bp,
+        "Name": pd.Series(genes, dtype=np.object),
+        "chromosome": pd.Series(chrs, dtype=np.int64),
+        "status": pd.Series(statuses, dtype=np.object),
+        "new_id": pd.Series(new_ids, dtype=np.float64),
+        "NCBI_ID": pd.Series(ncbi_ids, dtype=np.float64),
+        "Ensembl_ID": pd.Series(ensembl_ids, dtype=np.object),
+        "start_bp": pd.Series(starts_bp, dtype=np.float64),
+        "end_bp": pd.Series(ends_bp, dtype=np.float64),
     })
 
     return results
