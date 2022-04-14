@@ -14,69 +14,190 @@ import xmltodict
 
 from .constants import ALL_CANCERS
 
-def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data")):
+def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data"), resave=False):
     """Load CNV, transcriptomics, and proteomics tables for all cancers, create
     gene locations table, and save all of them.
     """
 
-    # Load cptac tables
-    cptac_tables = _load_cptac_tables(
-        cancer_types=ALL_CANCERS[0],
-        data_types=[
-            "CNV",
-            "transcriptomics",
-            "proteomics",
-        ],
-        pancan=pancan,
-    )
-
-    # Load, reformat, and save the GISTIC tables
-    gistic_tables = _load_gistic_tables()
-
-    # Get list of all genes we have CNV data for. These are the ones we'll need the locations of.
-    genes = None
-    for df in cptac_tables["CNV"].values() + gistic_tables["gene"].values():
-        if genes is None:
-            genes = df.columns.copy(deep=True) # Just for the first one
-        else:
-            genes = genes.union(df.columns)
-
-    genes = genes.to_frame()
-    gene_locations, not_found_genes = query_gene_locations_database(genes)
-
-    # TODO
-    # Do some comparisons of the Entrez and Ensembl gene location data
-
-    # Create a data directory in the directory the function was called from
+    # Create directories to store all the files we load
     input_data_dir = os.path.join(data_dir, "sources")
     cptac_data_dir = os.path.join(input_data_dir, "cptac_tables")
-    gistic_data_dir = os.path.join(input_data_dir, "gistic_tables_formatted")
+    gistic_data_dir = os.path.join(input_data_dir, "gistic_tables")
 
     os.makedirs(input_data_dir, exist_ok=True)
     os.makedirs(cptac_data_dir, exist_ok=True)
     os.makedirs(gistic_data_dir, exist_ok=True)
 
-    # Save the gene locations
+    # See if the cptac files have already been saved
+    cptac_filenames = [
+        "brca_CNV.tsv.gz",
+        "brca_proteomics.tsv.gz",
+        "brca_transcriptomics.tsv.gz",
+
+        "ccrcc_CNV.tsv.gz",
+        "ccrcc_proteomics.tsv.gz",
+        "ccrcc_transcriptomics.tsv.gz",
+
+        "coad_CNV.tsv.gz",
+        "coad_proteomics.tsv.gz",
+        "coad_transcriptomics.tsv.gz",
+
+        "gbm_CNV.tsv.gz",
+        "gbm_proteomics.tsv.gz",
+        "gbm_transcriptomics.tsv.gz",
+
+        "hnscc_CNV.tsv.gz",
+        "hnscc_proteomics.tsv.gz",
+        "hnscc_transcriptomics.tsv.gz",
+
+        "lscc_CNV.tsv.gz",
+        "lscc_proteomics.tsv.gz",
+        "lscc_transcriptomics.tsv.gz",
+
+        "luad_CNV.tsv.gz",
+        "luad_proteomics.tsv.gz",
+        "luad_transcriptomics.tsv.gz",
+
+        "ov_CNV.tsv.gz",
+        "ov_proteomics.tsv.gz",
+        "ov_transcriptomics.tsv.gz",
+
+        "pdac_CNV.tsv.gz",
+        "pdac_proteomics.tsv.gz",
+        "pdac_transcriptomics.tsv.gz",
+
+        "ucec_CNV.tsv.gz",
+        "ucec_proteomics.tsv.gz",
+        "ucec_transcriptomics.tsv.gz",
+    ]
+
+    cptac_saved = True
+    for filename in cptac_filenames:
+        if not os.path.isfile(os.path.join(cptac_data_dir, filename)):
+            cptac_saved = False
+            break
+
+    # Save the cptac files if needed
+    if cptac_saved and not resave:
+        cptac_tables = None # If we need this later to make the locations table, we'll load the previously saved tables then
+    else:
+
+        # Load and reformat the cptac tables
+        cptac_tables = _load_cptac_tables(
+            cancer_types=ALL_CANCERS[0],
+            data_types=[
+                "CNV",
+                "transcriptomics",
+                "proteomics",
+            ],
+            pancan=pancan,
+        )
+
+        # Save cptac tables
+        for data_type, cancer_types in cptac_tables.items():
+            for cancer_type, df in cancer_types.items():
+
+                file_name = f"{cancer_type}_{data_type}.tsv.gz"
+                save_path = os.path.join(cptac_data_dir, file_name)
+                df.to_csv(save_path, sep="\t")
+
+    # See if the GISTIC files have already been saved
+    gistic_filenames = [
+        "brca_segment.tsv.gz",
+        "brca_gene.tsv.gz",
+        "brca_arm.tsv.gz",
+
+        "ccrcc_segment.tsv.gz",
+        "ccrcc_gene.tsv.gz",
+        "ccrcc_arm.tsv.gz",
+
+        "coad_segment.tsv.gz",
+        "coad_gene.tsv.gz",
+        "coad_arm.tsv.gz",
+
+        "gbm_segment.tsv.gz",
+        "gbm_gene.tsv.gz",
+        "gbm_arm.tsv.gz",
+
+        "hnscc_segment.tsv.gz",
+        "hnscc_gene.tsv.gz",
+        "hnscc_arm.tsv.gz",
+
+        "lscc_segment.tsv.gz",
+        "lscc_gene.tsv.gz",
+        "lscc_arm.tsv.gz",
+
+        "luad_segment.tsv.gz",
+        "luad_gene.tsv.gz",
+        "luad_arm.tsv.gz",
+
+        "ov_segment.tsv.gz",
+        "ov_gene.tsv.gz",
+        "ov_arm.tsv.gz",
+
+        "pdac_segment.tsv.gz",
+        "pdac_gene.tsv.gz",
+        "pdac_arm.tsv.gz",
+
+        "ucec_segment.tsv.gz",
+        "ucec_gene.tsv.gz",
+        "ucec_arm.tsv.gz",
+    ]
+
+    gistic_saved = False # TODO
+    for filename in gistic_filenames:
+        if not os.path.isfile(os.path.join(gistic_data_dir, filename)):
+            gistic_saved = False
+            break
+
+    # Save the GISTIC files if needed
+    if gistic_saved and not resave:
+        gistic_tables = None # If we need this later to make the locations table, we'll load the previously saved tables then
+    else:
+
+        # Load and reformat the GISTIC tables
+        gistic_tables = _load_gistic_tables(
+            levels=["segment"],# "gene", "chromosome"],
+            data_dir=data_dir,
+        )
+
+        # Save GISTIC tables
+        for data_level, cancer_types in gistic_tables.items():
+            for cancer_type, df in cancer_types.items():
+
+                file_name = f"{cancer_type}_{data_level}.tsv.gz"
+                save_path = os.path.join(gistic_data_dir, file_name)
+                df.to_csv(save_path, sep="\t")
+
+    # Create and save gene locations file if needed
     gene_locations_save_path = os.path.join(input_data_dir, "gene_locations.tsv.gz")
-    gene_locations.to_csv(gene_locations_save_path, sep="\t")
+    if not os.path.isfile(gene_locations_save_path) or resave:
 
-    # Save the cptac omics tables
-    for data_type, cancer_types in cptac_tables.items():
-        for cancer_type, df in cancer_types.items():
+        # Load previous saved cptac and/or GISTIC tables if they weren't already loaded earlier in this function
+        if cptac_tables is None:
+            cptac_tables = get_cptac_tables(data_dir=data_dir)
 
-            file_name = f"{cancer_type}_{data_type}.tsv.gz"
-            save_path = os.path.join(cptac_data_dir, file_name)
-            df.to_csv(save_path, sep="\t")
+        if gistic_tables is None:
+            gistic_tables = get_gistic_tables(data_dir=data_dir)
 
-    # Save GISTIC CNV tables
-    for data_level, cancer_types in gistic_tables.items():
-        for cancer_type, df in cancer_types.items():
+        # Get list of all genes we have CNV data for. These are the ones we'll need the locations of.
+        genes = None
+        for df in cptac_tables["CNV"].values() + gistic_tables["gene_ensembl"].values():
+            if genes is None:
+                genes = df.columns.copy(deep=True) # Just for the first one
+            else:
+                genes = genes.union(df.columns)
 
-            file_name = f"{cancer_type}_{data_level}.tsv.gz"
-            save_path = os.path.join(gistic_data_dir, file_name)
-            df.to_csv(save_path, sep="\t")
+        genes = genes.to_frame()
+        gene_locations, not_found_genes = _query_gene_locations_database(genes)
 
-def load_input_tables(data_dir, data_types=["CNV", "proteomics", "transcriptomics"], cancer_types=ALL_CANCERS[0]):
+        # TODO
+        # Do some comparisons of the Entrez and Ensembl gene location data
+
+        # Save the gene locations
+        gene_locations.to_csv(gene_locations_save_path, sep="\t")
+
+def get_cptac_tables(data_dir, data_types=["CNV", "proteomics", "transcriptomics"], cancer_types=ALL_CANCERS[0]):
 
     # Standardize data_types and cancer_types
     data_types = [data_type.lower() for data_type in data_types]
@@ -115,14 +236,55 @@ def load_input_tables(data_dir, data_types=["CNV", "proteomics", "transcriptomic
 
     return cptac_tables
 
-def load_gene_locations(data_dir=os.path.join(os.getcwd(), "..", "data")):
+def get_gistic_tables(data_dir=os.path.join(os.getcwd(), "..", "data"), levels=["segment", "gene", "arm"], cancer_types=ALL_CANCERS[0]):
+
+    # Standardize levels and cancer_types
+    levels = [level.lower() for level in levels]
+    cancer_types = [cancer_type.lower() for cancer_type in cancer_types]
+
+    # Get the data tables directory
+    gistic_tables_dir = os.path.join(data_dir, "sources", "gistic_tables")
+
+    # Get list of tables to load
+    all_table_paths = sorted(glob.glob(os.path.join(gistic_tables_dir, "*")))
+    load_table_paths = []
+    for path in all_table_paths:
+        cancer_type, level = path.split(os.sep)[-1].split(".")[0].split("_")
+        if cancer_type.lower() in cancer_types and level.lower() in levels:
+            load_table_paths.append(path)
+
+    # Load the tables
+    gistic_tables = {}
+    for i, path in enumerate(load_table_paths):
+        cancer_type, level = path.split(os.sep)[-1].split(".")[0].split("_")
+
+        print(f"Loading {cancer_type} {level} ({i + 1}/{len(load_table_paths)})...{' ' * 30}", end="\r")
+
+        if level not in gistic_tables.keys():
+            gistic_tables[level] = {}
+
+        gistic_tables[level][cancer_type] = pd.read_csv(
+            path,
+            sep="\t",
+            index_col=0,
+            header=[0, 1]
+        )
+
+    # Clear last loading message
+    print(" " * 80, end="\r")
+
+    return gistic_tables
+
+def get_gene_locations_table(data_dir=os.path.join(os.getcwd(), "..", "data")):
 
     gene_locations_path = os.path.join(data_dir, "sources", "gene_locations.tsv.gz")
     gene_locations = pd.read_csv(gene_locations_path, sep="\t", index_col=[0, 1])
 
     return gene_locations
 
-def query_gene_locations_database(genes):
+# Helper functions
+
+def _query_gene_locations_database(genes):
 
     # Find latest Ensembl release supported by pyensembl
     latest_release = 100
@@ -136,7 +298,7 @@ def query_gene_locations_database(genes):
             latest_release += 1
 
     # Load pyensembl Ensembl API
-    ensembl = load_ensembl_release(latest_release)
+    ensembl = _load_ensembl_release(latest_release)
 
     gene_names = []
     db_id = []
@@ -204,7 +366,7 @@ def query_gene_locations_database(genes):
             release_too_new.extend(old_genes.tolist())
             continue
 
-        old_ensembl = load_ensembl_release(old_release_number)
+        old_ensembl = _load_ensembl_release(old_release_number)
 
         print(f"Looking up {len(old_genes)} genes with release {old_release_number} (release {i + 1}/{len(old_db_dict.keys())})     ", end="\r")
             
@@ -249,7 +411,7 @@ def query_gene_locations_database(genes):
     })
 
     # Add arms
-    cytoband = get_cytoband_info()
+    cytoband = _get_cytoband_info()
 
     p_arm_max = cytoband[cytoband["arm"] == "p"].\
     groupby("chromosome").\
@@ -284,7 +446,7 @@ def query_gene_locations_database(genes):
 
     return gene_locations, not_found_genes
 
-def load_ensembl_release(release_number):
+def _load_ensembl_release(release_number):
     ensembl = pyensembl.EnsemblRelease(release_number)
     try:
         ensembl.genes() # If this fails, we need to download the data again.
@@ -296,15 +458,13 @@ def load_ensembl_release(release_number):
         print(" " * 80, end="\r") # Clear the message
     return ensembl
 
-def get_cytoband_info():
+def _get_cytoband_info():
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     cytoband_file = os.path.join(BASE_DIR, "cnvutils", "data", 'NCBI_ideogram.csv')
     df = pd.\
     read_csv(cytoband_file).\
     rename(columns={"#chromosome": "chromosome"})
     return df
-
-# Helper functions
 
 def _lookup_old_ensembl_release(gene_db_id):
 
@@ -425,50 +585,57 @@ def _load_cancer_type_cptac_tables(cancer_type, data_types, pancan, no_internet=
 
 def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")):
 
-    # Load and format mapping file
-    mapping_file_path = os.path.join(data_dir, "sources", "GISTIC_Matched_Samples_Updated.txt")
-
-    id_map = pd.\
-    read_csv(mapping_file_path, sep="\t").\
-    rename(columns={"Case_ID": "Patient_ID"}).\
-    melt(
-        id_vars=["Patient_ID", "Tumor_Type", "Sample_Type", "Category"],
-        var_name="other_id_type",
-        value_name="other_id",
-        ignore_index=True,
-    ).\
-    drop(columns=["Sample_Type", "Category", "other_id_type"]).\
-    drop_duplicates(keep="first")
-
-    # Add an empty level to the columns index to match the format of the data table
-    id_map = id_map.\
-    transpose().\
-    assign(NCBI_ID=[""] * id_map.shape[1]).\
-    set_index("NCBI_ID", append=True).\
-    transpose()
-
-    # Set the column multiindex level names
-    id_map.columns.names = ["Name", "NCBI_ID"]
-
     # Get the requested data types
     gistic_dir = os.path.join(data_dir, "sources", "Broad_pipeline_wxs")
     data_file_paths = {
-        "segment_level": os.path.join(gistic_dir, "all_lesions.txt"),
-        "gene_level": os.path.join(gistic_dir, "all_data_by_genes.txt"),
-        "arm_level": os.path.join(gistic_dir, "broad_values_by_arm.txt"),
+        "segment": os.path.join(gistic_dir, "all_lesions.txt"),
+        "gene": os.path.join(gistic_dir, "all_data_by_genes.txt"),
+        "arm": os.path.join(gistic_dir, "broad_values_by_arm.txt"),
     }
 
     tables = {}
     for level in levels:
 
         if level == "segment":
-            df = pd.read_csv(data_file_paths["segment_level"], sep="\t")
+            df = pd.read_csv(data_file_paths[level], sep="\t")
 
             # Drop empty last row. It must have been a formatting error when the file was generated.
             df = df.drop(columns="Unnamed: 1092")
 
             # Select the rows with raw CNV values, not thresholded
+            # For future reference, these are the thresholds they did use for the thresholded data:
+            # Amplifications:
+            #   0: t < 0.1
+            #   1: 0.1 < t < 0.9
+            #   2: t > 0.9
+            # Deletions:
+            #   0: t > -0.1
+            #   1: -0.1 > t > -1.3
+            #   2: t < -1.3
             df = df[df["Unique Name"].str.endswith("values")]
+
+            # As explained by the nozzle.html file from the Broad documenting the GISTIC data, the all_lesions.txt file
+            # identifies three different regions associated with each amplification and deletion. In order from smallest
+            # (most stringent) to largest (most inclusive) they are:
+            #     Peak Limits: The boundaries of the region of maximal amplification or deletion.
+            #     Wide Peak Limits: The 'wide peak' boundaries most likely to contain the targeted genes. These are listed in genomic coordinates and marker (or probe) indices.
+            #     Region Limits: The boundaries of the entire significant region of amplification or deletion.
+            # I wanted to use the Region Limits to associate the different CNV values with genomic regions, but
+            # unfortunately this won't work. The reason is that apparently some of the regions had multiple peaks, so
+            # the Region Limits column does not uniquely index all the data rows in the table. However, because the
+            # other two columns are document peaks, not entire regions, they do provide a unique index. I looked into
+            # maybe combining all the rows that are part of the same regions, so that I could still use the region
+            # boundaries, but the CNV values between the different rows within a region were too different for me to
+            # feel comfortable just taking the average. So it appears that the CNV values were based on the individual
+            # peaks, not entire regions.
+            #
+            # So, I will use the Wide Peak Limits. The only drawback is that because we're looking at smaller regions,
+            # some regions may not show enough of a particular event region to count as amplified or deleted, which will
+            # affect our determination of samples with and without the event.
+            #
+            # This also raises a question for me. How did regions get filtered to be included in this table or not? Did
+            # they just have to be significant in at least one sample? Because they're definitely not significant in
+            # every sample.
 
             df = df.drop(columns=[
                 "Unique Name",
@@ -477,16 +644,29 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
                 "Residual q values after removing segments shared with higher peaks",
                 "Broad or Focal",
                 "Amplitude Threshold",
-                #"Wide Peak Limits", # TODO: Which limits to use? Region?
-                #"Peak Limits",
-                #"Region Limits",
+                "Peak Limits",
+                "Region Limits",
             ])
 
-            import pdb; pdb.set_trace()
-            print(1)
+            chromosome = df["Wide Peak Limits"].str.split("(", expand=True)[0].str.split(":", expand=True)[0].str[3:].astype(np.int64)
+            start_bp = df["Wide Peak Limits"].str.split("(", expand=True)[0].str.split(":", expand=True)[1].str.split("-", expand=True)[0]
+            end_bp = df["Wide Peak Limits"].str.split("(", expand=True)[0].str.split(":", expand=True)[1].str.split("-", expand=True)[1]
+            probes = df["Wide Peak Limits"].str.split("(", expand=True)[1].str.strip().str.split(" ", expand=True)[1].str[:-1].str.split(":", expand=True).astype(np.int64)
+            num_probes = probes[1] - probes[0]
+
+            df = df.\
+            assign(
+                chromosome=chromosome,
+                start_bp=start_bp,
+                end_bp=end_bp,
+                num_probes=num_probes,
+            ).\
+            drop(columns="Wide Peak Limits").\
+            set_index(["chromosome", "start_bp", "end_bp", "num_probes"]).\
+            transpose()
 
         elif level == "gene":
-            df = pd.read_csv(data_file_paths["gene_level"], sep="\t").\
+            df = pd.read_csv(data_file_paths[level], sep="\t").\
             drop(columns="Cytoband").\
             rename(columns={
                 "Gene Symbol": "Name",
@@ -504,9 +684,7 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
 
             # Look up data for new IDs for any genes listed as "secondary" (meaning they've been replaced by another gene)
             secondary = metadata[metadata["status"] == "secondary"]
-            new_meta = _lookup_genes_ncbi_id(secondary["new_id"].drop_duplicates(keep="first"))
-
-            import pdb; pdb.set_trace()
+            new_meta = _lookup_genes_ncbi_id(secondary["new_id"].drop_duplicates(keep="first").astype(np.int64).astype(str))
 
             # Join in all our metadata
             df = df.\
@@ -585,17 +763,19 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
 
             # Drop duplicates
             df = df.drop_duplicates(keep="first")
-            # TODO: Fun fact: We still have duplicated genes, but some values differ between the duplicates. Not usually very many. Not sure what to do about that.
+
+            # Fun fact: We still have duplicated genes, but some values differ between the duplicates. Not usually very many, so we'll just average them.
+            import pdb; pdb.set_trace()
 
             # Split out the data and location metadata
             metadata_cleaned = df[["Name", "NCBI_ID", "Ensembl_ID", "chromosome", "start_bp", "end_bp"]]
-            df = df[["Name", "NCBI_ID"] + df.columns[~df.columns.isin(["Name", "NCBI_ID", "Ensembl_ID", "chromosome", "start_bp", "end_bp"])].tolist()]
+            df = df[["Name", "Ensembl_ID", "NCBI_ID"] + df.columns[~df.columns.isin(["Name", "NCBI_ID", "Ensembl_ID", "chromosome", "start_bp", "end_bp"])].tolist()]
 
             # Save the gene metadata for later
             tables["gene_metadata"] = metadata_cleaned
             
             # Set index columns and transpose
-            df = df.set_index(["Name", "NCBI_ID"]).\
+            df = df.set_index(["Name", "Ensembl_ID", "NCBI_ID"]).\
             transpose()
 
         elif level == "arm":
@@ -603,6 +783,31 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
 
         else:
             raise ValueError(f"Invalid GISTIC data level: '{level}'")
+
+        # Load and format mapping file
+        mapping_file_path = os.path.join(data_dir, "sources", "GISTIC_Matched_Samples_Updated.txt")
+
+        id_map = pd.\
+        read_csv(mapping_file_path, sep="\t").\
+        rename(columns={"Case_ID": "Patient_ID"}).\
+        melt(
+            id_vars=["Patient_ID", "Tumor_Type", "Sample_Type", "Category"],
+            var_name="other_id_type",
+            value_name="other_id",
+            ignore_index=True,
+        ).\
+        drop(columns=["Sample_Type", "Category", "other_id_type"]).\
+        drop_duplicates(keep="first")
+
+        # Add empty levels to the id_map columns axis to match the format of the data table
+        id_map = id_map.\
+        transpose().\
+        assign(**{level_name: [""] * id_map.shape[1] for level_name in df.columns.names[1:]}).\
+        set_index(df.columns.names[1:], append=True).\
+        transpose()
+
+        # Set the column multiindex level names
+        id_map.columns.names = ["Name"] + df.columns.names[1:]
 
         # Merge in mapping index
         df = df.\
@@ -612,7 +817,7 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
             left_index=True,
             right_on="other_id",
         ).\
-        drop(columns=("other_id", ""))
+        drop(columns=("other_id",) + ("",) * (df.columns.nlevels - 1))
 
         # Standardize cancer types
         df = df.\
@@ -630,10 +835,10 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
         })).\
         rename(columns={"Tumor_Type": "cancer_type"}).\
         sort_values(by=["cancer_type", "Patient_ID"]).\
-        set_index(["Patient_ID", "cancer_type"])
+        set_index(["Patient_ID"])
 
         # Split into a separate table for each cancer type
-        cancer_types_dict = {cancer_type: df for cancer_type, df in df.groupby("cancer_type")}
+        cancer_types_dict = {cancer_type: cancer_df.drop(columns=("cancer_type",) + ("",) * (df.columns.nlevels - 1)) for cancer_type, cancer_df in df.groupby("cancer_type")}
 
         tables[level] = cancer_types_dict
 
@@ -703,9 +908,9 @@ def _lookup_genes_ncbi_id(gene_ids):
 
         # Print an info message about what we're looking up
         total_genes = len(gene_ids)
-        end = total_genes - len(full_ids_str.split(escaped_comma))
-        start = end - len(ids_str_slice.split(escaped_comma))
-        print(f"Looking up genes {start + 1} to {end} of {total_genes}...", end="\r")
+        end = total_genes - (len(full_ids_str.split(escaped_comma)) if len(full_ids_str) > 0 else 0)
+        start = end - len(ids_str_slice.split(escaped_comma)) + 1
+        print(f"Looking up genes {start} to {end} of {total_genes}...", end="\r")
 
         # ids_str_slice currently uses %2C as the separator value between ids, which is the URL encoded hexadecimal value 
         # for a comma. However, the requests library automatically tries to encode the URL for us, and won't recognize this
@@ -828,7 +1033,7 @@ def _run_ncbi_id_query(ids_str_slice):
 
     results = pd.DataFrame({
         "Name": pd.Series(genes, dtype=np.object),
-        "chromosome": pd.Series(chrs, dtype=np.int64),
+        "chromosome": pd.Series(chrs).astype(np.int64), # Can't just use dtype=np.int64 in pd.Series contructor due to pandas issue #44923: https://github.com/pandas-dev/pandas/issues/44923
         "status": pd.Series(statuses, dtype=np.object),
         "new_id": pd.Series(new_ids, dtype=np.float64),
         "NCBI_ID": pd.Series(ncbi_ids, dtype=np.float64),

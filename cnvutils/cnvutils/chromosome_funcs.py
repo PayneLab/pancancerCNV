@@ -3,7 +3,11 @@ import os
 import pandas as pd
 
 from .constants import ALL_CANCERS, INDIVIDUAL_GENE_CNV_MAGNITUDE_CUTOFF, PROPORTION_WITH_EVENT_CUTOFF
-from .load_data import load_gene_locations, load_input_tables
+from .load_data import (
+    get_cptac_tables,
+    get_gistic_tables,
+    get_gene_locations_table,
+)
 
 def make_counts_table(
     chromosome,

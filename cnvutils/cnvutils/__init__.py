@@ -7,8 +7,9 @@ from .chromosome_funcs import (
 
 from .load_data import (
     save_input_tables,
-    load_input_tables,
-    load_gene_locations,
+    get_cptac_tables,
+    get_gistic_tables,
+    get_gene_locations_table,
     _load_gistic_tables,
 )
 
