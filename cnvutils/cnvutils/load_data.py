@@ -102,72 +102,73 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data"), 
                 df.to_csv(save_path, sep="\t")
 
     # See if the GISTIC files have already been saved
-    gistic_filenames = [
+    gistic_segment_filenames = [
         "brca_segment.tsv.gz",
-        "brca_gene.tsv.gz",
-        "brca_arm.tsv.gz",
-
         "ccrcc_segment.tsv.gz",
-        "ccrcc_gene.tsv.gz",
-        "ccrcc_arm.tsv.gz",
-
         "coad_segment.tsv.gz",
-        "coad_gene.tsv.gz",
-        "coad_arm.tsv.gz",
-
         "gbm_segment.tsv.gz",
-        "gbm_gene.tsv.gz",
-        "gbm_arm.tsv.gz",
-
         "hnscc_segment.tsv.gz",
-        "hnscc_gene.tsv.gz",
-        "hnscc_arm.tsv.gz",
-
         "lscc_segment.tsv.gz",
-        "lscc_gene.tsv.gz",
-        "lscc_arm.tsv.gz",
-
         "luad_segment.tsv.gz",
-        "luad_gene.tsv.gz",
-        "luad_arm.tsv.gz",
-
         "ov_segment.tsv.gz",
-        "ov_gene.tsv.gz",
-        "ov_arm.tsv.gz",
-
         "pdac_segment.tsv.gz",
-        "pdac_gene.tsv.gz",
-        "pdac_arm.tsv.gz",
-
         "ucec_segment.tsv.gz",
+    ]
+
+    gistic_seg = _save_or_load_gistic_tables(
+        level="segment",
+        data_dir=data_dir,
+        gistic_data_dir=gistic_data_dir,
+        filenames=gistic_segment_filenames,
+        resave=resave,
+    )
+
+    gistic_gene_filenames = [
+        "brca_gene.tsv.gz",
+        "ccrcc_gene.tsv.gz",
+        "coad_gene.tsv.gz",
+        "gbm_gene.tsv.gz",
+        "hnscc_gene.tsv.gz",
+        "lscc_gene.tsv.gz",
+        "luad_gene.tsv.gz",
+        "ov_gene.tsv.gz",
+        "pdac_gene.tsv.gz",
         "ucec_gene.tsv.gz",
+    ]
+
+    gistic_gene = _save_or_load_gistic_tables(
+        level="gene",
+        data_dir=data_dir,
+        gistic_data_dir=gistic_data_dir,
+        filenames=gistic_gene_filenames,
+        resave=resave,
+    )
+
+    gistic_arm_filenames = [
+        "brca_arm.tsv.gz",
+        "ccrcc_arm.tsv.gz",
+        "coad_arm.tsv.gz",
+        "gbm_arm.tsv.gz",
+        "hnscc_arm.tsv.gz",
+        "lscc_arm.tsv.gz",
+        "luad_arm.tsv.gz",
+        "ov_arm.tsv.gz",
+        "pdac_arm.tsv.gz",
         "ucec_arm.tsv.gz",
     ]
 
-    gistic_saved = False # TODO
-    for filename in gistic_filenames:
-        if not os.path.isfile(os.path.join(gistic_data_dir, filename)):
-            gistic_saved = False
-            break
+    gistic_arm = _save_or_load_gistic_tables(
+        level="arm",
+        data_dir=data_dir,
+        gistic_data_dir=gistic_data_dir,
+        filenames=gistic_arm_filenames,
+        resave=resave,
+    )
 
-    # Save the GISTIC files if needed
-    if gistic_saved and not resave:
-        gistic_tables = None # If we need this later to make the locations table, we'll load the previously saved tables then
+    if None in [gistic_seg, gistic_gene, gistic_arm]:
+        gistic_tables = None # If we need this later to make the locations table, we'll load all the previously saved tables then
     else:
-
-        # Load and reformat the GISTIC tables
-        gistic_tables = _load_gistic_tables(
-            levels=["segment"],# "gene", "chromosome"],
-            data_dir=data_dir,
-        )
-
-        # Save GISTIC tables
-        for data_level, cancer_types in gistic_tables.items():
-            for cancer_type, df in cancer_types.items():
-
-                file_name = f"{cancer_type}_{data_level}.tsv.gz"
-                save_path = os.path.join(gistic_data_dir, file_name)
-                df.to_csv(save_path, sep="\t")
+        gistic_tables = {**gistic_seg, **gistic_gene, **gistic_arm}
 
     # Create and save gene locations file if needed
     gene_locations_save_path = os.path.join(input_data_dir, "gene_locations.tsv.gz")
@@ -177,16 +178,18 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data"), 
         if cptac_tables is None:
             cptac_tables = get_cptac_tables(data_dir=data_dir)
 
-        if gistic_tables is None:
-            gistic_tables = get_gistic_tables(data_dir=data_dir)
+        if None in gistic_tables.values():
+            gistic_tables = get_gistic_tables(data_dir=data_dir, levels=["segment", "gene", "arm"])
 
         # Get list of all genes we have CNV data for. These are the ones we'll need the locations of.
+        import pdb; pdb.set_trace()
         genes = None
-        for df in cptac_tables["CNV"].values() + gistic_tables["gene_ensembl"].values():
+        for df in cptac_tables["CNV"].values() + gistic_tables["gene"].values():
+            cols = df.columns.droplevel([level for level in df.columns.names if level not in ("Name", "Database_ID")])
             if genes is None:
-                genes = df.columns.copy(deep=True) # Just for the first one
+                genes = cols.copy(deep=True) # Just for the first one
             else:
-                genes = genes.union(df.columns)
+                genes = genes.union(cols)
 
         genes = genes.to_frame()
         gene_locations, not_found_genes = _query_gene_locations_database(genes)
@@ -282,7 +285,43 @@ def get_gene_locations_table(data_dir=os.path.join(os.getcwd(), "..", "data")):
 
     return gene_locations
 
+def get_gistic_gene_metadata_table(data_dir=os.path.join(os.getcwd(), "..", "data")):
+
+    gistic_gene_metadata_path = os.path.join(data_dir, "sources", "gistic_gene_metadata.tsv.gz")
+    gistic_gene_metadata = pd.read_csv(gistic_gene_metadata_path, sep="\t", index_col=[0, 1])
+
+    return gistic_gene_metadata
+
 # Helper functions
+
+def _save_or_load_gistic_tables(level, data_dir, gistic_data_dir, filenames, resave):
+
+    gistic_saved = True
+    for filename in filenames:
+        if not os.path.isfile(os.path.join(gistic_data_dir, filename)):
+            gistic_saved = False
+            break
+
+    # Save the GISTIC files if needed
+    if gistic_saved and not resave:
+        gistic_tables = None # If we need this later to make the locations table, we'll load the previously saved tables then
+    else:
+
+        # Load and reformat the GISTIC tables
+        gistic_tables = _load_gistic_tables(
+            levels=[level],
+            data_dir=data_dir,
+        )
+
+        # Save GISTIC tables
+        for data_level, cancer_types in gistic_tables.items():
+            for cancer_type, df in cancer_types.items():
+
+                file_name = f"{cancer_type}_{data_level}.tsv.gz"
+                save_path = os.path.join(gistic_data_dir, file_name)
+                df.to_csv(save_path, sep="\t")
+
+    return gistic_tables
 
 def _query_gene_locations_database(genes):
 
@@ -570,16 +609,34 @@ def _load_cancer_type_cptac_tables(cancer_type, data_types, pancan, no_internet=
     for data_type in data_types:
         if pancan:
             if data_type == "CNV":
-                tables[data_type] = ds.get_CNV()
+                df = ds.get_CNV()
             elif data_type == "proteomics":
-                tables[data_type] = ds.get_proteomics(source="umich")
+                df = ds.get_proteomics(source="umich")
             elif data_type == "transcriptomics":
-                tables[data_type] = ds.get_transcriptomics(source="washu")
+                df = ds.get_transcriptomics(source="washu")
             else:
                 raise ValueError(f"Invalid data type name '{data_type}'")
                 
         else:
-            tables[data_type] = ds._get_dataframe(data_type, tissue_type="both")
+            df = ds._get_dataframe(data_type, tissue_type="both")
+
+        # Get rid of the ID version numbers on the end of database IDs
+        if "Database_ID" in df.columns.names:
+
+            # Save names of column index arrays
+            col_multiindex_names = df.columns.names
+
+            df = df.\
+            transpose().\
+            reset_index(drop=False)
+
+            df = df.\
+            assign(Database_ID=df["Database_ID"].str.split(".", expand=True)[0]).\
+            set_index(col_multiindex_names).\
+            transpose()
+
+        # Save the table
+        tables[data_type] = df
 
     return tables
 
@@ -711,7 +768,7 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
                     "status_new",
                     "new_id_new",
                     "new_id",
-                    "Ensembl_ID_new",
+                    "Database_ID_new",
                     "start_bp_new",
                     "end_bp_new",
                 ]
@@ -722,7 +779,7 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
                 "status_new": "status",
                 "new_id_new": "new_id",
                 "new_id": "NCBI_ID",
-                "Ensembl_ID_new": "Ensembl_ID",
+                "Database_ID_new": "Database_ID",
                 "start_bp_new": "start_bp",
                 "end_bp_new": "end_bp",
             })
@@ -735,7 +792,7 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
                     "status",
                     "new_id",
                     "NCBI_ID",
-                    "Ensembl_ID",
+                    "Database_ID",
                     "start_bp",
                     "end_bp",
                 ]
@@ -765,21 +822,41 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
             df = df.drop_duplicates(keep="first")
 
             # Fun fact: We still have duplicated genes, but some values differ between the duplicates. Not usually very many, so we'll just average them.
-            import pdb; pdb.set_trace()
+            # We'll temporarily fill NaNs in the metadata columns, since grouping by columns containing NaNs can cause rows to be dropped.
+            df.\
+            loc[:, ["Name", "NCBI_ID", "Database_ID", "chromosome", "start_bp", "end_bp"]] = df.\
+            loc[:, ["Name", "NCBI_ID", "Database_ID", "chromosome", "start_bp", "end_bp"]].\
+            fillna("tmp")
+
+            # Group and take the mean of duplicate rows
+            df = df.groupby(["Name", "NCBI_ID", "Database_ID", "chromosome", "start_bp", "end_bp"]).mean().reset_index(drop=False)
+
+            # Replace the temporarily filled NaNs with regular NaNs again
+            df.\
+            loc[:, ["Name", "NCBI_ID", "Database_ID", "chromosome", "start_bp", "end_bp"]] = df.\
+            loc[:, ["Name", "NCBI_ID", "Database_ID", "chromosome", "start_bp", "end_bp"]].\
+            replace({"tmp": np.nan})
+
+            # Fix dtypes
+            df = df.assign(
+                NCBI_ID=df["NCBI_ID"].astype(np.int64),
+                chromosome=df["chromosome"].astype(np.int64),
+            )
 
             # Split out the data and location metadata
-            metadata_cleaned = df[["Name", "NCBI_ID", "Ensembl_ID", "chromosome", "start_bp", "end_bp"]]
-            df = df[["Name", "Ensembl_ID", "NCBI_ID"] + df.columns[~df.columns.isin(["Name", "NCBI_ID", "Ensembl_ID", "chromosome", "start_bp", "end_bp"])].tolist()]
+            metadata_cleaned = df[["Name", "NCBI_ID", "Database_ID", "chromosome", "start_bp", "end_bp"]]
+            df = df[["Name", "Database_ID", "NCBI_ID"] + df.columns[~df.columns.isin(["Name", "NCBI_ID", "Database_ID", "chromosome", "start_bp", "end_bp"])].tolist()]
 
-            # Save the gene metadata for later
-            tables["gene_metadata"] = metadata_cleaned
-            
+            # Save the gene metadata file
+            metadata_path = os.path.join(data_dir, "sources", "gistic_gene_metadata.tsv.gz")
+            metadata_cleaned.to_csv(metadata_path, sep="\t", index=False)
+
             # Set index columns and transpose
-            df = df.set_index(["Name", "Ensembl_ID", "NCBI_ID"]).\
+            df = df.set_index(["Name", "Database_ID", "NCBI_ID"]).\
             transpose()
 
         elif level == "arm":
-            pass
+            continue
 
         else:
             raise ValueError(f"Invalid GISTIC data level: '{level}'")
@@ -1037,7 +1114,7 @@ def _run_ncbi_id_query(ids_str_slice):
         "status": pd.Series(statuses, dtype=np.object),
         "new_id": pd.Series(new_ids, dtype=np.float64),
         "NCBI_ID": pd.Series(ncbi_ids, dtype=np.float64),
-        "Ensembl_ID": pd.Series(ensembl_ids, dtype=np.object),
+        "Database_ID": pd.Series(ensembl_ids, dtype=np.object),
         "start_bp": pd.Series(starts_bp, dtype=np.float64),
         "end_bp": pd.Series(ends_bp, dtype=np.float64),
     })
