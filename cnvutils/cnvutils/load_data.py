@@ -176,26 +176,34 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data"), 
 
         # Load previous saved cptac and/or GISTIC tables if they weren't already loaded earlier in this function
         if cptac_tables is None:
-            cptac_tables = get_cptac_tables(data_dir=data_dir)
+            cptac_tables = get_cptac_tables(data_dir=data_dir, data_types=["CNV"])
 
-        if None in gistic_tables.values():
-            gistic_tables = get_gistic_tables(data_dir=data_dir, levels=["segment", "gene", "arm"])
+        if gistic_tables is None:
+            gistic_tables = get_gistic_tables(data_dir=data_dir, levels=["gene"])
 
         # Get list of all genes we have CNV data for. These are the ones we'll need the locations of.
-        import pdb; pdb.set_trace()
         genes = None
-        for df in cptac_tables["CNV"].values() + gistic_tables["gene"].values():
+
+        # It's important that we go through the CPTAC tables before the GISTIC tables, because the GISTIC tables are
+        # more likely to have NaNs for the Ensembl IDs
+        for df in list(cptac_tables["CNV"].values()) + list(gistic_tables["gene"].values()):
             cols = df.columns.droplevel([level for level in df.columns.names if level not in ("Name", "Database_ID")])
             if genes is None:
                 genes = cols.copy(deep=True) # Just for the first one
             else:
                 genes = genes.union(cols)
 
-        genes = genes.to_frame()
+        genes = genes.\
+        to_frame().\
+        reset_index(drop=True)
+        genes = genes.assign(Database_ID=genes["Database_ID"].replace("nan", np.nan))
+
         gene_locations, not_found_genes = _query_gene_locations_database(genes)
 
-        # TODO
-        # Do some comparisons of the Entrez and Ensembl gene location data
+        # TODO: Do some comparisons of the Entrez and Ensembl gene location data
+        gistic_gene_locations = get_gistic_gene_metadata_table(data_dir=data_dir)
+        joined_locs = gene_locations.merge(gistic_gene_locations, how="outer", on=["Name", "Database_ID"], suffixes=("_ens", "_ncbi"))
+        import pdb; pdb.set_trace()
 
         # Save the gene locations
         gene_locations.to_csv(gene_locations_save_path, sep="\t")
@@ -261,7 +269,7 @@ def get_gistic_tables(data_dir=os.path.join(os.getcwd(), "..", "data"), levels=[
     for i, path in enumerate(load_table_paths):
         cancer_type, level = path.split(os.sep)[-1].split(".")[0].split("_")
 
-        print(f"Loading {cancer_type} {level} ({i + 1}/{len(load_table_paths)})...{' ' * 30}", end="\r")
+        print(f"Loading {cancer_type} {level} level CNV ({i + 1}/{len(load_table_paths)})...{' ' * 30}", end="\r")
 
         if level not in gistic_tables.keys():
             gistic_tables[level] = {}
@@ -339,85 +347,72 @@ def _query_gene_locations_database(genes):
     # Load pyensembl Ensembl API
     ensembl = _load_ensembl_release(latest_release)
 
-    gene_names = []
+    # Save the results of our lookups
     db_id = []
+    release = []
     chromosome = []
     start_bp = []
     end_bp = []
 
+    no_id_names = []
+    no_id_ids = []
+
     # Look up genes using the latest Ensembl release
     db_not_found = []
-    no_db_id = []
     name_not_found = []
+
     for gene in genes.itertuples(index=False):
 
         info = None # Reset from previous iteration
 
-        if gene.Database_ID:
-            try:
-                info = ensembl.gene_by_id(gene.Database_ID.split(".")[0])
-            except ValueError:
-                db_not_found.append(gene)
-        else:
-            no_db_id.append(gene)
+        # If we don't have a database ID, try and get one, and save the mapping
+        if pd.isna(gene.Database_ID):
             try:
                 info = ensembl.genes_by_name(gene.Name)[0]
+
             except ValueError:
                 name_not_found.append(gene)
+        try:
+            info = ensembl.gene_by_id(gene.Database_ID)
+        except ValueError:
+            db_not_found.append(gene)
 
         if info is not None: # If info is not None, then the lookup was successful
-            gene_names.append(gene.Name)
-            db_id.append(gene.Database_ID)
+            db_id.append(info.gene_id)
+            release.append(latest_release)
             chromosome.append(info.contig)
             start_bp.append(info.start)
             end_bp.append(info.end)
 
     # For genes with database IDs who weren't found in the latest Ensembl release, we can query the Ensembl API to see if they're from an older Ensembl release, and then look them up with those older releases
+
     # First we'll look up which release each identifier is from
-    old_db_release_not_found = []
-    old_db_genes = []
-    old_db_release_nums = []
-    for i, gene in enumerate(db_not_found):
+    old_db_df, old_db_release_not_found = _lookup_old_ensembl_release(db_not_found)
 
-        print(f"Looking up release for ID {i + 1}/{len(db_not_found)}", end="\r")
-        try:
-            old_release_number = _lookup_old_release(gene.Database_ID.split(".")[0])
-        except ValueError:
-            old_db_release_not_found.append(gene)
-        else:
-            old_db_genes.append(gene)
-            old_db_release_nums.append(old_release_number)
-
-    # Second, for the IDs we did find an old release for, we'll sort them by release and then look up all the IDs for each release
-    old_db_df = pd.\
-    DataFrame({
-        "gene": old_db_genes,
-        "old_release_number": old_db_release_nums,
-    })
-
-    old_db_dict = dict(tuple(old_db_df.groupby("old_release_number")["gene"]))
+    # Second, for the IDs we did find an old release for, we'll group them by release and then look up all the IDs for each release
+    old_db_dict = dict(tuple(old_db_df.groupby("release")[["Name", "Database_ID"]]))
 
     old_db_not_found = []
     release_too_new = []
-    for i, (old_release_number, old_genes) in enumerate(old_db_dict.items()):
+    for i, (old_release_number, old_genes_df) in enumerate(old_db_dict.items()):
 
         if old_release_number > latest_release:
-            release_too_new.extend(old_genes.tolist())
+            release_too_new.extend(list(old_genes_df.itertuples()))
             continue
 
         old_ensembl = _load_ensembl_release(old_release_number)
 
-        print(f"Looking up {len(old_genes)} genes with release {old_release_number} (release {i + 1}/{len(old_db_dict.keys())})     ", end="\r")
-            
-        for j, gene in enumerate(old_genes):
+        print(f"Looking up {len(old_genes_df)} genes with release {old_release_number} (release {i + 1}/{len(old_db_dict.keys())})     ", end="\r")
+
+        for gene in old_genes_df.itertuples():
 
             try:
-                info = old_ensembl.gene_by_id(gene.Database_ID.split(".")[0])
+                info = old_ensembl.gene_by_id(gene.Database_ID)
             except ValueError as e:
                 old_db_not_found.append(gene)
             else:
-                gene_names.append(gene.Name)
-                db_id.append(gene.Database_ID)
+                db_id.append(info.gene_id)
+                release.append(old_release_number)
                 chromosome.append(info.contig)
                 start_bp.append(info.start)
                 end_bp.append(info.end)
@@ -425,29 +420,21 @@ def _query_gene_locations_database(genes):
     # Clear message
     print(" " * 80, end="\r")
 
-    # If we couldn't find the database ID in an older version, we'll last try looking it up by name
-    name_and_db_not_found = []
-    for gene in old_db_release_not_found + old_db_not_found:
-
-        try:
-            info = ensembl.genes_by_name(gene.Name)[0]
-        except ValueError:
-            name_and_db_not_found.append(gene)
-        else:
-            gene_names.append(gene.Name)
-            db_id.append(gene.Database_ID)
-            chromosome.append(info.contig)
-            start_bp.append(info.start)
-            end_bp.append(info.end)
-
     # Put what we have so far into a table
+    names_to_ids = pd.DataFrame({
+        "Name": no_id_names,
+        "Database_ID": no_id_ids,
+    })
+
     gene_locations = pd.DataFrame({
-        "Name": gene_names,
         "Database_ID": db_id,
+        "release": release,
         "chromosome": chromosome,
         "start_bp": start_bp,
-        "end_bp": end_bp
+        "end_bp": end_bp,
     })
+
+    import pdb; pdb.set_trace()
 
     # Add arms
     cytoband = _get_cytoband_info()
@@ -476,11 +463,9 @@ def _query_gene_locations_database(genes):
 
     # Package these extra lists
     not_found_genes = {
-        "name_and_db_not_found": name_and_db_not_found,
-        "release_too_new": release_too_new,
-        "old_db_not_found": old_db_not_found,
-        "old_db_release_not_found": old_db_release_not_found,
-        "no_db_id": no_db_id,
+        "release_too_new": pd.DataFrame(release_too_new),
+        "old_db_not_found": pd.DataFrame(old_db_not_found),
+        "old_db_release_not_found": pd.DataFrame(old_db_release_not_found),
     }
 
     return gene_locations, not_found_genes
@@ -505,15 +490,39 @@ def _get_cytoband_info():
     rename(columns={"#chromosome": "chromosome"})
     return df
 
-def _lookup_old_ensembl_release(gene_db_id):
+def _lookup_old_ensembl_release(genes):
 
-    url = f"https://rest.ensembl.org/archive/id/{gene_db_id}"
-    params = {"content-type": "application/json"}
+    # Print an info message
+    print(f"Looking up Ensembl release versions for {len(genes)} outdated Ensembl IDs...", end="\r")
 
-    response = requests.get(url, params=params)
+    # Convert into to DataFrame
+    genes = pd.DataFrame(genes) # genes needs to be a list of Pandas tuples from pandas.DataFrame.itertuples
+
+    url = f"https://rest.ensembl.org/archive/id/"
+
+    headers = {
+        "content-type": "application/json",
+        "accept": "application/json",
+    }
+
+    response = requests.post(url, headers=headers, data=json.dumps({"id": genes["Database_ID"].tolist()}))
     response.raise_for_status() # Raises a requests.HTTPError if the response code was unsuccessful
 
-    return int(response.json()["release"])
+    # Convert the response into a table
+    results = pd.read_json(response.text)[["id", "release"]].\
+    rename(columns={"id": "Database_ID"})
+
+    # Merge with our input
+    joined = genes.merge(results, on="Database_ID", how="outer")
+
+    # Split out the IDs we did and didn't find releases for
+    releases = joined[joined["release"].notna()]
+    release_not_found = joined[joined["release"].isna()]["Database_ID"].tolist()
+
+    # Erase the info message
+    print(" " * 70, end="\r")
+
+    return releases, release_not_found
 
 def _load_cptac_tables(cancer_types, data_types, pancan, no_internet=False):
     """Get the tables for the specified data types from the specified cancer types.
@@ -798,7 +807,7 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
                 ]
             ] = replacements
 
-            # TODO: When the Broad gives us the new tables without duplicated genes or negative IDs, see if we still have any duplicated NCBI IDs. Hopefully we won't.
+            # When the Broad gives us the new tables without duplicated genes or negative IDs, see if we still have any duplicated NCBI IDs. Hopefully we won't.
 
             # Drop the columns we don't need now, after joining in the replacement gene info
             df = df.drop(columns=df.columns[df.columns.str.endswith("_new")].tolist() + ["new_id", "status"])
