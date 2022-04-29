@@ -10,7 +10,7 @@ from .load_data import (
     get_cptac_tables,
     get_gistic_tables,
     get_gene_locations_table,
-    _load_gistic_tables,
+    get_gistic_gene_metadata_table,
 )
 
 from .make_plots import (
