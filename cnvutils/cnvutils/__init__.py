@@ -9,8 +9,8 @@ from .load_data import (
     save_input_tables,
     get_cptac_tables,
     get_gistic_tables,
-    get_gene_locations_table,
-    get_gistic_gene_metadata_table,
+    get_ensembl_gene_locations_table,
+    get_ncbi_gene_locations_table,
 )
 
 from .make_plots import (

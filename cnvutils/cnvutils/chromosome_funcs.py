@@ -6,8 +6,8 @@ from .constants import ALL_CANCERS, INDIVIDUAL_GENE_CNV_MAGNITUDE_CUTOFF, PROPOR
 from .load_data import (
     get_cptac_tables,
     get_gistic_tables,
-    get_gene_locations_table,
-    get_gistic_gene_metadata_table,
+    get_ensembl_gene_locations_table,
+    get_ncbi_gene_locations_table,
 )
 
 def make_counts_table(
@@ -26,7 +26,7 @@ def make_counts_table(
         cnv = tables["CNV"]
 
         # Get gene locations
-        gene_locations = get_gene_locations_table(data_dir=data_dir)
+        gene_locations = get_ensembl_gene_locations_table(data_dir=data_dir)
         chr_gene_locations = gene_locations[gene_locations["chromosome"] == chromosome]
 
     elif data_source == "gistic":
@@ -37,7 +37,7 @@ def make_counts_table(
         cnv = tables[level]
 
         if level == "gene":
-            gene_locations = get_gistic_gene_metadata_table(data_dir=data_dir)
+            gene_locations = get_ncbi_gene_locations_table(data_dir=data_dir)
             chr_gene_locations = gene_locations[gene_locations["chromosome"] == chromosome]
         else:
             raise ValueError(f"Invalid level '{level}'")
@@ -51,14 +51,15 @@ def make_counts_table(
         df = cnv[cancer_type].transpose()
         num_patients = df.shape[1]
 
-        import pdb; pdb.set_trace()
-        
-        # Get just our chromosome
-        # TODO: Make sure dtypes are matching between mapping and data files
-        if data_source == "cptac" or data_source == "gistic" and level == "gene":
-            df = df[df.index.get_level_values(id_name).isin(chr_gene_locations.index.get_level_values(id_name).astype(str))]
+        # If it's a GISTIC gene table, drop the unneeded Ensembl IDs from the index. We'll just work with NCBI IDs.
+        if data_source == "gistic" and level == "gene":
+            df.index = df.index.droplevel("Database_ID")
 
-        df = df[df.index.get_level_values(0).isin(chr_gene_locations.index.get_level_values(0))]
+        # Get just our chromosome
+        if data_source == "cptac" or data_source == "gistic" and level == "gene":
+            df = df[df.index.get_level_values(id_name).isin(chr_gene_locations.index.get_level_values(id_name))]
+        else:
+            raise ValueError(f"Invalid level '{level}'")
         
         # Calculate counts
         df['gain'] = df.apply(_get_gain_counts, axis=1)
@@ -67,11 +68,15 @@ def make_counts_table(
         # Join in locations
         if data_source == "cptac" or data_source == "gistic" and level == "gene":
             df = df.join(chr_gene_locations)
+        else:
+            raise ValueError(f"Invalid level '{level}'")
         
         df = df.melt(
             id_vars=['start_bp', 'end_bp'], 
             value_vars=['gain', 'loss'], 
-            ignore_index=False
+            var_name="cnv_type",
+            value_name="num_patients_with_cnv",
+            ignore_index=False,
         )
         
         df = df.assign(
@@ -86,7 +91,7 @@ def make_counts_table(
     cnv_long = cnv_long.reset_index()
 
     # Save table
-    cnv_long.to_csv(os.path.join(data_dir, f"chr{chromosome:0>2}_cnv_counts.tsv"), sep='\t', index=False)
+    cnv_long.to_csv(os.path.join(data_dir, f"{data_source}_chr{chromosome:0>2}_cnv_counts.tsv"), sep='\t', index=False)
 
 def select_genes_for_event(
     gene_locations,

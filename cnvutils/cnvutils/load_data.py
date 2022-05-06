@@ -170,23 +170,21 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data"), 
     else:
         gistic_tables = {**gistic_seg, **gistic_gene, **gistic_arm}
 
-    # Create and save gene locations file if needed
-    gene_locations_save_path = os.path.join(input_data_dir, "gene_locations.tsv.gz")
-    if not os.path.isfile(gene_locations_save_path) or resave:
+    # Create and save Ensembl gene locations file from CPTAC tables if needed
+    # We already created a NCBI gene locations file for the GISTIC tables when we parsed and saved them
+    ensembl_gene_locations_save_path = os.path.join(input_data_dir, "ensembl_gene_locations.tsv.gz")
+    if not os.path.isfile(ensembl_gene_locations_save_path) or resave:
 
-        # Load previous saved cptac and/or GISTIC tables if they weren't already loaded earlier in this function
+        # Load previously saved cptac tables if they weren't already loaded earlier in this function
         if cptac_tables is None:
             cptac_tables = get_cptac_tables(data_dir=data_dir, data_types=["CNV"])
-
-        if gistic_tables is None:
-            gistic_tables = get_gistic_tables(data_dir=data_dir, levels=["gene"])
 
         # Get list of all genes we have CNV data for. These are the ones we'll need the locations of.
         genes = None
 
         # It's important that we go through the CPTAC tables before the GISTIC tables, because the GISTIC tables are
         # more likely to have NaNs for the Ensembl IDs
-        for df in list(cptac_tables["CNV"].values()) + list(gistic_tables["gene"].values()):
+        for df in cptac_tables["CNV"].values():
             cols = df.columns.droplevel([level for level in df.columns.names if level not in ("Name", "Database_ID")])
             if genes is None:
                 genes = cols.copy(deep=True) # Just for the first one
@@ -198,10 +196,10 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data"), 
         reset_index(drop=True)
         genes = genes.assign(Database_ID=genes["Database_ID"].replace("nan", np.nan))
 
-        gene_locations, name_changes, not_found_genes = _compile_ensembl_gene_locations(genes)
+        ensembl_gene_locations, name_changes, not_found_genes = _compile_ensembl_gene_locations(genes)
 
         # Save the gene locations
-        gene_locations.to_csv(gene_locations_save_path, sep="\t")
+        ensembl_gene_locations.to_csv(ensembl_gene_locations_save_path, sep="\t")
 
         # Save the name changes
         name_changes_save_path = os.path.join(input_data_dir, "gene_name_updates.tsv.gz")
@@ -285,20 +283,22 @@ def get_gistic_tables(data_dir=os.path.join(os.getcwd(), "..", "data"), levels=[
 
     return gistic_tables
 
-def get_gene_locations_table(data_dir=os.path.join(os.getcwd(), "..", "data")):
+def get_ensembl_gene_locations_table(data_dir=os.path.join(os.getcwd(), "..", "data")):
 
-    gene_locations_path = os.path.join(data_dir, "sources", "gene_locations.tsv.gz")
-    gene_locations = pd.read_csv(gene_locations_path, sep="\t", index_col=[0, 1])
+    ensembl_gene_locations_path = os.path.join(data_dir, "sources", "ensembl_gene_locations.tsv.gz")
+    ensembl_gene_locations = pd.read_csv(ensembl_gene_locations_path, sep="\t", index_col=[0, 1])
 
-    return gene_locations
+    return ensembl_gene_locations
 
-def get_gistic_gene_metadata_table(data_dir=os.path.join(os.getcwd(), "..", "data")):
+def get_ncbi_gene_locations_table(data_dir=os.path.join(os.getcwd(), "..", "data")):
 
-    gistic_gene_metadata_path = os.path.join(data_dir, "sources", "gistic_gene_metadata.tsv.gz")
-    import pdb; pdb.set_trace() # TODO: resolve dtypes
-    gistic_gene_metadata = pd.read_csv(gistic_gene_metadata_path, sep="\t", index_col=[0, 1])
+    ncbi_gene_metadata_path = os.path.join(data_dir, "sources", "ncbi_gene_locations.tsv.gz")
 
-    return gistic_gene_metadata
+    ncbi_gene_metadata = pd.\
+    read_csv(ncbi_gene_metadata_path, sep="\t", dtype={"NCBI_ID": np.object}).\
+    set_index(["Name", "NCBI_ID"]) # We don't set the index in read_csv because we want to control the dtypes
+
+    return ncbi_gene_metadata
 
 # Helper functions
 
@@ -413,22 +413,24 @@ def _compile_ensembl_gene_locations(genes):
     })
 
     # Combine the info from the "has identifier" and "no identifier" queries
-    current_meta = pd.\
-    concat([has_id_metadata, no_id_metadata], axis="index").\
-    drop_duplicates(keep="first")
+    if no_id_metadata is not None: # It wouild be None if there were no genes without IDs
+        current_meta = pd.\
+        concat([has_id_metadata, no_id_metadata], axis="index").\
+        drop_duplicates(keep="first")
+    else:
+        current_meta = has_id_metadata
 
     # Split out genes we have all metadata for
     # If we're missing the name that's fine; novel proteins don't have names
     full_meta = current_meta[current_meta[["Database_ID", "chromosome", "start_bp", "end_bp"]].notna().all(axis="columns")]
     missing_meta = current_meta[~current_meta[["Database_ID", "chromosome", "start_bp", "end_bp"]].notna().all(axis="columns")]
 
-    # TODO
-    # Resolve duplicate names with different IDs in full_meta table
-    # So far it looks like these are genes that have separate protein-coding and lncRNA annotations
-    # For now we'll just ignore them
+    # Some genes in full_meta have the same name but different IDs
+    # It looks like these are all just genes that have separate protein-coding and lncRNA annotations
+    # We won't worry about it, but the line below will show these genes if you're curious
     # full_meta[full_meta["Name"].duplicated(keep=False)].sort_values(by="Name")
 
-    # Resolve weird chromosome values. For now we'll just drop them.
+    # Resolve weird chromosome values (stuff life "CHR_HG1342_HG2282_PATCH"). For now we'll just drop them.
     full_meta = full_meta[full_meta["chromosome"].str.isnumeric()]
 
     # Split out genes we have IDs for but no metadata. See what we can fill in from old info.
@@ -436,14 +438,15 @@ def _compile_ensembl_gene_locations(genes):
     had_old_id = old_meta[old_meta["Database_ID"].isin(only_id["Database_ID"])]
     full_meta = pd.concat([full_meta, had_old_id], axis="index")
 
-    # TODO
     # Split out genes we only have names for. See if the names are in the rest of the table. Then see what we can fill in from old info.
-    # Initial checks looked like there wasn't much we could do here. This group has 706 genes.
+    # When running with genes from GISTIC as well as CPTAC tables, it looked like there wasn't much we could do here. This group has 706 genes.
+    # But when we decided to only run with genes from CPTAC tables, nothing fell in this category, so actually don't worry about it
     only_name = missing_meta[missing_meta["Name"].notna()]
 
     # Merge with original gene information so we can resolve out of date gene names
     # We keep this separate from full_meta because this map will have duplicated Database_IDs
     # TODO: what about if the IDs don't match for the names? Do we care? Since we're only merging by Name if Database_ID was null.
+    import pdb; pdb.set_trace()
     name_changes = full_meta[["Name", "Database_ID"]].\
     merge(genes, on="Database_ID", how="outer", suffixes=(None, "_old")).\
     dropna(how="any", axis="index")
@@ -491,6 +494,9 @@ def _compile_ensembl_gene_locations(genes):
     return gene_locations, name_changes, not_found
 
 def _lookup_genes_ensembl(query, id_or_name):
+
+    if len(query) == 0:
+        return
 
     query.name = "query"
 
@@ -980,7 +986,7 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
             df = df[["Name", "Database_ID", "NCBI_ID"] + df.columns[~df.columns.isin(["Name", "NCBI_ID", "Database_ID", "chromosome", "start_bp", "end_bp"])].tolist()]
 
             # Save the gene metadata file
-            metadata_path = os.path.join(data_dir, "sources", "gistic_gene_metadata.tsv.gz")
+            metadata_path = os.path.join(data_dir, "sources", "ncbi_gene_locations.tsv.gz")
             metadata_cleaned.to_csv(metadata_path, sep="\t", index=False)
 
             # Set index columns and transpose
