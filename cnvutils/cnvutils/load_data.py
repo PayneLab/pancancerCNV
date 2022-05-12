@@ -196,13 +196,13 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data"), 
         reset_index(drop=True)
         genes = genes.assign(Database_ID=genes["Database_ID"].replace("nan", np.nan))
 
-        ensembl_gene_locations, name_changes, not_found_genes = _compile_ensembl_gene_locations(genes)
+        ensembl_gene_locations, name_changes, problems = _compile_ensembl_gene_locations(genes)
 
         # Save the gene locations
         ensembl_gene_locations.to_csv(ensembl_gene_locations_save_path, sep="\t")
 
         # Save the name changes
-        name_changes_save_path = os.path.join(input_data_dir, "gene_name_updates.tsv.gz")
+        name_changes_save_path = os.path.join(input_data_dir, "ensembl_gene_name_updates.tsv.gz")
         name_changes.to_csv(name_changes_save_path, sep="\t")
 
 def get_cptac_tables(data_dir, data_types=["CNV", "proteomics", "transcriptomics"], cancer_types=ALL_CANCERS[0]):
@@ -425,11 +425,6 @@ def _compile_ensembl_gene_locations(genes):
     full_meta = current_meta[current_meta[["Database_ID", "chromosome", "start_bp", "end_bp"]].notna().all(axis="columns")]
     missing_meta = current_meta[~current_meta[["Database_ID", "chromosome", "start_bp", "end_bp"]].notna().all(axis="columns")]
 
-    # Some genes in full_meta have the same name but different IDs
-    # It looks like these are all just genes that have separate protein-coding and lncRNA annotations
-    # We won't worry about it, but the line below will show these genes if you're curious
-    # full_meta[full_meta["Name"].duplicated(keep=False)].sort_values(by="Name")
-
     # Resolve weird chromosome values (stuff life "CHR_HG1342_HG2282_PATCH"). For now we'll just drop them.
     full_meta = full_meta[full_meta["chromosome"].str.isnumeric()]
 
@@ -445,11 +440,18 @@ def _compile_ensembl_gene_locations(genes):
 
     # Merge with original gene information so we can resolve out of date gene names
     # We keep this separate from full_meta because this map will have duplicated Database_IDs
-    # TODO: what about if the IDs don't match for the names? Do we care? Since we're only merging by Name if Database_ID was null.
-    import pdb; pdb.set_trace()
     name_changes = full_meta[["Name", "Database_ID"]].\
     merge(genes, on="Database_ID", how="outer", suffixes=(None, "_old")).\
     dropna(how="any", axis="index")
+
+    # Some genes in full_meta have the same name but different IDs
+    # A good number just have NaN as the name.
+    # Outside of that, most of these are due both current and old versions of a gene, with different
+    # IDs, being looked up and put in our tables--thus we have both the current and the old IDs (and
+    # metadata) for the same genes. The rest are genes that have separate protein-coding and lncRNA 
+    # annotations. We won't worry about it, but the lines below will show these genes if you're curious.
+    duplicate_names = full_meta[full_meta["Name"].duplicated(keep=False)].dropna(how="any").sort_values(by="Name")
+    dups_from_old = duplicate_names[duplicate_names["Database_ID"].isin(had_old_id["Database_ID"])]
 
     # Fix dtypes and rename our final table
     full_meta = full_meta.assign(
@@ -485,13 +487,15 @@ def _compile_ensembl_gene_locations(genes):
     gene_locations = gene_locations.set_index(["Name", "Database_ID"], drop=True, append=False)
 
     # Package these extra lists
-    not_found = {
+    problems = {
         "old_id_not_found": old_id_not_found,
         "invalid_release": invalid_release,
         "only_name": only_name,
+        "duplicate_names": duplicate_names,
+        "dups_from_old": dups_from_old,
     }
 
-    return gene_locations, name_changes, not_found
+    return gene_locations, name_changes, problems
 
 def _lookup_genes_ensembl(query, id_or_name):
 
@@ -989,8 +993,12 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
             metadata_path = os.path.join(data_dir, "sources", "ncbi_gene_locations.tsv.gz")
             metadata_cleaned.to_csv(metadata_path, sep="\t", index=False)
 
+            # Drop the Database_ID column from the table--we'll just work with NCBI IDs, since that's the database the
+            # tables were generated based on. If we really need Ensembl IDs at some point, they're in the metadata table.
+            df = df.drop(columns="Database_ID")
+
             # Set index columns and transpose
-            df = df.set_index(["Name", "Database_ID", "NCBI_ID"]).\
+            df = df.set_index(["Name", "NCBI_ID"]).\
             transpose()
 
         elif level == "arm":
