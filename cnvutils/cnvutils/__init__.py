@@ -7,10 +7,9 @@ from .chromosome_funcs import (
 
 from .load_data import (
     save_input_tables,
-    get_cptac_tables,
-    get_gistic_tables,
-    get_ensembl_gene_locations_table,
-    get_ncbi_gene_locations_table,
+    get_tables,
+    get_ensembl_gene_locations,
+    get_ncbi_gene_locations,
 )
 
 from .make_plots import (

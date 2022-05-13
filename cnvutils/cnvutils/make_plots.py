@@ -6,6 +6,14 @@ import pandas as pd
 import seaborn as sns
 import warnings
 
+from .constants import ALL_CANCERS, CHART_DPI, CHART_FORMAT, CHART_SCALE
+
+def make_event_line_plot(
+    chromosome,
+    cancer_types=ALL_CANCERS[0],
+):
+    pass
+
 def make_ttest_plot(
     chromosome,
     arm,
@@ -76,42 +84,6 @@ def make_ttest_plot(
 
     return event_effects_barchart
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def make_cytoband_plot(chrm, show_xlabel=True, height=800):
     """Create a cytoband plot"""
     
@@ -176,6 +148,8 @@ def make_cytoband_plot(chrm, show_xlabel=True, height=800):
     ).properties(height=height)
     
     return bars
+
+# Old
 
 def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=None, show_labels=True, title=None, ax=None, above=True):
     """ Create a cytoband plot and mark genes

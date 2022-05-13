@@ -1,195 +1,132 @@
-import collections
 import cptac
 import cptac.pancan
-import glob
 import json
 import numpy as np
 import os
 import pandas as pd
 import pyensembl
-import re
 import requests
-import sys
 import xmltodict
 
 from .constants import ALL_CANCERS
+from .filenames import (
+    get_input_data_dir,
+    get_input_source_data_dir,
+    get_input_source_file_path,
+    get_gene_locations_path,
+    get_input_source_file_path,
+)
 
-def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data"), resave=False):
+# Table getters
+
+def get_cnv_counts(
+    chromosome,
+    source,
+    level=None,
+    data_dir=os.path.join(os.getcwd(), "..", "data")
+):
+    counts_path = get_cnv_counts_path(
+        data_dir=data_dir,
+        source=source,
+        level=level,
+        chromosome=chromosome,
+    )
+    return pd.read_csv(counts_path, sep='\t')
+
+def get_tables(
+    source,
+    data_types,
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
+    cancer_types=ALL_CANCERS[0]
+):
+
+    # Load the tables
+    tables = {}
+    i = 0
+    for cancer_type in cancer_types:
+        for data_type in data_types:
+
+            print(f"Loading {cancer_type} {data_type} ({i + 1}/{len(cancer_types) * len(data_types)})...{' ' * 30}", end="\r")
+
+            if data_type not in tables.keys():
+                tables[data_type] = {}
+
+            path = get_input_source_file_path(
+                data_dir=data_dir,
+                source=source,
+                cancer_type=cancer_type,
+                data_type=data_type,
+            )
+
+            tables[data_type][cancer_type] = pd.read_csv(
+                path,
+                sep="\t",
+                index_col=0,
+                header=[0, 1]
+            )
+
+            i += 1
+
+    # Clear last loading message
+    print(" " * 80, end="\r")
+
+    return tables
+
+def get_ensembl_gene_locations(data_dir=os.path.join(os.getcwd(), "..", "data")):
+
+    ensembl_gene_locations_path = get_gene_locations_path(source="ensembl", data_dir=data_dir)
+    ensembl_gene_locations = pd.read_csv(ensembl_gene_locations_path, sep="\t", index_col=[0, 1])
+
+    return ensembl_gene_locations
+
+def get_ncbi_gene_locations(data_dir=os.path.join(os.getcwd(), "..", "data")):
+
+    ncbi_gene_locations_path = get_gene_locations_path(source="ncbi", data_dir=data_dir)
+
+    ncbi_gene_locations = pd.\
+    read_csv(ncbi_gene_locations_path, sep="\t", dtype={"NCBI_ID": np.object}).\
+    set_index(["Name", "NCBI_ID"]) # We don't set the index in read_csv because we want to control the dtypes
+
+    return ncbi_gene_locations
+
+# Table savers
+
+def save_input_tables(data_dir=os.path.join(os.getcwd(), "..", "data"), resave=False):
     """Load CNV, transcriptomics, and proteomics tables for all cancers, create
     gene locations table, and save all of them.
     """
-
+    
     # Create directories to store all the files we load
-    input_data_dir = os.path.join(data_dir, "sources")
-    cptac_data_dir = os.path.join(input_data_dir, "cptac_tables")
-    gistic_data_dir = os.path.join(input_data_dir, "gistic_tables")
+    input_data_dir = get_input_data_dir(data_dir)
+    cptac_data_dir = get_input_source_data_dir(data_dir, "cptac")
+    gistic_data_dir = get_input_source_data_dir(data_dir, "gistic")
 
     os.makedirs(input_data_dir, exist_ok=True)
     os.makedirs(cptac_data_dir, exist_ok=True)
     os.makedirs(gistic_data_dir, exist_ok=True)
 
-    # See if the cptac files have already been saved
-    cptac_filenames = [
-        "brca_CNV.tsv.gz",
-        "brca_proteomics.tsv.gz",
-        "brca_transcriptomics.tsv.gz",
+    # Save the CPTAC files if needed
+    _save_input_tables_if_needed(data_dir=data_dir, source="cptac", resave=resave)
 
-        "ccrcc_CNV.tsv.gz",
-        "ccrcc_proteomics.tsv.gz",
-        "ccrcc_transcriptomics.tsv.gz",
-
-        "coad_CNV.tsv.gz",
-        "coad_proteomics.tsv.gz",
-        "coad_transcriptomics.tsv.gz",
-
-        "gbm_CNV.tsv.gz",
-        "gbm_proteomics.tsv.gz",
-        "gbm_transcriptomics.tsv.gz",
-
-        "hnscc_CNV.tsv.gz",
-        "hnscc_proteomics.tsv.gz",
-        "hnscc_transcriptomics.tsv.gz",
-
-        "lscc_CNV.tsv.gz",
-        "lscc_proteomics.tsv.gz",
-        "lscc_transcriptomics.tsv.gz",
-
-        "luad_CNV.tsv.gz",
-        "luad_proteomics.tsv.gz",
-        "luad_transcriptomics.tsv.gz",
-
-        "ov_CNV.tsv.gz",
-        "ov_proteomics.tsv.gz",
-        "ov_transcriptomics.tsv.gz",
-
-        "pdac_CNV.tsv.gz",
-        "pdac_proteomics.tsv.gz",
-        "pdac_transcriptomics.tsv.gz",
-
-        "ucec_CNV.tsv.gz",
-        "ucec_proteomics.tsv.gz",
-        "ucec_transcriptomics.tsv.gz",
-    ]
-
-    cptac_saved = True
-    for filename in cptac_filenames:
-        if not os.path.isfile(os.path.join(cptac_data_dir, filename)):
-            cptac_saved = False
-            break
-
-    # Save the cptac files if needed
-    if cptac_saved and not resave:
-        cptac_tables = None # If we need this later to make the locations table, we'll load the previously saved tables then
-    else:
-
-        # Load and reformat the cptac tables
-        cptac_tables = _load_cptac_tables(
-            cancer_types=ALL_CANCERS[0],
-            data_types=[
-                "CNV",
-                "transcriptomics",
-                "proteomics",
-            ],
-            pancan=pancan,
-        )
-
-        # Save cptac tables
-        for data_type, cancer_types in cptac_tables.items():
-            for cancer_type, df in cancer_types.items():
-
-                file_name = f"{cancer_type}_{data_type}.tsv.gz"
-                save_path = os.path.join(cptac_data_dir, file_name)
-                df.to_csv(save_path, sep="\t")
-
-    # See if the GISTIC files have already been saved
-    gistic_segment_filenames = [
-        "brca_segment.tsv.gz",
-        "ccrcc_segment.tsv.gz",
-        "coad_segment.tsv.gz",
-        "gbm_segment.tsv.gz",
-        "hnscc_segment.tsv.gz",
-        "lscc_segment.tsv.gz",
-        "luad_segment.tsv.gz",
-        "ov_segment.tsv.gz",
-        "pdac_segment.tsv.gz",
-        "ucec_segment.tsv.gz",
-    ]
-
-    gistic_seg = _save_or_load_gistic_tables(
-        level="segment",
-        data_dir=data_dir,
-        gistic_data_dir=gistic_data_dir,
-        filenames=gistic_segment_filenames,
-        resave=resave,
-    )
-
-    gistic_gene_filenames = [
-        "brca_gene.tsv.gz",
-        "ccrcc_gene.tsv.gz",
-        "coad_gene.tsv.gz",
-        "gbm_gene.tsv.gz",
-        "hnscc_gene.tsv.gz",
-        "lscc_gene.tsv.gz",
-        "luad_gene.tsv.gz",
-        "ov_gene.tsv.gz",
-        "pdac_gene.tsv.gz",
-        "ucec_gene.tsv.gz",
-    ]
-
-    gistic_gene = _save_or_load_gistic_tables(
-        level="gene",
-        data_dir=data_dir,
-        gistic_data_dir=gistic_data_dir,
-        filenames=gistic_gene_filenames,
-        resave=resave,
-    )
-
-    gistic_arm_filenames = [
-        "brca_arm.tsv.gz",
-        "ccrcc_arm.tsv.gz",
-        "coad_arm.tsv.gz",
-        "gbm_arm.tsv.gz",
-        "hnscc_arm.tsv.gz",
-        "lscc_arm.tsv.gz",
-        "luad_arm.tsv.gz",
-        "ov_arm.tsv.gz",
-        "pdac_arm.tsv.gz",
-        "ucec_arm.tsv.gz",
-    ]
-
-    gistic_arm = _save_or_load_gistic_tables(
-        level="arm",
-        data_dir=data_dir,
-        gistic_data_dir=gistic_data_dir,
-        filenames=gistic_arm_filenames,
-        resave=resave,
-    )
-
-    if None in [gistic_seg, gistic_gene, gistic_arm]:
-        gistic_tables = None # If we need this later to make the locations table, we'll load all the previously saved tables then
-    else:
-        gistic_tables = {**gistic_seg, **gistic_gene, **gistic_arm}
+    # Save the GISTIC tables if needed
+    _save_input_tables_if_needed(data_dir=data_dir, source="gistic", resave=resave)
 
     # Create and save Ensembl gene locations file from CPTAC tables if needed
     # We already created a NCBI gene locations file for the GISTIC tables when we parsed and saved them
-    ensembl_gene_locations_save_path = os.path.join(input_data_dir, "ensembl_gene_locations.tsv.gz")
+    ensembl_gene_locations_save_path = get_gene_locations_path(source="ensembl", data_dir=data_dir)
     if not os.path.isfile(ensembl_gene_locations_save_path) or resave:
 
-        # Load previously saved cptac tables if they weren't already loaded earlier in this function
-        if cptac_tables is None:
-            cptac_tables = get_cptac_tables(data_dir=data_dir, data_types=["CNV"])
+        # Load previously saved cptac tables
+        cptac_tables = get_tables(source="cptac", data_types=["CNV"], data_dir=data_dir)
 
         # Get list of all genes we have CNV data for. These are the ones we'll need the locations of.
         genes = None
-
-        # It's important that we go through the CPTAC tables before the GISTIC tables, because the GISTIC tables are
-        # more likely to have NaNs for the Ensembl IDs
         for df in cptac_tables["CNV"].values():
             cols = df.columns.droplevel([level for level in df.columns.names if level not in ("Name", "Database_ID")])
             if genes is None:
-                genes = cols.copy(deep=True) # Just for the first one
+                genes = df.columns.copy(deep=True) # Just for the first one
             else:
-                genes = genes.union(cols)
+                genes = genes.union(df.columns)
 
         genes = genes.\
         to_frame().\
@@ -202,134 +139,64 @@ def save_input_tables(pancan, data_dir=os.path.join(os.getcwd(), "..", "data"), 
         ensembl_gene_locations.to_csv(ensembl_gene_locations_save_path, sep="\t")
 
         # Save the name changes
-        name_changes_save_path = os.path.join(input_data_dir, "ensembl_gene_name_updates.tsv.gz")
+        name_changes_save_path = get_input_source_file_path(data_dir, "ensembl")
         name_changes.to_csv(name_changes_save_path, sep="\t")
-
-def get_cptac_tables(data_dir, data_types=["CNV", "proteomics", "transcriptomics"], cancer_types=ALL_CANCERS[0]):
-
-    # Standardize data_types and cancer_types
-    data_types = [data_type.lower() for data_type in data_types]
-    cancer_types = [cancer_type.lower() for cancer_type in cancer_types]
-
-    # Get the data tables directory
-    cptac_tables_dir = os.path.join(data_dir, "sources", "cptac_tables")
-
-    # Get list of tables to load
-    all_table_paths = sorted(glob.glob(os.path.join(cptac_tables_dir, "*")))
-    load_table_paths = []
-    for path in all_table_paths:
-        cancer_type, data_type = path.split(os.sep)[-1].split(".")[0].split("_")
-        if cancer_type.lower() in cancer_types and data_type.lower() in data_types:
-            load_table_paths.append(path)
-
-    # Load the tables
-    cptac_tables = {}
-    for i, path in enumerate(load_table_paths):
-        cancer_type, data_type = path.split(os.sep)[-1].split(".")[0].split("_")
-
-        print(f"Loading {cancer_type} {data_type} ({i + 1}/{len(load_table_paths)})...{' ' * 30}", end="\r")
-
-        if data_type not in cptac_tables.keys():
-            cptac_tables[data_type] = {}
-
-        cptac_tables[data_type][cancer_type] = pd.read_csv(
-            path,
-            sep="\t",
-            index_col=0,
-            header=[0, 1]
-        )
-
-    # Clear last loading message
-    print(" " * 80, end="\r")
-
-    return cptac_tables
-
-def get_gistic_tables(data_dir=os.path.join(os.getcwd(), "..", "data"), levels=["segment", "gene", "arm"], cancer_types=ALL_CANCERS[0]):
-
-    # Standardize levels and cancer_types
-    levels = [level.lower() for level in levels]
-    cancer_types = [cancer_type.lower() for cancer_type in cancer_types]
-
-    # Get the data tables directory
-    gistic_tables_dir = os.path.join(data_dir, "sources", "gistic_tables")
-
-    # Get list of tables to load
-    all_table_paths = sorted(glob.glob(os.path.join(gistic_tables_dir, "*")))
-    load_table_paths = []
-    for path in all_table_paths:
-        cancer_type, level = path.split(os.sep)[-1].split(".")[0].split("_")
-        if cancer_type.lower() in cancer_types and level.lower() in levels:
-            load_table_paths.append(path)
-
-    # Load the tables
-    gistic_tables = {}
-    for i, path in enumerate(load_table_paths):
-        cancer_type, level = path.split(os.sep)[-1].split(".")[0].split("_")
-
-        print(f"Loading {cancer_type} {level} level CNV ({i + 1}/{len(load_table_paths)})...{' ' * 30}", end="\r")
-
-        if level not in gistic_tables.keys():
-            gistic_tables[level] = {}
-
-        gistic_tables[level][cancer_type] = pd.read_csv(
-            path,
-            sep="\t",
-            index_col=0,
-            header=[0, 1, 2]
-        )
-
-    # Clear last loading message
-    print(" " * 80, end="\r")
-
-    return gistic_tables
-
-def get_ensembl_gene_locations_table(data_dir=os.path.join(os.getcwd(), "..", "data")):
-
-    ensembl_gene_locations_path = os.path.join(data_dir, "sources", "ensembl_gene_locations.tsv.gz")
-    ensembl_gene_locations = pd.read_csv(ensembl_gene_locations_path, sep="\t", index_col=[0, 1])
-
-    return ensembl_gene_locations
-
-def get_ncbi_gene_locations_table(data_dir=os.path.join(os.getcwd(), "..", "data")):
-
-    ncbi_gene_metadata_path = os.path.join(data_dir, "sources", "ncbi_gene_locations.tsv.gz")
-
-    ncbi_gene_metadata = pd.\
-    read_csv(ncbi_gene_metadata_path, sep="\t", dtype={"NCBI_ID": np.object}).\
-    set_index(["Name", "NCBI_ID"]) # We don't set the index in read_csv because we want to control the dtypes
-
-    return ncbi_gene_metadata
 
 # Helper functions
 
-def _save_or_load_gistic_tables(level, data_dir, gistic_data_dir, filenames, resave):
+def _save_input_tables_if_needed(data_dir, source, resave):
 
-    gistic_saved = True
-    for filename in filenames:
-        if not os.path.isfile(os.path.join(gistic_data_dir, filename)):
-            gistic_saved = False
-            break
-
-    # Save the GISTIC files if needed
-    if gistic_saved and not resave:
-        gistic_tables = None # If we need this later to make the locations table, we'll load the previously saved tables then
+    if source == "cptac":
+        data_types = ["CNV", "transcriptomics", "proteomics"]
+    elif source == "gistic":
+        data_types = ["arm", "gene", "segment"]
     else:
+        raise ValueError(f"Invalid data source '{source}'")
 
-        # Load and reformat the GISTIC tables
-        gistic_tables = _load_gistic_tables(
-            levels=[level],
-            data_dir=data_dir,
-        )
+    tables_saved = True
+    for cancer_type in ALL_CANCERS[0]:
+        for data_type in data_types:
 
-        # Save GISTIC tables
-        for data_level, cancer_types in gistic_tables.items():
+            if not os.path.isfile(get_input_source_file_path(
+                data_dir=data_dir,
+                source=source,
+                cancer_type=cancer_type,
+                data_type=data_type,
+            )):
+                tables_saved = False
+                break
+
+    if not tables_saved or resave:
+
+        # Load and reformat the tables
+        if source == "cptac":
+            tables = _load_cptac_tables(
+                cancer_types=ALL_CANCERS[0],
+                data_types=data_types,
+                pancan=True,
+            )
+
+        elif source == "gistic":
+            tables = _load_gistic_tables(
+                levels=data_types,
+                data_dir=data_dir,
+            )
+
+        else:
+            raise ValueError(f"Invalid data source '{source}'")
+
+        # Save the tables
+        for data_type, cancer_types in tables.items():
             for cancer_type, df in cancer_types.items():
 
-                file_name = f"{cancer_type}_{data_level}.tsv.gz"
-                save_path = os.path.join(gistic_data_dir, file_name)
-                df.to_csv(save_path, sep="\t")
+                save_path = get_input_source_file_path(
+                    data_dir=data_dir,
+                    source=source,
+                    cancer_type=cancer_type,
+                    data_type=data_type,
+                )
 
-    return gistic_tables
+                df.to_csv(save_path, sep="\t")
 
 def _compile_ensembl_gene_locations(genes):
 
@@ -990,7 +857,7 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
             df = df[["Name", "Database_ID", "NCBI_ID"] + df.columns[~df.columns.isin(["Name", "NCBI_ID", "Database_ID", "chromosome", "start_bp", "end_bp"])].tolist()]
 
             # Save the gene metadata file
-            metadata_path = os.path.join(data_dir, "sources", "ncbi_gene_locations.tsv.gz")
+            metadata_path = get_gene_locations_path(data_dir, "ncbi")
             metadata_cleaned.to_csv(metadata_path, sep="\t", index=False)
 
             # Drop the Database_ID column from the table--we'll just work with NCBI IDs, since that's the database the

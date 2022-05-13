@@ -3,22 +3,25 @@ import os
 import pandas as pd
 
 from .constants import ALL_CANCERS, INDIVIDUAL_GENE_CNV_MAGNITUDE_CUTOFF, PROPORTION_WITH_EVENT_CUTOFF
+from .filenames import (
+    get_cnv_counts_path,
+    get_has_event_path,
+)
 from .load_data import (
-    get_cptac_tables,
-    get_gistic_tables,
-    get_ensembl_gene_locations_table,
-    get_ncbi_gene_locations_table,
+    get_tables,
+    get_ensembl_gene_locations,
+    get_ncbi_gene_locations,
 )
 
 def make_counts_table(
     chromosome,
-    data_source,
+    source,
     level=None,
     data_dir=os.path.join(os.getcwd(), "..", "data"),
-    cancer_types=ALL_CANCERS[0]
+    cancer_types=ALL_CANCERS[0],
 ):
     # Get tables
-    if data_source == "cptac":
+    if source == "cptac":
 
         id_name = "Database_ID"
 
@@ -29,7 +32,7 @@ def make_counts_table(
         gene_locations = get_ensembl_gene_locations_table(data_dir=data_dir)
         chr_gene_locations = gene_locations[gene_locations["chromosome"] == chromosome]
 
-    elif data_source == "gistic":
+    elif source == "gistic":
 
         id_name = "NCBI_ID"
 
@@ -42,7 +45,7 @@ def make_counts_table(
         else:
             raise ValueError(f"Invalid level '{level}'")
     else:
-        raise ValueError(f"Invalid data source '{data_source}'")
+        raise ValueError(f"Invalid data source '{source}'")
     
     # Compile counts
     cnv_long = pd.DataFrame()
@@ -52,7 +55,7 @@ def make_counts_table(
         num_patients = df.shape[1]
 
         # Get just our chromosome
-        if data_source == "cptac" or data_source == "gistic" and level == "gene":
+        if source == "cptac" or source == "gistic" and level == "gene":
             df = df[df.index.get_level_values(id_name).isin(chr_gene_locations.index.get_level_values(id_name))]
         else:
             raise ValueError(f"Invalid level '{level}'")
@@ -62,8 +65,12 @@ def make_counts_table(
         df['loss'] = df.apply(_get_loss_counts, axis=1)
         
         # Join in locations
-        if data_source == "cptac" or data_source == "gistic" and level == "gene":
-            df = df.join(chr_gene_locations)
+        if source == "cptac" or source == "gistic" and level == "gene":
+            df = df.merge(
+                right=chr_gene_locations,
+                how="left",
+                on=id_name,
+            )
         else:
             raise ValueError(f"Invalid level '{level}'")
         
@@ -87,7 +94,13 @@ def make_counts_table(
     cnv_long = cnv_long.reset_index()
 
     # Save table
-    cnv_long.to_csv(os.path.join(data_dir, f"{data_source}_chr{chromosome:0>2}_cnv_counts.tsv"), sep='\t', index=False)
+    counts_path = get_cnv_counts_path(
+        data_dir=data_dir,
+        source=source,
+        level=level,
+        chromosome=chromosome,
+    )
+    cnv_long.to_csv(counts_path, sep='\t', index=False)
 
 def select_genes_for_event(
     gene_locations,
@@ -126,12 +139,12 @@ def make_has_event_table(
     event_end,
     gain_or_loss,
     cancer_types,
-    data_source,
+    source,
     level=None,
     data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
     # Get tables
-    if data_source == "cptac":
+    if source == "cptac":
 
         id_name = "Database_ID"
 
@@ -140,9 +153,8 @@ def make_has_event_table(
 
         # Get gene locations
         gene_locations = get_ensembl_gene_locations_table(data_dir=data_dir)
-        chr_gene_locations = gene_locations[gene_locations["chromosome"] == chromosome]
 
-    elif data_source == "gistic":
+    elif source == "gistic":
 
         id_name = "NCBI_ID"
 
@@ -154,14 +166,22 @@ def make_has_event_table(
         else:
             raise ValueError(f"Invalid level '{level}'")
     else:
-        raise ValueError(f"Invalid data source '{data_source}'")
+        raise ValueError(f"Invalid data source '{source}'")
     
     for cancer_type in cnv.keys():
 
         # Join in locations
         event_df = cnv[cancer_type]
         event_df = event_df.transpose()
-        event_df = event_df.join(gene_locations)
+
+        if source == "cptac" or source == "gistic" and level == "gene":
+            event_df = event_df.merge(
+                right=gene_locations,
+                how="left",
+                on=id_name,
+            )
+        else:
+            raise ValueError(f"Invalid level '{level}'")
         
         # Slice out just the genes within the event
         event_df = select_genes_for_event(
@@ -197,10 +217,16 @@ def make_has_event_table(
         })
 
         # Write to tsv
-        has_event.to_csv(os.path.join(
-            data_dir,
-            f"{data_source}_chr{chromosome:0>2}{arm}_{gain_or_loss}_{cancer_type}_has_event.tsv"
-        ), sep='\t')
+        has_event_path = get_has_event_path(
+            data_dir=data_dir,
+            source=source,
+            cancer_type=cancer_type,
+            level=level,
+            chromosome=chromosome,
+            arm=arm,
+            gain_or_loss=gain_or_loss,
+        )
+        has_event.to_csv(has_event_path, sep='\t')
 
 def event_effects_ttest(
     chromosome,
@@ -211,18 +237,20 @@ def event_effects_ttest(
     cis_or_trans,
     proteomics_or_transcriptomics,
     cancer_types,
+    source,
+    level=None,
     data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
     # Get data_tables
-    data_tables = load_input_tables(
-        data_dir,
+    data_tables = get_cptac_tables(
+        data_dir=data_dir,
         data_types=[proteomics_or_transcriptomics],
         cancer_types=cancer_types,
     )
     data_tables = data_tables[proteomics_or_transcriptomics]
-    
+
     # Get gene locations
-    gene_locations = load_gene_locations(data_dir)
+    gene_locations = get_ensembl_gene_locations_table(data_dir=data_dir)
 
     # Select proteins
     # Note that the cnvutils.get_event_genes function uses Ensembl gene IDs for the 
@@ -252,10 +280,18 @@ def event_effects_ttest(
     for cancer_type in data_tables.keys():
         df = data_tables[cancer_type]
         df = df.transpose()
-        event = pd.read_csv(os.path.join(
-            data_dir,
-            f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cancer_type}_has_event.tsv"
-        ), sep='\t', index_col=0)
+
+        event_path = get_has_event_path(
+            data_dir=data_dir,
+            source=source,
+            cancer_type=cancer_type,
+            level=level,
+            chromosome=chromosome,
+            arm=arm,
+            gain_or_loss=gain_or_loss,
+        )
+        event = pd.read_csv(event_path, sep='\t', index_col=0)
+
         event.index.rename('Name')
         df = df.join(event)
         df = df.dropna(subset=["event"])
@@ -344,10 +380,15 @@ def event_effects_ttest(
     # Drop duplicate rows and reset the index
     long_results = long_results[~long_results.duplicated(keep=False)].\
     reset_index(drop=True)
-
-    save_path = os.path.join(
-        data_dir,
-        f"{data_source}_chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_ttest.tsv"
+    
+    save_path = get_ttest_results_path(
+        data_dir=data_dir,
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        arm=arm,
+        gain_or_loss=gain_or_loss,
+        cis_or_trans=cis_or_trans,
     )
     long_results.to_csv(save_path, sep='\t', index=False)
 
