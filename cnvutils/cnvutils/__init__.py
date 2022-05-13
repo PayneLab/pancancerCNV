@@ -6,12 +6,14 @@ from .chromosome_funcs import (
 )
 
 from .load_data import (
-    save_input_tables,
-    get_tables,
     get_ensembl_gene_locations,
     get_ncbi_gene_locations,
+    get_tables,
+    save_input_tables,
 )
 
 from .make_plots import (
-    make_ttest_plot
+    make_chr_line_plot,
+    make_chr_gradient_plot,
+    make_ttest_plot,
 )

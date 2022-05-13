@@ -25,22 +25,22 @@ def make_counts_table(
 
         id_name = "Database_ID"
 
-        tables = get_cptac_tables(data_dir=data_dir, data_types=["CNV"])
+        tables = get_tables(source=source, data_types=["CNV"], data_dir=data_dir)
         cnv = tables["CNV"]
 
         # Get gene locations
-        gene_locations = get_ensembl_gene_locations_table(data_dir=data_dir)
+        gene_locations = get_ensembl_gene_locations(data_dir=data_dir)
         chr_gene_locations = gene_locations[gene_locations["chromosome"] == chromosome]
 
     elif source == "gistic":
 
         id_name = "NCBI_ID"
 
-        tables = get_gistic_tables(data_dir=data_dir, levels=[level])
+        tables = get_tables(source=source, data_types=[level], data_dir=data_dir)
         cnv = tables[level]
 
         if level == "gene":
-            gene_locations = get_ncbi_gene_locations_table(data_dir=data_dir)
+            gene_locations = get_ncbi_gene_locations(data_dir=data_dir)
             chr_gene_locations = gene_locations[gene_locations["chromosome"] == chromosome]
         else:
             raise ValueError(f"Invalid level '{level}'")
@@ -148,21 +148,21 @@ def make_has_event_table(
 
         id_name = "Database_ID"
 
-        tables = get_cptac_tables(data_dir=data_dir, data_types=["CNV"])
+        tables = get_tables(source=source, data_types=["CNV"], data_dir=data_dir)
         cnv = tables["CNV"]
 
         # Get gene locations
-        gene_locations = get_ensembl_gene_locations_table(data_dir=data_dir)
+        gene_locations = get_ensembl_gene_locations(data_dir=data_dir)
 
     elif source == "gistic":
 
         id_name = "NCBI_ID"
 
-        tables = get_gistic_tables(data_dir=data_dir, levels=[level])
+        tables = get_tables(source=source, data_types=[level], data_dir=data_dir)
         cnv = tables[level]
 
         if level == "gene":
-            gene_locations = get_ncbi_gene_locations_table(data_dir=data_dir)
+            gene_locations = get_ncbi_gene_locations(data_dir=data_dir)
         else:
             raise ValueError(f"Invalid level '{level}'")
     else:
@@ -242,15 +242,16 @@ def event_effects_ttest(
     data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
     # Get data_tables
-    data_tables = get_cptac_tables(
+    data_tables = get_tables(
         data_dir=data_dir,
+        source="cptac",
         data_types=[proteomics_or_transcriptomics],
         cancer_types=cancer_types,
     )
     data_tables = data_tables[proteomics_or_transcriptomics]
 
     # Get gene locations
-    gene_locations = get_ensembl_gene_locations_table(data_dir=data_dir)
+    gene_locations = get_ensembl_gene_locations(data_dir=data_dir)
 
     # Select proteins
     # Note that the cnvutils.get_event_genes function uses Ensembl gene IDs for the 

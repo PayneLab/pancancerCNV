@@ -1,4 +1,5 @@
 import altair as alt
+import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -7,12 +8,249 @@ import seaborn as sns
 import warnings
 
 from .constants import ALL_CANCERS, CHART_DPI, CHART_FORMAT, CHART_SCALE
+from .filenames import (
+    get_chr_gradient_plot_path,
+    get_chr_line_plot_path,
+)
+from .load_data import (
+    get_cnv_counts,
+    get_cytoband_info,
+)
 
-def make_event_line_plot(
+def make_chr_line_plot(
+    source,
     chromosome,
+    level=None,
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
     cancer_types=ALL_CANCERS[0],
 ):
-    pass
+
+    # Turn off interactive plotting
+    plt.ioff()
+
+    # Get CNV counts
+    cnv_counts = get_cnv_counts(
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        data_dir=data_dir
+    )
+
+    # I was not able to find a good library for creating a visual of a chromosome
+    # with their banding patterns, so I wrote this function to do it for me.
+
+    ideogram_data = get_cytoband_info()
+    chromo = ideogram_data[ideogram_data['chromosome'] == chromosome]
+    colors = []
+    sections = list()
+    for index, row in chromo.iterrows():
+        sections.append((row['bp_start'], row['bp_stop'] - row['bp_start']))
+        if row['stain'] == 'gneg':
+            colors.append('white')
+        elif row['stain'] == 'gpos':
+            if row['density'] == 25.0:
+                colors.append('lightgray')
+            elif row['density'] == 50.0:
+                colors.append('gray')
+            elif row['density'] == 75.0:
+                colors.append('darkgray')
+            else:
+                colors.append('black')
+        elif row['stain'] == 'acen':
+            colors.append('red')
+        else:
+            colors.append('lightgray')
+
+    # Set up our axes
+    count = 0
+    end_bp = sections[len(sections) - 1][0] + sections[len(sections) - 1][1]
+    fig, axs = plt.subplots(nrows=len(cancer_types) + 1, sharex=True, sharey=True, num=0, figsize=(10,11))
+    title = f"Chromosome {chromosome} CNV - {source}{' ' + level if level else ''}"
+    fig.suptitle(title, y=0.9, x=0.45)
+    plt.xlim(0,175138636)
+    plt.xlim(0,end_bp + (end_bp/5))
+    plt.ylim(0, 100)
+
+    # Fill in the individual plots
+    for cancer in cancer_types:
+        frame = cnv_counts[cnv_counts["cancer"] == cancer]
+        axs[count].get_xaxis().set_visible(False)
+        axs[count].set_yticks([25,50])
+        axs[count].set_frame_on(False)
+        axs[count].text(end_bp + 5000000, 25, cancer)
+        # Testing out the location event stuff
+        axs[count].axvline(52110839, 0, 75, color='b')
+        axs[count].axvline(202660, 0, 75, color='b')
+        axs[count].axvline(37421341, 0, 75, color='b')
+        sns.lineplot(
+            x="start_bp", 
+            y="num_patients_with_cnv", 
+            hue="cnv_type", 
+            palette=['darkred', 'darkblue'], 
+            data=frame, 
+            ax=axs[count], 
+            legend=False)
+        axs[count].set_ylabel("")
+        count += 1
+        
+    # Add the chromosome banding map at the bottom
+    plt.broken_barh(sections, (50,15), facecolors=colors, edgecolor="black")
+    plt.axis('off')
+
+    # Set up the legend
+    red_line = mlines.Line2D([], [], color='darkred', label='Amplifications')
+    blue_line = mlines.Line2D([], [], color='darkblue', label='Deletions')
+    fig.legend(handles=[red_line, blue_line], loc='center right')
+
+    # Set the Y axis label
+    fig.text(0.07, 0.5, "Number of Samples", rotation="vertical")
+
+    # Save the chart
+    chart_path = get_chr_line_plot_path(
+        data_dir=data_dir,
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        chart_format=CHART_FORMAT,
+    )
+
+    fig.savefig(chart_path, dpi=CHART_DPI, transparent=False, facecolor="white")
+    plt.clf()
+
+    return chart_path
+
+def make_chr_gradient_plot(
+    source,
+    chromosome,
+    level=None,
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
+    cancer_types=ALL_CANCERS[0],
+):
+
+    if source == "cptac":
+        id_name = "Database_ID"
+    elif source == "gistic":
+        id_name = "NCBI_ID"
+    else:
+        raise ValueError(f"Invalid data source '{source}'")
+
+    # Altair options
+    alt.data_transformers.disable_max_rows()
+
+    # Get CNV counts
+    cnv_counts = get_cnv_counts(
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        data_dir=data_dir
+    )
+
+    # Categorize counts
+    gain_loss_counts = cnv_counts.pivot_table(index=[id_name, 'cancer'], columns='cnv_type')
+    gain_loss_counts.columns = gain_loss_counts.columns.to_flat_index()
+    gain_loss_counts = gain_loss_counts.drop(columns=[
+        ('start_bp', 'gain'),
+        ('end_bp', 'gain'),
+        ('cancer_type_total_patients', 'gain'),
+    ])
+    gain_loss_counts = gain_loss_counts.rename(
+        columns={
+            ('cancer_type_total_patients', 'loss'): 'cancer_type_total_patients', 
+            ('end_bp', 'loss'): 'end_bp', 
+            ('start_bp', 'loss'): 'start_bp', 
+            ('num_patients_with_cnv', 'gain'): 'gain', 
+            ('num_patients_with_cnv', 'loss'): 'loss'}, 
+    )
+
+    gain_loss_counts['net_patient_ct'] = gain_loss_counts.gain - gain_loss_counts.loss
+
+    gain_loss_counts = gain_loss_counts.\
+    reset_index().\
+    rename(columns={id_name: "gene"}).\
+    sort_values(["cancer", "start_bp"])
+
+    # Calculate a net_patient_prop column
+    gain_loss_counts = gain_loss_counts.assign(
+        net_patient_prop=gain_loss_counts["net_patient_ct"] / gain_loss_counts["cancer_type_total_patients"],
+    )
+
+    # Make the gradients
+    grads = alt.Chart(gain_loss_counts).mark_rect().encode(
+        x=alt.X(
+            "cancer",
+            title="Cancer type",
+            axis=alt.Axis(
+                labelAngle=40,
+                ticks=False,
+                grid=False,
+                domain=False,
+            ),
+        ),
+        y=alt.Y(
+            "start_bp",
+            title=None,
+            axis=alt.Axis(
+                labels=False,
+                ticks=False,
+                grid=False,
+                domain=False,
+                values=list(range(0, gain_loss_counts["end_bp"].astype(int).max(), 5000000)),
+            )
+        ),
+        y2="end_bp",
+        color=alt.Color(
+            "net_patient_prop",
+            title=[
+                "Net proportion",
+                "of patients with",
+                "gain (red) or",
+                "loss (blue)",
+            ],
+            scale=alt.Scale(
+                scheme="redblue",
+                domain=[-gain_loss_counts["net_patient_prop"].abs().max(), gain_loss_counts["net_patient_prop"].abs().max()],
+                reverse=True,
+            ),
+        ),
+    ).properties(
+        width=300,
+    )
+    
+    # Get the cytoband plot
+    cytobands = make_cytoband_plot(
+        chromosome,
+        show_xlabel=False,
+        width=20,
+        height=500,
+    )
+    
+    # Concatenate the plots
+    grads = alt.hconcat(
+        cytobands,
+        grads,
+        bounds="flush",
+        title=f"Gene gain and loss on chromosome {chromosome}"
+    ).resolve_scale(
+        color="independent",
+        y="shared",
+    ).configure_title(
+        anchor="middle"
+    ).configure_view(
+        stroke=None,
+    )
+    
+    # Save the chart
+    path = get_chr_gradient_plot_path(
+        data_dir=data_dir,
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        chart_format=CHART_FORMAT,
+    )
+
+    grads.save(path, scale_factor=CHART_SCALE)
+
+    return path
 
 def make_ttest_plot(
     chromosome,
@@ -84,14 +322,12 @@ def make_ttest_plot(
 
     return event_effects_barchart
 
-def make_cytoband_plot(chrm, show_xlabel=True, height=800):
+def make_cytoband_plot(chrm, width, height, show_xlabel=True):
     """Create a cytoband plot"""
     
     # Get cytoband info
     cytoband_data = get_cytoband_info()
-    if chrm not in cytoband_data['#chromosome'].values:
-        raise ValueError(f"Chromosome '{chrm}' not found in cytoband data. Make sure it's a string, not an int.")
-    cytoband_data = cytoband_data[cytoband_data['#chromosome'] == chrm]
+    cytoband_data = cytoband_data[cytoband_data['chromosome'] == chrm]
     
     # Create a column for colors
     cytoband_data = cytoband_data.assign(
@@ -103,9 +339,9 @@ def make_cytoband_plot(chrm, show_xlabel=True, height=800):
     )
 
     # Make the chart
-    bars = alt.Chart(cytoband_data).mark_bar().encode(
+    bars = alt.Chart(cytoband_data).mark_rect().encode(
         x=alt.X(
-            "#chromosome",
+            "chromosome",
             title="Chromosome" if show_xlabel else None,
             axis=alt.Axis(
                 labelAngle=0,
@@ -116,7 +352,6 @@ def make_cytoband_plot(chrm, show_xlabel=True, height=800):
         ),
         y=alt.Y(
             "bp_start",
-            stack=None,
             scale=alt.Scale(
                 domain=[cytoband_data["bp_stop"].max(), 0],
                 nice=False,
@@ -136,6 +371,7 @@ def make_cytoband_plot(chrm, show_xlabel=True, height=800):
                 labelExpr="datum.value == 0 ? 0 : datum.value % 10000000 ? null : slice(datum.label, -length(datum.label), -8) + 'Mb'",
             )
         ),
+        y2="bp_end",
         color=alt.Color(
             "color",
             scale=alt.Scale(
@@ -145,7 +381,10 @@ def make_cytoband_plot(chrm, show_xlabel=True, height=800):
             legend=None,
         ),
         order=alt.Order("bp_start", sort="ascending"),
-    ).properties(height=height)
+    ).properties(
+        width=width,
+        height=height,
+    )
     
     return bars
 
@@ -170,7 +409,7 @@ def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=Non
 
     """
     cytoband_info = get_cytoband_info()
-    data = cytoband_info[cytoband_info['#chromosome'] == chromo]
+    data = cytoband_info[cytoband_info['chromosome'] == chromo]
     locations = get_gene_locations()
 
     if arm:

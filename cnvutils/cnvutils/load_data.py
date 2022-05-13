@@ -10,19 +10,20 @@ import xmltodict
 
 from .constants import ALL_CANCERS
 from .filenames import (
+    get_cnv_counts_path,
     get_input_data_dir,
     get_input_source_data_dir,
     get_input_source_file_path,
     get_gene_locations_path,
-    get_input_source_file_path,
+    get_gene_name_updates_path,
 )
 
 # Table getters
 
 def get_cnv_counts(
-    chromosome,
     source,
-    level=None,
+    level,
+    chromosome,
     data_dir=os.path.join(os.getcwd(), "..", "data")
 ):
     counts_path = get_cnv_counts_path(
@@ -89,6 +90,23 @@ def get_ncbi_gene_locations(data_dir=os.path.join(os.getcwd(), "..", "data")):
 
     return ncbi_gene_locations
 
+def get_cytoband_info(x_and_y_chr=False):
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    cytoband_file = os.path.join(base_dir, "cnvutils", "data", 'NCBI_ideogram.csv')
+
+    df = pd.\
+    read_csv(cytoband_file).\
+    rename(columns={"#chromosome": "chromosome"})
+
+    df = pd.read_csv(cytoband_file).rename(columns={"#chromosome": "chromosome"})
+
+    if not x_and_y_chr:
+        df = df[df["chromosome"].str.isnumeric()]
+        df = df.assign(chromosome=df["chromosome"].astype(np.int64))
+    
+    return df
+
 # Table savers
 
 def save_input_tables(data_dir=os.path.join(os.getcwd(), "..", "data"), resave=False):
@@ -96,15 +114,6 @@ def save_input_tables(data_dir=os.path.join(os.getcwd(), "..", "data"), resave=F
     gene locations table, and save all of them.
     """
     
-    # Create directories to store all the files we load
-    input_data_dir = get_input_data_dir(data_dir)
-    cptac_data_dir = get_input_source_data_dir(data_dir, "cptac")
-    gistic_data_dir = get_input_source_data_dir(data_dir, "gistic")
-
-    os.makedirs(input_data_dir, exist_ok=True)
-    os.makedirs(cptac_data_dir, exist_ok=True)
-    os.makedirs(gistic_data_dir, exist_ok=True)
-
     # Save the CPTAC files if needed
     _save_input_tables_if_needed(data_dir=data_dir, source="cptac", resave=resave)
 
@@ -139,7 +148,7 @@ def save_input_tables(data_dir=os.path.join(os.getcwd(), "..", "data"), resave=F
         ensembl_gene_locations.to_csv(ensembl_gene_locations_save_path, sep="\t")
 
         # Save the name changes
-        name_changes_save_path = get_input_source_file_path(data_dir, "ensembl")
+        name_changes_save_path = get_gene_name_updates_path(data_dir, "ensembl")
         name_changes.to_csv(name_changes_save_path, sep="\t")
 
 # Helper functions
@@ -329,7 +338,7 @@ def _compile_ensembl_gene_locations(genes):
     gene_locations = full_meta
 
     # Add arms
-    cytoband = _get_cytoband_info(x_and_y_chr=False)
+    cytoband = get_cytoband_info()
 
     p_arm_max = cytoband[cytoband["arm"] == "p"].\
     groupby("chromosome").\
@@ -506,23 +515,6 @@ def _load_ensembl_release(release_number):
         ensembl.index()
         print(" " * 80, end="\r") # Clear the message
     return ensembl
-
-def _get_cytoband_info(x_and_y_chr=True):
-
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    cytoband_file = os.path.join(base_dir, "cnvutils", "data", 'NCBI_ideogram.csv')
-
-    df = pd.\
-    read_csv(cytoband_file).\
-    rename(columns={"#chromosome": "chromosome"})
-
-    df = pd.read_csv(cytoband_file).rename(columns={"#chromosome": "chromosome"})
-
-    if not x_and_y_chr:
-        df = df[df["chromosome"].str.isnumeric()]
-        df = df.assign(chromosome=df["chromosome"].astype(np.int64))
-    
-    return df
 
 def _load_cptac_tables(cancer_types, data_types, pancan, no_internet=False):
     """Get the tables for the specified data types from the specified cancer types.

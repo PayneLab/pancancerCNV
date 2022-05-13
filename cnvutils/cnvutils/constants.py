@@ -55,4 +55,4 @@ GENE_CNV_PROPORTION_CUTOFF =  0.2
 # Parameters for saving charts
 CHART_DPI = 600
 CHART_FORMAT = "png"
-CHART_SCALE = 4
+CHART_SCALE = 1.0
