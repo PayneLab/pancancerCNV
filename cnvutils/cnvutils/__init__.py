@@ -13,6 +13,7 @@ from .load_data import (
 )
 
 from .make_plots import (
+    find_gain_and_loss_regions,
     make_chr_line_plot,
     make_chr_gradient_plot,
     make_ttest_plot,

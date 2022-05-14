@@ -8,6 +8,7 @@ from .filenames import (
     get_has_event_path,
 )
 from .load_data import (
+    get_cnv_counts,
     get_tables,
     get_ensembl_gene_locations,
     get_ncbi_gene_locations,

@@ -7,7 +7,7 @@ import pandas as pd
 import seaborn as sns
 import warnings
 
-from .constants import ALL_CANCERS, CHART_DPI, CHART_FORMAT, CHART_SCALE
+from .constants import ALL_CANCERS, CHART_DPI, CHART_FORMAT, CHART_SCALE, GENE_CNV_PROPORTION_CUTOFF
 from .filenames import (
     get_chr_gradient_plot_path,
     get_chr_line_plot_path,
@@ -251,6 +251,93 @@ def make_chr_gradient_plot(
     grads.save(path, scale_factor=CHART_SCALE)
 
     return path
+
+def find_gain_and_loss_regions(
+    source,
+    chromosome,
+    level=None,
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
+    cancer_types=ALL_CANCERS[0],
+):
+
+    # Get our counts of number of patients with a CNV event at each gene
+    counts = get_cnv_counts(
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        data_dir=data_dir
+    )
+
+    # For each cancer type, calculate the minimum number of patients that need to have a CNV amplification
+    # or deletion of a gene for us to consider that gene significantly amplified or deleted in that cancer
+    # type, based on the GENE_CNV_PROPORTION_CUTOFF parameter. As of 12 Feb 2022, this is set at 20% of the total number
+    # of patients in the cancer type.
+    cutoffs = dict()
+
+    for cancer_type in cancer_types:
+        cutoffs[cancer_type] = counts[counts["cancer"] == cancer_type]["cancer_type_total_patients"].iloc[0] * GENE_CNV_PROPORTION_CUTOFF
+
+    # Find gain and loss regions
+    gains = _find_gain_or_loss_regions(
+        counts=counts,
+        cancer_types=cancer_types,
+        gain_or_loss="gain",
+    )
+
+    losses = _find_gain_or_loss_regions(
+        counts=counts,
+        cancer_types=cancer_types,
+        gain_or_loss="loss",
+    )
+    
+    # Join the gain and loss data
+    gains = gains.assign(event="gain")
+    losses = losses.assign(event="loss", counts=losses["counts"] * -1)
+    events = gains.append(losses)
+    
+    # Make the gains and losses plot
+    events_plot = alt.Chart(events).mark_rect().encode(
+        x=alt.X(
+            "counts",
+            title="Number of cancers with gain (positive) or loss (negative)",
+        ),
+        y=alt.Y(
+            "start",
+            title=None,
+            axis=alt.Axis(
+                labels=False,
+                ticks=False,
+                values=list(range(0, events["end"].astype(int).max(), 5000000)),
+            )
+        ),
+        y2="end",
+        color=alt.Color(
+            "event",
+            scale=alt.Scale(
+                domain=["gain", "loss"],
+                range=["darkred", "darkblue"],
+            ),
+        ),
+        tooltip=alt.Tooltip(
+            ["start", "end", "counts"],
+            format=","
+        ),
+    )
+    
+    # Get the cytoband plot
+    cytobands = cnvutils.make_cytoband_plot(chromosome)
+    
+    # Concatenate the plots
+    events_plot = alt.hconcat(
+        cytobands,
+        events_plot,
+        bounds="flush"
+    ).resolve_scale(
+        color="independent",
+        y="shared",
+    )
+
+    return events_plot, gains, losses
 
 def make_ttest_plot(
     chromosome,
@@ -549,3 +636,65 @@ def make_pvalue_plot(df, label_column, value_column, group_column=None, sort_col
         plt.setp(ax.xaxis.get_majorticklabels(), rotation=90)
     plt.subplots_adjust(hspace=0.8, wspace=0.4)
     return g
+
+def _find_gain_or_loss_regions(
+    counts,
+    cancer_types,
+    gain_or_loss,
+):
+    event_locations = dict()
+    for cancer in cancer_types:
+        
+        df = counts[(counts.variable == gain_or_loss) & (counts.cancer == cancer)].sort_values('start_bp')
+        values = list(df.value)
+        events = list()
+        start = None
+        for i in range(0, len(values)):
+            val = values[i]
+            if val > cutoffs[cancer]:
+                if start is None:
+                    start = i
+            else:
+                if start is not None:
+                    events.append((start, i))
+                    start = None
+        if start is not None:
+            events.append((start, len(values)-1))
+        event_locations = list()
+        for event in events:
+            start_bp = df.iloc[event[0]].start_bp
+            end_bp = df.iloc[event[1]].start_bp
+            event_locations.append((start_bp, end_bp - start_bp))
+        event_locations[cancer] = event_locations
+
+    event_patients = list()
+    for cancer in event_locations.keys():
+        events = event_locations[cancer]
+        for event in events:
+            start = event[0]
+            end = event[0] + event[1]
+            event_patients.append((start, 1))
+            event_patients.append((end, 0))
+    event_patients.sort()
+
+    count = 0
+    current_bp = 0
+    start = list()
+    end = list()
+    size = list()
+    total = list()
+    for patient in event_patients:
+        if patient[0] != current_bp:
+            start.append(current_bp)
+            end.append(patient[0])
+            size.append(patient[0] - current_bp)
+            total.append(count)
+            current_bp = patient[0]
+        if patient[1] == 1:
+            count += 1
+        else:
+            count -= 1
+    event_data = pd.DataFrame({'start': start, 'end': end, 'counts': total, 'length': size}).sort_values('start')
+
+    return event_data
+
