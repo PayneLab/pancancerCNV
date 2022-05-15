@@ -11,6 +11,7 @@ import xmltodict
 from .constants import ALL_CANCERS
 from .filenames import (
     get_cnv_counts_path,
+    get_event_metadata_path,
     get_input_data_dir,
     get_input_source_data_dir,
     get_input_source_file_path,
@@ -150,6 +151,18 @@ def save_input_tables(data_dir=os.path.join(os.getcwd(), "..", "data"), resave=F
         # Save the name changes
         name_changes_save_path = get_gene_name_updates_path(data_dir, "ensembl")
         name_changes.to_csv(name_changes_save_path, sep="\t")
+
+# Metadata
+def load_event_metadata(source, chromosome, arm, gain_or_loss, level=None, data_dir=os.path.join(os.getcwd(), "..", "data")):
+    path = get_event_metadata_path(data_dir, source, level, chromosome, arm, gain_or_loss)
+    with open(path, "r") as file_obj:
+        metadata = json.load(file_obj)
+    return metadata
+
+def save_event_metadata(metadata, source, chromosome, arm, gain_or_loss, level=None, data_dir=os.path.join(os.getcwd(), "..", "data")):
+    path = get_event_metadata_path(data_dir, source, level, chromosome, arm, gain_or_loss)
+    with open(path, "w") as file_obj:
+        json.dump(metadata, file_obj)
 
 # Helper functions
 
@@ -338,6 +351,24 @@ def _compile_ensembl_gene_locations(genes):
     gene_locations = full_meta
 
     # Add arms
+    gene_locations = _add_arms_to_gene_locations(gene_locations)
+
+    # Set index as gene name and database ID
+    gene_locations = gene_locations.set_index(["Name", "Database_ID"], drop=True, append=False)
+
+    # Package these extra lists
+    problems = {
+        "old_id_not_found": old_id_not_found,
+        "invalid_release": invalid_release,
+        "only_name": only_name,
+        "duplicate_names": duplicate_names,
+        "dups_from_old": dups_from_old,
+    }
+
+    return gene_locations, name_changes, problems
+
+def _add_arms_to_gene_locations(gene_locations):
+
     cytoband = get_cytoband_info()
 
     p_arm_max = cytoband[cytoband["arm"] == "p"].\
@@ -359,19 +390,7 @@ def _compile_ensembl_gene_locations(genes):
     # Drop the p_arm_max column now that we have arms
     gene_locations = gene_locations.drop(columns="p_arm_max")
 
-    # Set index as gene name and database ID
-    gene_locations = gene_locations.set_index(["Name", "Database_ID"], drop=True, append=False)
-
-    # Package these extra lists
-    problems = {
-        "old_id_not_found": old_id_not_found,
-        "invalid_release": invalid_release,
-        "only_name": only_name,
-        "duplicate_names": duplicate_names,
-        "dups_from_old": dups_from_old,
-    }
-
-    return gene_locations, name_changes, problems
+    return gene_locations
 
 def _lookup_genes_ensembl(query, id_or_name):
 
@@ -847,6 +866,9 @@ def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")
             # Split out the data and location metadata
             metadata_cleaned = df[["Name", "NCBI_ID", "Database_ID", "chromosome", "start_bp", "end_bp"]]
             df = df[["Name", "Database_ID", "NCBI_ID"] + df.columns[~df.columns.isin(["Name", "NCBI_ID", "Database_ID", "chromosome", "start_bp", "end_bp"])].tolist()]
+
+            # Add chromosome arms to gene metadata file
+            metadata_cleaned = _add_arms_to_gene_locations(metadata_cleaned)
 
             # Save the gene metadata file
             metadata_path = get_gene_locations_path(data_dir, "ncbi")

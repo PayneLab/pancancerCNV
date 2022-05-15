@@ -6,6 +6,7 @@ from .constants import ALL_CANCERS, INDIVIDUAL_GENE_CNV_MAGNITUDE_CUTOFF, PROPOR
 from .filenames import (
     get_cnv_counts_path,
     get_has_event_path,
+    get_ttest_results_path,
 )
 from .load_data import (
     get_cnv_counts,
@@ -87,8 +88,8 @@ def make_counts_table(
             cancer_type_total_patients=num_patients,
             cancer=cancer_type
         )
-        
-        cnv_long = cnv_long.append(df)
+
+        cnv_long = pd.concat([cnv_long, df])
 
     # Sort
     cnv_long = cnv_long.sort_values(['cancer', 'start_bp'])
@@ -195,7 +196,7 @@ def make_has_event_table(
         
         # Calculate gene lengths, drop other columns
         gene_lengths = event_df["end_bp"] - event_df["start_bp"]
-        event_df = event_df.drop(columns=['chromosome', 'start_bp', 'end_bp', 'arm'])
+        event_df = event_df.drop(columns=[col for col in ['chromosome', 'start_bp', 'end_bp', 'arm', "Database_ID"] if col in event_df.columns])
 
         # Binarize all values to whether greater than/less than cutoff
         if gain_or_loss == "gain":
@@ -295,6 +296,7 @@ def event_effects_ttest(
         event = pd.read_csv(event_path, sep='\t', index_col=0)
 
         event.index.rename('Name')
+        df.columns = df.columns.to_flat_index() # Flatten the index before joining
         df = df.join(event)
         df = df.dropna(subset=["event"])
         df = df.drop(columns="proportion")
@@ -377,7 +379,7 @@ def event_effects_ttest(
         cancer_df = cancer_df[["cancer_type", "protein", "Database_ID", "adj_p", "change"]]
 
         # Append to the overall dataframe
-        long_results = long_results.append(cancer_df)
+        long_results = pd.concat([long_results, cancer_df])
 
     # Drop duplicate rows and reset the index
     long_results = long_results[~long_results.duplicated(keep=False)].\

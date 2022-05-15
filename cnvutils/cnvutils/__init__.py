@@ -9,6 +9,8 @@ from .load_data import (
     get_ensembl_gene_locations,
     get_ncbi_gene_locations,
     get_tables,
+    load_event_metadata,
+    save_event_metadata,
     save_input_tables,
 )
 

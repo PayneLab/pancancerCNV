@@ -31,6 +31,10 @@ def get_has_event_path(data_dir, source, cancer_type, level, chromosome, arm, ga
 def get_ttest_results_path(data_dir, source, level, chromosome, arm, gain_or_loss, cis_or_trans):
     return os.path.join(data_dir, f"{source}_{level + '_' if level else ''}chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_ttest.tsv")
 
+# Metadata
+def get_event_metadata_path(data_dir, source, level, chromosome, arm, gain_or_loss):
+    return os.path.join(data_dir, f"{source}_{level + '_' if level else ''}chr{chromosome:0>2}{arm}_{gain_or_loss}_metadata.json")
+
 # Plots
 def get_charts_img_path(data_dir):
     path = os.path.join(data_dir, "charts_img")

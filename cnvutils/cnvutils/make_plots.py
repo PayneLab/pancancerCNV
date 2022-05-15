@@ -282,12 +282,14 @@ def find_gain_and_loss_regions(
         counts=counts,
         cancer_types=cancer_types,
         gain_or_loss="gain",
+        cutoffs=cutoffs,
     )
 
     losses = _find_gain_or_loss_regions(
         counts=counts,
         cancer_types=cancer_types,
         gain_or_loss="loss",
+        cutoffs=cutoffs,
     )
     
     # Join the gain and loss data
@@ -325,7 +327,11 @@ def find_gain_and_loss_regions(
     )
     
     # Get the cytoband plot
-    cytobands = cnvutils.make_cytoband_plot(chromosome)
+    cytobands = make_cytoband_plot(
+        chromosome,
+        width=20,
+        height=800,
+    )
     
     # Concatenate the plots
     events_plot = alt.hconcat(
@@ -641,12 +647,13 @@ def _find_gain_or_loss_regions(
     counts,
     cancer_types,
     gain_or_loss,
+    cutoffs,
 ):
     event_locations = dict()
     for cancer in cancer_types:
         
-        df = counts[(counts.variable == gain_or_loss) & (counts.cancer == cancer)].sort_values('start_bp')
-        values = list(df.value)
+        df = counts[(counts.cnv_type == gain_or_loss) & (counts.cancer == cancer)].sort_values('start_bp')
+        values = list(df.num_patients_with_cnv)
         events = list()
         start = None
         for i in range(0, len(values)):
@@ -660,12 +667,11 @@ def _find_gain_or_loss_regions(
                     start = None
         if start is not None:
             events.append((start, len(values)-1))
-        event_locations = list()
+        event_locations[cancer] = []
         for event in events:
             start_bp = df.iloc[event[0]].start_bp
             end_bp = df.iloc[event[1]].start_bp
-            event_locations.append((start_bp, end_bp - start_bp))
-        event_locations[cancer] = event_locations
+            event_locations[cancer].append((start_bp, end_bp - start_bp))
 
     event_patients = list()
     for cancer in event_locations.keys():
