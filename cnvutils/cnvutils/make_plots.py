@@ -11,6 +11,7 @@ from .constants import ALL_CANCERS, CHART_DPI, CHART_FORMAT, CHART_SCALE, GENE_C
 from .filenames import (
     get_chr_gradient_plot_path,
     get_chr_line_plot_path,
+    get_ttest_results_path,
 )
 from .load_data import (
     get_cnv_counts,
@@ -351,15 +352,25 @@ def make_ttest_plot(
     gain_or_loss,
     cis_or_trans,
     proteomics_or_transcriptomics,
-    #cancer_types,
+    source,
+    level=None,
     data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
 
+    # Get our ttest results file
+    ttest_results_path = get_ttest_results_path(
+        data_dir=data_dir,
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        arm=arm,
+        gain_or_loss=gain_or_loss,
+        cis_or_trans=cis_or_trans,
+        proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+    )
+
     ttest_results = pd.\
-    read_csv(os.path.join(
-        data_dir,
-        f"chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_ttest.tsv"
-    ), sep="\t").\
+    read_csv(ttest_results_path, sep="\t").\
     rename(columns={"Name": "protein"})
 
     prots = ttest_results[ttest_results["adj_p"] <= 0.05].reset_index(drop=True)
@@ -413,7 +424,22 @@ def make_ttest_plot(
         labelOrient="bottom",
     )
 
-    return event_effects_barchart
+    # Save the chart
+    path = get_ttest_plot_path(
+        data_dir=data_dir,
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        arm=arm,
+        gain_or_loss=gain_or_loss,
+        cis_or_trans=cis_or_trans,
+        proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+        chart_format=CHART_FORMAT,
+    )
+
+    event_effects_barchart.save(path, scale_factor=CHART_SCALE)
+
+    return path
 
 def make_cytoband_plot(chrm, width, height, show_xlabel=True):
     """Create a cytoband plot"""
@@ -480,168 +506,6 @@ def make_cytoband_plot(chrm, width, height, show_xlabel=True):
     )
     
     return bars
-
-# Old
-
-def make_chromosome_plot(chromo, arm=None, start_bp=None, end_bp=None, genes=None, show_labels=True, title=None, ax=None, above=True):
-    """ Create a cytoband plot and mark genes
-
-    Parameters:
-    chromo (str): The chromosome to be plotted
-    arm (str): The chromosome arm to be plotted
-    start_bp (int): the base pair to start plotting at
-    end_bp (int): the base pair to end the plot
-    genes (list or dict): a list of genes to mark on the plot; if using a dict, the key should be the color with the value as a list of genes to be marked in the given color.
-    show_labels (bool): whether to show the gene names
-    title (str): the title to show on the plot
-    ax (Axes): the axes the plot should be generated on
-    above (bool): If true labels will be placed above the plot. If false labels will be placed below.
-
-    Results:
-    Plot
-
-    """
-    cytoband_info = get_cytoband_info()
-    data = cytoband_info[cytoband_info['chromosome'] == chromo]
-    locations = get_gene_locations()
-
-    if arm:
-        data = data[data.arm == arm]
-
-    if start_bp:
-        data = data[data.bp_stop > start_bp]
-    else:
-        start_bp = np.min(data.bp_start)
-
-    if end_bp:
-        data = data[data.bp_start < end_bp]
-    else:
-        end_bp = np.max(data.bp_stop)
-
-    if above:
-        label_location = 75
-    else:
-        label_location = 20
-
-    colors = list()
-    sections = list()
-    for index, row in data.iterrows():
-        sections.append((row['bp_start'], row['bp_stop']-row['bp_start']))
-        if row['stain'] == 'gneg':
-            colors.append('white')
-        elif row['stain'] == 'gpos':
-            if row['density'] == 25.0:
-                colors.append('lightgray')
-            elif row['density'] == 50.0:
-                colors.append('gray')
-            elif row['density'] == 75.0:
-                colors.append('darkgray')
-            else:
-                colors.append('black')
-        elif row['stain'] == 'acen':
-            colors.append('red')
-        else:
-            colors.append('lightgray')
-    if ax is None:
-        fig, ax = plt.subplots()
-        fig.set_figheight(0.5)
-        fig.set_figwidth(30)
-    ax.broken_barh(sections, (50,15), facecolors=colors, edgecolor="black")
-    plt.axis('off')
-    if title:
-        ax.set_title(title, y=3.0, size='xx-large')
-    not_found = list()
-    if isinstance(genes, list):
-        for gene in genes:
-
-            loc = list(locations.loc[gene, 'start_bp'])[0]
-            chromosome = list(locations.loc[gene, 'chromosome'])[0]
-            if loc > start_bp and loc < end_bp and chromosome == chromo:
-                ax.axvline(loc, 0, 15, color='r')
-                if show_labels:
-                    ax.text(loc, label_location, gene, rotation=90)
-
-            else:
-                not_found.append(gene)
-    elif isinstance(genes, dict):
-        for color in genes.keys():
-            for gene in genes[color]:
-                loc = list(locations.loc[gene, 'start_bp'])[0]
-                chromosome = list(locations.loc[gene, 'chromosome'])[0]
-                if loc > start_bp and loc < end_bp and chromosome == chromo:
-                    ax.axvline(loc, 0, 15, color=color)
-                    if show_labels:
-                        ax.text(loc, label_location, gene, rotation=90)
-                else:
-                    not_found.append(gene)
-    if len(not_found) > 0:
-        warnings.warn(f'The following genes were not found within the event: {not_found}')
-
-    return plt
-
-def make_pvalue_plot(df, label_column, value_column, group_column=None, sort_column=None, sort_ascending=True, sig=0.05, show_sig=True, labels_per_plot=30):
-    """
-    @param df:
-        The dataframe with pvalue information
-    @param label_column:
-        The name of the column that contains the labels for the x-axis of the figure
-    @param value_column:
-        The name of the column that contains the pvalues to be plotted
-    @param group_column (optional):
-        The name of the column that contains a grouping category. If provided, the groups will be indicated by color and
-        a legend will be added to the figure
-    @param sort_column (optional):
-        The name of the column to sort the values on before plotting.
-    @param sort_ascending
-        Sort ascending vs. descending. This variable will only be used if sort_column is not None. Otherwise values will be
-        plotted by position in the dataframe provided.
-    @param sig:
-        The significance value (before log transformation) to be plotted for comparison. The line can be turned off using the
-        show_sig parameter.
-    @param show_sig:
-        Determines whether the significance line is shown in the plot.
-    @param labels_per_plot:
-        The number of labels on each plot. If there are more labels than fit on a single plot, additional plots will
-        be created.
-    """
-    all_cancer_types = ['brca', 'colon', 'ccrcc', 'endo', 'gbm', 'hnscc', 'luad', 'lscc', 'ovarian']
-    colors = sns.color_palette('tab10', n_colors=9)
-    color_dict = dict()
-    for i in range(9):
-        color_dict[all_cancer_types[i]] = colors[i]
-    df_copy = df.copy()
-    df_copy['log_val'] = df_copy[value_column].apply(lambda x: -np.log10(x))
-    if sort_column:
-        df_copy = df_copy.sort_values(sort_column, ascending=sort_ascending)
-    def chunks(lst, n):
-        """Yield successive n-sized chunks from lst."""
-        x = list()
-        for i in range(0, len(lst), n):
-            x.append(lst[i:i + n])
-        return x
-    split_results = chunks(df_copy[label_column].unique(), labels_per_plot)
-    def set_group(row):
-        for i in range(len(split_results)):
-            if row[label_column] in split_results[i]:
-                return i
-    df_copy['group_num'] = df_copy.apply(set_group, axis=1)
-    if group_column:
-        df_copy = df_copy.drop_duplicates(subset=[label_column, value_column, group_column])
-    else:
-        df_copy = df_copy.drop_duplicates(subset=[label_column, value_column])
-#     palette = [color_dict[x] for x in df_copy.cancer.unique()]
-    g = sns.FacetGrid(df_copy, row="group_num", aspect=4, sharex=False, sharey=False, legend_out=True)
-    if group_column:
-        plot = g.map_dataframe(sns.swarmplot, x=label_column, y="log_val", hue=group_column, palette=color_dict)
-        g.add_legend()
-    else:
-        g.map_dataframe(sns.swarmplot, x=label_column, y="log_val", palette=color_dict)
-    for ax in g.axes.ravel():
-        ax.hlines(-np.log10(sig),*ax.get_xlim())
-        ax.set_title("")
-        plt.setp(ax.xaxis.get_majorticklabels(), rotation=90)
-    plt.subplots_adjust(hspace=0.8, wspace=0.4)
-    return g
 
 def _find_gain_or_loss_regions(
     counts,

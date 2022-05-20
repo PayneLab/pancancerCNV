@@ -393,6 +393,7 @@ def event_effects_ttest(
         arm=arm,
         gain_or_loss=gain_or_loss,
         cis_or_trans=cis_or_trans,
+        proteomics_or_transcriptomics=proteomics_or_transcriptomics,
     )
     long_results.to_csv(save_path, sep='\t', index=False)
 

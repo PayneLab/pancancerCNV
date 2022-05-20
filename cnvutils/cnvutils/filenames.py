@@ -28,8 +28,8 @@ def get_cnv_counts_path(data_dir, source, level, chromosome):
 def get_has_event_path(data_dir, source, cancer_type, level, chromosome, arm, gain_or_loss):
     return os.path.join(data_dir, f"{source}_{level + '_' if level else ''}chr{chromosome:0>2}{arm}_{gain_or_loss}_{cancer_type}_has_event.tsv")
 
-def get_ttest_results_path(data_dir, source, level, chromosome, arm, gain_or_loss, cis_or_trans):
-    return os.path.join(data_dir, f"{source}_{level + '_' if level else ''}chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_ttest.tsv")
+def get_ttest_results_path(data_dir, source, level, chromosome, arm, gain_or_loss, cis_or_trans, proteomics_or_transcriptomics):
+    return os.path.join(data_dir, f"{source}_{level + '_' if level else ''}chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_{proteomics_or_transcriptomics}_ttest.tsv")
 
 # Metadata
 def get_event_metadata_path(data_dir, source, level, chromosome, arm, gain_or_loss):
@@ -46,3 +46,6 @@ def get_chr_line_plot_path(data_dir, source, level, chromosome, chart_format):
 
 def get_chr_gradient_plot_path(data_dir, source, level, chromosome, chart_format):
     return os.path.join(get_charts_img_path(data_dir), f"{source}_{level + '_' if level else ''}chr{chromosome:0>2}_gradient_plot.{chart_format}")
+
+def get_ttest_plot_path(data_dir, source, level, chromosome, arm, gain_or_loss, cis_or_trans, proteomics_or_transcriptomics, chart_format):
+    return os.path.join(data_dir, f"{source}_{level + '_' if level else ''}chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_{proteomics_or_transcriptomics}_ttest_plot.{chart_format}")
