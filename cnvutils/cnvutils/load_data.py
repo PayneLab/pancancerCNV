@@ -164,19 +164,6 @@ def save_event_metadata(metadata, source, chromosome, arm, gain_or_loss, level=N
     with open(path, "w") as file_obj:
         json.dump(metadata, file_obj)
 
-def get_driver_genes():
-    """Load the table of cancer driver genes from:
-    Bailey MH, Tokheim C, Porta-Pardo E, et al. Comprehensive Characterization of Cancer Driver 
-    Genes and Mutations. Cell. 2018;174(4):1034-1035. doi:10.1016/j.cell.2018.07.034
-
-    Download link for table: https://ars.els-cdn.com/content/image/1-s2.0-S009286741830237X-mmc1.xlsx
-    """
-
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    file = os.path.join(BASE_DIR, 'cnvutils', "data", 'bailey_driver_genes.csv')
-    df = pd.read_csv(file, skiprows=3)
-    return df
-
 def get_normal_expr_table():
     """Load the table of normal protein expression levels for different tissues. This table was downloaded from:
     https://www.embopress.org/action/downloadSupplement?doi=10.15252%2Fmsb.20188503&file=msb188503-sup-0007-TableEV5.zip
@@ -200,6 +187,66 @@ def get_normal_expr_table():
     set_index(["Gene_name", "Gene_ID", "Protein_ID"]).\
     sort_index().\
     reset_index(drop=False)
+
+    return df
+
+def get_driver_genes(source, cancer_types=None):
+    """Load the table of cancer driver genes from:
+    Bailey MH, Tokheim C, Porta-Pardo E, et al. Comprehensive Characterization of Cancer Driver 
+    Genes and Mutations. Cell. 2018;174(4):1034-1035. doi:10.1016/j.cell.2018.07.034
+
+    Download link for table: https://ars.els-cdn.com/content/image/1-s2.0-S009286741830237X-mmc1.xlsx
+    """
+
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    file_path = os.path.join(BASE_DIR, "cnvutils", "data", "bailey_driver_genes.xlsx")
+    df = pd.read_excel(
+        file_path,
+        sheet_name="Table S1",
+        header=3,
+        usecols=[0, 1],
+    )
+
+    # Do some reformatting and renaming for consistency with our code
+    df = df.rename(columns={"Gene": "Name", "Cancer": "cancer_type"})
+    df = df.assign(
+        Name=df["Name"].replace({ # Just fixing some old gene names
+            "H3F3A": "H3-3A",
+            "H3F3C": "H3-5",
+            "HIST1H1C": "H1-2",
+            "RQCD1": "CNOT9",
+            "TCEB1": "ELOC",
+        }),
+        cancer_type=df["cancer_type"].str.lower().replace({ # To match our acronymns
+            # "brca",
+            "kirc": "ccrcc",
+            "coadread": "coad",
+            # "gbm",
+            "hnsc": "hnscc",
+            "lusc": "lscc",
+            # "luad",
+            # "ov",
+            "paad": "pdac",
+            # "ucec",
+        }),
+    )
+    # Get a list of all cancer types in the table
+    all_cancer_types = df["cancer_type"].drop_duplicates(keep="first").reset_index(drop=True)
+    all_cancer_types = all_cancer_types[all_cancer_types != "pancan"].sort_values()
+
+    # For every gene marked "pancan", replace that with an
+    # individual row for that gene and each cancer type
+    df = df.\
+    assign(cancer_type=df["cancer_type"].replace({"pancan": ",".join(all_cancer_types)}).str.split(",")).\
+    explode("cancer_type", ignore_index=True).\
+    drop_duplicates(keep="first").\
+    sort_values(by=["Name", "cancer_type"])
+
+    # Optionally select just the desired cancer types
+    if cancer_types is not None:
+        df = df[df["cancer_type"].isin(cancer_types)]
+
+    df = df.groupby("Name").agg(list).reset_index(drop=False)
 
     return df
 
