@@ -164,6 +164,45 @@ def save_event_metadata(metadata, source, chromosome, arm, gain_or_loss, level=N
     with open(path, "w") as file_obj:
         json.dump(metadata, file_obj)
 
+def get_driver_genes():
+    """Load the table of cancer driver genes from:
+    Bailey MH, Tokheim C, Porta-Pardo E, et al. Comprehensive Characterization of Cancer Driver 
+    Genes and Mutations. Cell. 2018;174(4):1034-1035. doi:10.1016/j.cell.2018.07.034
+
+    Download link for table: https://ars.els-cdn.com/content/image/1-s2.0-S009286741830237X-mmc1.xlsx
+    """
+
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    file = os.path.join(BASE_DIR, 'cnvutils', "data", 'bailey_driver_genes.csv')
+    df = pd.read_csv(file, skiprows=3)
+    return df
+
+def get_normal_expr_table():
+    """Load the table of normal protein expression levels for different tissues. This table was downloaded from:
+    https://www.embopress.org/action/downloadSupplement?doi=10.15252%2Fmsb.20188503&file=msb188503-sup-0007-TableEV5.zip
+
+    It was produced as part of this paper:
+    Wang D, Eraslan B, Wieland T, et al. A deep proteome and transcriptome abundance atlas of 29 healthy human
+    tissues. Mol Syst Biol. 2019;15(2):e8503. Published 2019 Feb 18. doi:10.15252/msb.20188503
+    """
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    file_path = os.path.join(BASE_DIR, "cnvutils", "data", "Table_EV5.xlsx")
+
+    df = pd.read_excel(
+        file_path,
+        sheet_name="A. Protein copies"
+    ).\
+    rename(columns={
+        "Gene name": "Gene_name",
+        "Gene ID": "Gene_ID",
+        "Protein ID": "Protein_ID"
+    }).\
+    set_index(["Gene_name", "Gene_ID", "Protein_ID"]).\
+    sort_index().\
+    reset_index(drop=False)
+
+    return df
+
 # Helper functions
 
 def _save_input_tables_if_needed(data_dir, source, resave):
@@ -1164,38 +1203,3 @@ def _get_entrez_api_key():
         api_key = file.read().strip()
 
     return api_key
-
-# Old
-
-def get_driver_genes():
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    file = os.path.join(BASE_DIR, 'cnvutils', "data", 'bailey_driver_genes.csv')
-    df = pd.read_csv(file, skiprows=3)
-    return df
-
-
-def get_normal_expr_table():
-    """Load the table of normal protein expression levels for different tissues. This table was downloaded from:
-    https://www.embopress.org/action/downloadSupplement?doi=10.15252%2Fmsb.20188503&file=msb188503-sup-0007-TableEV5.zip
-
-    It was produced as part of this paper:
-    Wang D, Eraslan B, Wieland T, et al. A deep proteome and transcriptome abundance atlas of 29 healthy human
-    tissues. Mol Syst Biol. 2019;15(2):e8503. Published 2019 Feb 18. doi:10.15252/msb.20188503
-    """
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    file_path = os.path.join(BASE_DIR, "cnvutils", "data", "Table_EV5.xlsx")
-
-    df = pd.read_excel(
-        file_path,
-        sheet_name="A. Protein copies"
-    ).\
-    rename(columns={
-        "Gene name": "Gene_name",
-        "Gene ID": "Gene_ID",
-        "Protein ID": "Protein_ID"
-    }).\
-    set_index(["Gene_name", "Gene_ID", "Protein_ID"]).\
-    sort_index().\
-    reset_index(drop=False)
-
-    return df

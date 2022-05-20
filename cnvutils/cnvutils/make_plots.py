@@ -11,6 +11,7 @@ from .constants import ALL_CANCERS, CHART_DPI, CHART_FORMAT, CHART_SCALE, GENE_C
 from .filenames import (
     get_chr_gradient_plot_path,
     get_chr_line_plot_path,
+    get_ttest_plot_path,
     get_ttest_results_path,
 )
 from .load_data import (
@@ -382,7 +383,7 @@ def make_ttest_plot(
     prots_cts.insert(0, "count_type", "Significant difference")
     fail_cts.insert(0, "count_type", "No significant difference")
 
-    counts = prots_cts.append(fail_cts).sort_index().reset_index(drop=False)
+    counts = pd.concat([prots_cts, fail_cts]).sort_index().reset_index(drop=False)
 
     event_effects_barchart = alt.Chart(counts).mark_bar().encode(
         x=alt.X(
@@ -415,7 +416,7 @@ def make_ttest_plot(
             title="Cancer type",
         )
     ).properties(
-        title=f"Chr {chromosome}{arm} {cis_or_trans} {'protein' if proteomics_or_transcriptomics == 'proteomics' else 'RNA'} effects"
+        title=f"{source} {level + ' level ' if level else ''}chr {chromosome}{arm} {cis_or_trans} {'protein' if proteomics_or_transcriptomics == 'proteomics' else 'RNA'} effects"
     ).configure_title(
         anchor="middle"
     ).configure_header(

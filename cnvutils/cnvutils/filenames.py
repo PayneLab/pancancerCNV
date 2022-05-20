@@ -48,4 +48,4 @@ def get_chr_gradient_plot_path(data_dir, source, level, chromosome, chart_format
     return os.path.join(get_charts_img_path(data_dir), f"{source}_{level + '_' if level else ''}chr{chromosome:0>2}_gradient_plot.{chart_format}")
 
 def get_ttest_plot_path(data_dir, source, level, chromosome, arm, gain_or_loss, cis_or_trans, proteomics_or_transcriptomics, chart_format):
-    return os.path.join(data_dir, f"{source}_{level + '_' if level else ''}chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_{proteomics_or_transcriptomics}_ttest_plot.{chart_format}")
+    return os.path.join(get_charts_img_path(data_dir), f"{source}_{level + '_' if level else ''}chr{chromosome:0>2}{arm}_{gain_or_loss}_{cis_or_trans}_{proteomics_or_transcriptomics}_ttest_plot.{chart_format}")
