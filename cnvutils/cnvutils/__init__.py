@@ -8,6 +8,7 @@ from .chromosome_funcs import (
 from .load_data import (
     get_driver_genes,
     get_ensembl_gene_locations,
+    get_genes_ttest_results,
     get_ncbi_gene_locations,
     get_normal_expr_table,
     get_tables,

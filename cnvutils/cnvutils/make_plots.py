@@ -442,6 +442,28 @@ def make_ttest_plot(
 
     return path
 
+def make_genes_manhattan_plot(
+        genes,
+        source,
+        chromosome,
+        arm,
+        gain_or_loss,
+        proteomics_or_transcriptomics,
+        level=None,
+        data_dir="../data",
+):
+
+    ttest_results = get_genes_ttest_results(
+        genes,
+        source,
+        chromosome,
+        arm,
+        gain_or_loss,
+        proteomics_or_transcriptomics,
+        level=None,
+        data_dir=data_dir,
+    )
+
 def make_cytoband_plot(chrm, width, height, show_xlabel=True):
     """Create a cytoband plot"""
     

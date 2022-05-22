@@ -17,6 +17,7 @@ from .filenames import (
     get_input_source_file_path,
     get_gene_locations_path,
     get_gene_name_updates_path,
+    get_ttest_results_path,
 )
 
 # Table getters
@@ -190,7 +191,7 @@ def get_normal_expr_table():
 
     return df
 
-def get_driver_genes(source, cancer_types=None):
+def get_driver_genes(locs_source, cancer_types=None):
     """Load the table of cancer driver genes from:
     Bailey MH, Tokheim C, Porta-Pardo E, et al. Comprehensive Characterization of Cancer Driver 
     Genes and Mutations. Cell. 2018;174(4):1034-1035. doi:10.1016/j.cell.2018.07.034
@@ -246,9 +247,65 @@ def get_driver_genes(source, cancer_types=None):
     if cancer_types is not None:
         df = df[df["cancer_type"].isin(cancer_types)]
 
+    # Collapse down to one row per gene
     df = df.groupby("Name").agg(list).reset_index(drop=False)
 
+    # Join in location data
+    if locs_source == "ensembl":
+        locs = get_ensembl_gene_locations().reset_index()
+    elif locs_source == "ncbi":
+        locs = get_ncbi_gene_locations().reset_index()
+    else:
+        raise ValueError(f"Invalid locs_source '{locs_source}'")
+
+    df = df.merge(right=locs, how="left", on="Name")
+
+    # Drop the 18 rows that we didn't have location data for--they're mostly just X chromosome genes
+    df = df.dropna(how="any", axis=0)
+
     return df
+
+def get_genes_ttest_results(
+    genes,
+    source,
+    chromosome,
+    arm,
+    gain_or_loss,
+    proteomics_or_transcriptomics,
+    level=None,
+    data_dir="../data"
+):
+    
+    cis_results = pd.read_csv(get_ttest_results_path(
+        data_dir=data_dir,
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        arm=arm,
+        gain_or_loss=gain_or_loss,
+        cis_or_trans="cis",
+        proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+    ), sep="\t").\
+    assign(cis_or_trans="cis")
+
+    trans_results = pd.read_csv(get_ttest_results_path(
+        data_dir=data_dir,
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        arm=arm,
+        gain_or_loss=gain_or_loss,
+        cis_or_trans="trans",
+        proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+    ), sep="\t").\
+    assign(cis_or_trans="trans")
+
+    ttest_results = pd.concat([cis_results, trans_results])
+
+    matches = ttest_results[ttest_results["protein"].isin(genes)].\
+    sort_values(by=["protein", "cancer_type"])
+    
+    return matches
 
 # Helper functions
 
