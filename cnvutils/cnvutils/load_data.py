@@ -160,8 +160,17 @@ def load_event_metadata(source, chromosome, arm, gain_or_loss, level=None, data_
         metadata = json.load(file_obj)
     return metadata
 
-def save_event_metadata(metadata, source, chromosome, arm, gain_or_loss, level=None, data_dir=os.path.join(os.getcwd(), "..", "data")):
-    path = get_event_metadata_path(data_dir, source, level, chromosome, arm, gain_or_loss)
+def save_event_metadata(metadata, data_dir=os.path.join(os.getcwd(), "..", "data")):
+
+    path = get_event_metadata_path(
+        data_dir=data_dir,
+        source=metadata["source"],
+        level=metadata["level"],
+        chromosome=metadata["chromosome"],
+        arm=metadata["arm"],
+        gain_or_loss=metadata["gain_or_loss"],
+    )
+
     with open(path, "w") as file_obj:
         json.dump(metadata, file_obj)
 
