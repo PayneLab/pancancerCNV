@@ -271,36 +271,22 @@ def get_genes_ttest_results(
     chromosome,
     arm,
     gain_or_loss,
+    cis_or_trans,
     proteomics_or_transcriptomics,
     level=None,
     data_dir="../data"
 ):
     
-    cis_results = pd.read_csv(get_ttest_results_path(
+    ttest_results = pd.read_csv(get_ttest_results_path(
         data_dir=data_dir,
         source=source,
         level=level,
         chromosome=chromosome,
         arm=arm,
         gain_or_loss=gain_or_loss,
-        cis_or_trans="cis",
+        cis_or_trans=cis_or_trans,
         proteomics_or_transcriptomics=proteomics_or_transcriptomics,
-    ), sep="\t").\
-    assign(cis_or_trans="cis")
-
-    trans_results = pd.read_csv(get_ttest_results_path(
-        data_dir=data_dir,
-        source=source,
-        level=level,
-        chromosome=chromosome,
-        arm=arm,
-        gain_or_loss=gain_or_loss,
-        cis_or_trans="trans",
-        proteomics_or_transcriptomics=proteomics_or_transcriptomics,
-    ), sep="\t").\
-    assign(cis_or_trans="trans")
-
-    ttest_results = pd.concat([cis_results, trans_results])
+    ), sep="\t")
 
     matches = ttest_results[ttest_results["protein"].isin(genes)].\
     sort_values(by=["protein", "cancer_type"])

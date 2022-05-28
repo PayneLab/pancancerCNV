@@ -56,3 +56,6 @@ GENE_CNV_PROPORTION_CUTOFF =  0.2
 CHART_DPI = 600
 CHART_FORMAT = "png"
 CHART_SCALE = 1.0
+
+# Significance cutoff for B-H FDR adjusted p values
+SIG_CUTOFF = 0.05

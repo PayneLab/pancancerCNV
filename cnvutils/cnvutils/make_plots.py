@@ -7,16 +7,26 @@ import pandas as pd
 import seaborn as sns
 import warnings
 
-from .constants import ALL_CANCERS, CHART_DPI, CHART_FORMAT, CHART_SCALE, GENE_CNV_PROPORTION_CUTOFF
+from .constants import (
+    ALL_CANCERS,
+    CHART_DPI,
+    CHART_FORMAT,
+    CHART_SCALE,
+    GENE_CNV_PROPORTION_CUTOFF,
+    SIG_CUTOFF,
+)
 from .filenames import (
     get_chr_gradient_plot_path,
     get_chr_line_plot_path,
-    get_ttest_plot_path,
+    get_drivers_manhattan_plot_path,
+    get_ttest_counts_plot_path,
     get_ttest_results_path,
 )
 from .load_data import (
     get_cnv_counts,
     get_cytoband_info,
+    get_driver_genes,
+    get_genes_ttest_results,
 )
 
 def make_chr_line_plot(
@@ -347,7 +357,7 @@ def find_gain_and_loss_regions(
 
     return events_plot, gains, losses
 
-def make_ttest_plot(
+def make_ttest_counts_plot(
     chromosome,
     arm,
     gain_or_loss,
@@ -426,7 +436,7 @@ def make_ttest_plot(
     )
 
     # Save the chart
-    path = get_ttest_plot_path(
+    path = get_ttest_counts_plot_path(
         data_dir=data_dir,
         source=source,
         level=level,
@@ -448,21 +458,112 @@ def make_genes_manhattan_plot(
         chromosome,
         arm,
         gain_or_loss,
+        cis_or_trans,
         proteomics_or_transcriptomics,
         level=None,
+        facet_row=None,
         data_dir="../data",
 ):
 
     ttest_results = get_genes_ttest_results(
-        genes,
-        source,
-        chromosome,
-        arm,
-        gain_or_loss,
-        proteomics_or_transcriptomics,
-        level=None,
+        genes=genes,
+        source=source,
+        chromosome=chromosome,
+        arm=arm,
+        gain_or_loss=gain_or_loss,
+        cis_or_trans=cis_or_trans,
+        proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+        level=level,
         data_dir=data_dir,
     )
+
+    ttest_results = ttest_results.assign(
+        line=-np.log10(SIG_CUTOFF),
+        neg_log_adj_p=-np.log10(ttest_results["adj_p"]),
+    )
+
+    base = alt.Chart(ttest_results)
+
+    dots = base.mark_point().encode(
+        x=alt.X(
+            "cancer_type",
+            title=None,
+        ),
+        y=alt.Y(
+            "neg_log_adj_p",
+            title="-log(p)",
+        ),
+        color=alt.Color(
+            "cancer_type",
+            title="Cancer type",
+        ),
+    )
+
+    line = base.mark_rule(color="crimson").encode(
+        y="line",
+    )
+
+    mplot = alt.layer(
+        dots,
+        line,
+    ).facet(
+        facet="protein",
+        columns=7,
+        spacing=alt.RowColnumber(column=0, row=20),
+    ).configure_header(
+        title=None,
+    )
+
+    return mplot
+
+def make_drivers_manhattan_plot(
+    source,
+    chromosome,
+    arm,
+    gain_or_loss,
+    cis_or_trans,
+    proteomics_or_transcriptomics,
+    level=None,
+    data_dir="../data",
+):
+
+    if source == "cptac":
+        locs_source = "ensembl"
+    elif source == "gistic":
+        locs_source = "ncbi"
+    else:
+        raise ValueError(f"Invalid 'source' parameter '{source}'")
+    
+    genes = get_driver_genes(locs_source=locs_source)
+
+    mplot = make_genes_manhattan_plot(
+            genes=genes["Name"],
+            source=source,
+            chromosome=chromosome,
+            arm=arm,
+            gain_or_loss=gain_or_loss,
+            cis_or_trans=cis_or_trans,
+            proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+            level=level,
+            data_dir=data_dir,
+    )
+
+    # Save the chart
+    path = get_drivers_manhattan_plot_path(
+        data_dir=data_dir,
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        arm=arm,
+        gain_or_loss=gain_or_loss,
+        cis_or_trans=cis_or_trans,
+        proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+        chart_format=CHART_FORMAT,
+    )
+
+    mplot.save(path, scale_factor=CHART_SCALE)
+
+    return path
 
 def make_cytoband_plot(chrm, width, height, show_xlabel=True):
     """Create a cytoband plot"""

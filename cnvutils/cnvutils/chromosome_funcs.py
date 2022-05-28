@@ -2,7 +2,12 @@ import cptac.utils
 import os
 import pandas as pd
 
-from .constants import ALL_CANCERS, INDIVIDUAL_GENE_CNV_MAGNITUDE_CUTOFF, PROPORTION_WITH_EVENT_CUTOFF
+from .constants import (
+    ALL_CANCERS,
+    INDIVIDUAL_GENE_CNV_MAGNITUDE_CUTOFF,
+    PROPORTION_WITH_EVENT_CUTOFF,
+    SIG_CUTOFF,
+)
 from .filenames import (
     get_cnv_counts_path,
     get_has_event_path,
@@ -310,6 +315,7 @@ def event_effects_ttest(
         results = cptac.utils.wrap_ttest(
             df=data_table, 
             label_column="event",
+            alpha=SIG_CUTOFF,
             correction_method="fdr_bh",
             return_all=True
         )
