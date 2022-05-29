@@ -154,10 +154,20 @@ def save_input_tables(data_dir=os.path.join(os.getcwd(), "..", "data"), resave=F
         name_changes.to_csv(name_changes_save_path, sep="\t")
 
 # Metadata
-def load_event_metadata(source, chromosome, arm, gain_or_loss, level=None, data_dir=os.path.join(os.getcwd(), "..", "data")):
+def load_event_metadata(
+    source,
+    chromosome,
+    arm,
+    gain_or_loss,
+    level=None,
+    data_dir=os.path.join(os.getcwd(), "..", "data")
+):
+
     path = get_event_metadata_path(data_dir, source, level, chromosome, arm, gain_or_loss)
+
     with open(path, "r") as file_obj:
         metadata = json.load(file_obj)
+
     return metadata
 
 def save_event_metadata(metadata, data_dir=os.path.join(os.getcwd(), "..", "data")):

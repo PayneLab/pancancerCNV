@@ -1,1 +1,1 @@
-{"cancer_types": ["brca", "coad", "hnscc", "lscc", "luad", "ov"], "start": 406428, "end": 38176533, "type": "loss"}
+{"source": "cptac", "level": null, "chromosome": 8, "arm": "p", "gain_or_loss": "loss", "cancer_types": ["brca", "coad", "hnscc", "lscc", "luad", "ov"], "event_start": 406428, "event_end": 38176533}

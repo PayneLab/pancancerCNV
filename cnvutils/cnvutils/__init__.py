@@ -5,6 +5,8 @@ from .chromosome_funcs import (
     select_genes_for_event,
 )
 
+from .function_runners import multi_runner
+
 from .load_data import (
     get_driver_genes,
     get_ensembl_gene_locations,

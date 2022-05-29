@@ -1,1 +1,1 @@
-{"cancer_types": ["brca", "coad", "hnscc", "lscc", "luad", "ov", "pdac"], "start": 36784373, "end": 145052466, "type": "gain"}
+{"source": "gistic", "level": "gene", "chromosome": 8, "arm": "q", "gain_or_loss": "gain", "cancer_types": ["brca", "coad", "hnscc", "lscc", "luad", "ov", "pdac"], "event_start": 36784373, "event_end": 145052466}
