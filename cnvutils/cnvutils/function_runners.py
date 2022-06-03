@@ -1,8 +1,10 @@
 import inspect
+import multiprocessing
 
 from .load_data import load_event_metadata
 
-def runner(
+def _runner(
+    lock,
     func,
     meta,
     more={},
@@ -23,8 +25,13 @@ def runner(
             
         kwargs[name] = val
 
-    print(f"Running {func.__name__} with {kwargs}...")
-    return func(**kwargs)
+    lock.acquire()
+    try:
+        print(f"Running {func.__name__} with {kwargs}...\n\n")
+    finally:
+        lock.release()
+
+    return #func(**kwargs)
 
 def multi_runner(
     func,
@@ -34,50 +41,73 @@ def multi_runner(
     more_dicts=[],
     _more_args={},
 ):
-    results = []
 
-    # Handle additional parameters
-    if more_dicts:
+    with multiprocessing.Pool() as pool:
+
+        lock = multiprocessing.Lock()
+        args = _get_multi_runner_args(
+            lock=lock,
+            func=func,
+            sources=sources,
+            levels=levels,
+            chromosomes_events=chromosomes_events,
+            more_dicts=more_dicts,
+            more_args=_more_args,
+        )
+
+        results = pool.starmap(_runner, args)
+
+    return results
+
+def _get_multi_runner_args(
+    lock,
+    func,
+    sources,
+    levels,
+    chromosomes_events,
+    more_dicts,
+    more_args,
+):
+    args = []
+
+    if more_dicts: # We need to handle additional parameter permutations via recursion
         param = more_dicts[0]
         for val in param["vals"]:
-            _more_args[param["name"]] = val
+            more_args[param["name"]] = val
 
-            results.extend(multi_runner(
+            args.extend(_get_multi_runner_args(
+                lock=lock,
                 func=func,
                 sources=sources,
                 levels=levels,
                 chromosomes_events=chromosomes_events,
                 more_dicts=more_dicts[1:],
-                _more_args=_more_args,
+                more_args=more_args,
             ))
 
-    # Run with standard parameters
-    for source in sources:
-        
-        # Handle different level options for CPTAC/GISTIC
-        if source == "cptac":
-            source_levels = [None]
-        elif source == "gistic":
-            source_levels = levels
+    else: # We have all the parameters we need, time to run the function
+
+        # Save each combination of args we want to run
+        for source in sources:
             
-        for level in source_levels:
-            for chromosome, arms in chromosomes_events.items():
-                for arm, types in arms.items():
-                    for event_type in types:
-                        
-                        meta = load_event_metadata(
-                            source=source,
-                            chromosome=chromosome,
-                            arm=arm,
-                            gain_or_loss=event_type,
-                            level=level,
-                        )
+            # Handle different level options for CPTAC/GISTIC
+            if source == "cptac":
+                source_levels = [None]
+            elif source == "gistic":
+                source_levels = levels
+                
+            for level in source_levels:
+                for chromosome, arms in chromosomes_events.items():
+                    for arm, types in arms.items():
+                        for event_type in types:
+                            
+                            meta = load_event_metadata(
+                                source=source,
+                                chromosome=chromosome,
+                                arm=arm,
+                                gain_or_loss=event_type,
+                                level=level,
+                            )
 
-                        results.append(runner(
-                            func=func,
-                            meta=meta,
-                            more=_more_args,
-                        ))
-
-                        print()
-    return results
+                            args.append((lock, func, meta, more_args))
+    return args

@@ -317,8 +317,8 @@ def event_effects_ttest(
             label_column="event",
             alpha=SIG_CUTOFF,
             correction_method="fdr_bh",
-            return_all=True
-            #quiet=True,
+            return_all=True,
+            quiet=True,
         )
         results.set_index('Comparison', inplace=True)
         if isinstance(results.index[0], tuple):
