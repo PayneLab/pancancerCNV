@@ -1,10 +1,10 @@
 import inspect
+import itertools
 import multiprocessing
 
 from .load_data import load_event_metadata
 
 def _runner(
-    lock,
     func,
     meta,
     more={},
@@ -25,13 +25,9 @@ def _runner(
             
         kwargs[name] = val
 
-    lock.acquire()
-    try:
-        print(f"Running {func.__name__} with {kwargs}...\n\n")
-    finally:
-        lock.release()
+    print(f"Running {func.__name__} with {kwargs}...\n")
 
-    return #func(**kwargs)
+    return func(**kwargs)
 
 def multi_runner(
     func,
@@ -39,75 +35,61 @@ def multi_runner(
     levels,
     chromosomes_events,
     more_dicts=[],
-    _more_args={},
 ):
 
+    args = _get_multi_runner_args(
+        func=func,
+        sources=sources,
+        levels=levels,
+        chromosomes_events=chromosomes_events,
+        more_dicts=more_dicts,
+    )
+
     with multiprocessing.Pool() as pool:
-
-        lock = multiprocessing.Lock()
-        args = _get_multi_runner_args(
-            lock=lock,
-            func=func,
-            sources=sources,
-            levels=levels,
-            chromosomes_events=chromosomes_events,
-            more_dicts=more_dicts,
-            more_args=_more_args,
-        )
-
         results = pool.starmap(_runner, args)
 
     return results
 
 def _get_multi_runner_args(
-    lock,
     func,
     sources,
     levels,
     chromosomes_events,
     more_dicts,
-    more_args,
 ):
+
+    # Save each combination of args we want to run
     args = []
-
-    if more_dicts: # We need to handle additional parameter permutations via recursion
-        param = more_dicts[0]
-        for val in param["vals"]:
-            more_args[param["name"]] = val
-
-            args.extend(_get_multi_runner_args(
-                lock=lock,
-                func=func,
-                sources=sources,
-                levels=levels,
-                chromosomes_events=chromosomes_events,
-                more_dicts=more_dicts[1:],
-                more_args=more_args,
-            ))
-
-    else: # We have all the parameters we need, time to run the function
-
-        # Save each combination of args we want to run
-        for source in sources:
+    for source in sources:
+        
+        # Handle different level options for CPTAC/GISTIC
+        if source == "cptac":
+            source_levels = [None]
+        elif source == "gistic":
+            source_levels = levels
             
-            # Handle different level options for CPTAC/GISTIC
-            if source == "cptac":
-                source_levels = [None]
-            elif source == "gistic":
-                source_levels = levels
-                
-            for level in source_levels:
-                for chromosome, arms in chromosomes_events.items():
-                    for arm, types in arms.items():
-                        for event_type in types:
-                            
-                            meta = load_event_metadata(
-                                source=source,
-                                chromosome=chromosome,
-                                arm=arm,
-                                gain_or_loss=event_type,
-                                level=level,
-                            )
+        for level in source_levels:
+            for chromosome, arms in chromosomes_events.items():
+                for arm, types in arms.items():
+                    for event_type in types:
+                        
+                        meta = load_event_metadata(
+                            source=source,
+                            chromosome=chromosome,
+                            arm=arm,
+                            gain_or_loss=event_type,
+                            level=level,
+                        )
 
-                            args.append((lock, func, meta, more_args))
+                        # For any additional parameters, just do all combinations of them
+                        if more_dicts:
+                            names = [more_dict["name"] for more_dict in more_dicts]
+                            vals = [more_dict["vals"] for more_dict in more_dicts]
+                            for combo in itertools.product(*vals):
+                                more_args = dict(zip(names, combo))
+                                args.append((func, meta, more_args))
+
+                        else:
+                            more_args = {}
+                            args.append((func, meta, more_args))
     return args
