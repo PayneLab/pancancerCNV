@@ -11,6 +11,7 @@ from .constants import (
     ALL_CANCERS,
     CHART_DPI,
     CHART_FORMAT,
+    CHART_RENDER_METHOD,
     CHART_SCALE,
     GENE_CNV_PROPORTION_CUTOFF,
     SIG_CUTOFF,
@@ -260,7 +261,7 @@ def make_chr_gradient_plot(
         chart_format=CHART_FORMAT,
     )
 
-    grads.save(path, scale_factor=CHART_SCALE)
+    grads.save(path, method=CHART_RENDER_METHOD, scale_factor=CHART_SCALE)
 
     return path
 
@@ -448,7 +449,7 @@ def make_ttest_counts_plot(
         chart_format=CHART_FORMAT,
     )
 
-    event_effects_barchart.save(path, scale_factor=CHART_SCALE)
+    event_effects_barchart.save(path, method=CHART_RENDER_METHOD, scale_factor=CHART_SCALE)
 
     return path
 
@@ -570,7 +571,7 @@ def make_drivers_manhattan_plot(
         chart_format=CHART_FORMAT,
     )
 
-    mplot.save(path, scale_factor=CHART_SCALE)
+    mplot.save(path, method=CHART_RENDER_METHOD, scale_factor=CHART_SCALE)
 
     return path
 
