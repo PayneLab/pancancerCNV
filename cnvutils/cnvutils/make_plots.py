@@ -463,6 +463,7 @@ def make_genes_manhattan_plot(
         level=None,
         facet_row=None,
         data_dir="../data",
+        title=None,
 ):
 
     ttest_results = get_genes_ttest_results(
@@ -503,6 +504,9 @@ def make_genes_manhattan_plot(
         y="line",
     )
 
+    if title is None:
+        title = f"{source} {level + ' level ' if level else ''}chr {chromosome}{arm} {cis_or_trans} {'protein' if proteomics_or_transcriptomics == 'proteomics' else 'RNA'} effects"
+
     mplot = alt.layer(
         dots,
         line,
@@ -510,6 +514,10 @@ def make_genes_manhattan_plot(
         facet="protein",
         columns=7,
         spacing=alt.RowColnumber(column=0, row=20),
+    ).properties(
+        title=title,
+    ).configure_title(
+        anchor="middle"
     ).configure_header(
         title=None,
     )
@@ -546,6 +554,7 @@ def make_drivers_manhattan_plot(
             proteomics_or_transcriptomics=proteomics_or_transcriptomics,
             level=level,
             data_dir=data_dir,
+            title=f"{source} {level + ' level ' if level else ''}chr {chromosome}{arm} {cis_or_trans} {'protein' if proteomics_or_transcriptomics == 'proteomics' else 'RNA'} drivers effects"
     )
 
     # Save the chart
