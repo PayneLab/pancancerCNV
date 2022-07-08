@@ -1,4 +1,6 @@
+import cptac
 import cptac.utils
+import numpy as np
 import os
 import pandas as pd
 
@@ -248,14 +250,14 @@ def event_effects_ttest(
     level=None,
     data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
-    # Get data_tables
-    data_tables = get_tables(
+    # Get omics tables
+    omics_dict = get_tables(
         data_dir=data_dir,
         source="cptac",
         data_types=[proteomics_or_transcriptomics],
         cancer_types=cancer_types,
     )
-    data_tables = data_tables[proteomics_or_transcriptomics]
+    omics_dict = omics_dict[proteomics_or_transcriptomics]
 
     # Get gene locations
     gene_locations = get_ensembl_gene_locations(data_dir=data_dir)
@@ -273,20 +275,30 @@ def event_effects_ttest(
         cis_or_trans=cis_or_trans,
     ).reset_index(drop=False)["Name"]
 
-    for cancer_type in data_tables.keys():
-        df = data_tables[cancer_type].transpose()
+    for cancer_type in omics_dict.keys():
         
-        if df.index.nlevels == 1:
-            df = df[df.index.isin(selected_genes)]
-        else:
-            df = df[df.index.isin(selected_genes, level="Name")]
+        df = omics_dict[cancer_type].\
+        transpose().\
+        reset_index()
 
-        data_tables[cancer_type] = df
+        df.columns.name = None
+
+        # Get just the genes we want
+        df = df[df["Name"].isin(selected_genes)]
+
+        # Standardize index
+        if "Database_ID" not in df.columns:
+            df.insert(loc=1, column="Database_ID", value=np.nan)
+
+        # Set the index again
+        df = df.set_index(["Name", "Database_ID"])
+
+        omics_dict[cancer_type] = df
 
     # Join in has_event data
-    has_event = dict()
-    for cancer_type in data_tables.keys():
-        df = data_tables[cancer_type]
+    has_event = {}
+    for cancer_type in omics_dict.keys():
+        df = omics_dict[cancer_type]
         df = df.transpose()
 
         event_path = get_has_event_path(
@@ -300,41 +312,51 @@ def event_effects_ttest(
         )
         event = pd.read_csv(event_path, sep='\t', index_col=0)
 
-        event.index.rename('Name')
-        df.columns = df.columns.to_flat_index() # Flatten the index before joining
-        df = df.join(event)
-        df = df.dropna(subset=["event"])
+        event.columns.name = "Name"
+        event.columns = cptac.dataframe_tools.add_index_levels(
+            to=event.columns,
+            source=df.columns,
+            fill="",
+        )
+
+        df = df.join(event, how="inner")
         df = df.drop(columns="proportion")
-        has_event[cancer_type] = df["event"]
-        data_tables[cancer_type] = df
-    
+        omics_dict[cancer_type] = df
+
+        event = df[["event"]].copy(deep=True)
+        event.columns = event.columns.get_level_values("Name")
+
+        has_event[cancer_type] = event
+
     # Run t-tests
-    results_df = None
-    for cancer_type in data_tables.keys():
-        data_table = data_tables[cancer_type]
-        results = cptac.utils.wrap_ttest(
-            df=data_table, 
-            label_column="event",
+    all_results = pd.DataFrame()
+    for cancer_type in omics_dict.keys():
+
+        omics = omics_dict[cancer_type]
+
+        results = cptac.utils.\
+        wrap_ttest(
+            df=omics, 
+            label_column=omics[["event"]].columns[0],
             alpha=SIG_CUTOFF,
             correction_method="fdr_bh",
             return_all=True,
             quiet=True,
+        ).\
+        set_index("Comparison").\
+        rename(columns={"P_Value": "adj_p"}).\
+        assign(cancer_type=cancer_type)
+
+        results.index = pd.MultiIndex.from_tuples(
+            tuples=results.index,
+            names=["Name", "Database_ID"],
         )
-        results.set_index('Comparison', inplace=True)
-        if isinstance(results.index[0], tuple):
-            results[['Name', f'{cancer_type}_Database_ID']] = pd.DataFrame(
-                results.index.values.tolist(),
-                index=results.index
-            )
-            results.set_index(['Name', f'{cancer_type}_Database_ID'], inplace=True)
-        else:
-            results.index.name='Name'
-        results.rename(columns={'P_Value': f'{cancer_type}_pvalue'}, inplace=True)
-        if results_df is None:
-            results_df = results
-        else:
-            results_df = results_df.join(results)
-        
+
+        results = results.reset_index(drop=False)
+        all_results = pd.concat([all_results, results])
+
+    return all_results, has_event
+
     # Append difference data
     info_dfs = []
     for func, col_name in [
@@ -342,26 +364,22 @@ def event_effects_ttest(
         [_get_has_event_sample_size, "has_event_sample_size"],
         [_get_not_has_event_sample_size, "not_has_event_sample_size"],
     ]:
-        info_df = None
-        for cancer_type in data_tables.keys():
-            df = data_tables[cancer_type]
+
+        info_df = pd.DataFrame()
+        for cancer_type in omics_dict.keys():
+            df = omics_dict[cancer_type]
             df = df.drop("event", axis=1)
 
             results = df.apply(lambda x: func(x, has_event[cancer_type]))
-            results = pd.DataFrame(results)
 
-            if isinstance(results.index[0], tuple):
-                results[['Name', f'{cancer_type}_Database_ID']] = pd.DataFrame(results.index.values.tolist(), index=results.index)
-                results.set_index(['Name', f'{cancer_type}_Database_ID'], inplace=True)
-            else:
-                results.index.name='Name'
+            results = pd.DataFrame(results).\
+            rename(columns={0: col_name}).\
+            assign(cancer_type=cancer_type)
 
-            results.rename(columns={0: f'{cancer_type}_{col_name}'}, inplace=True)
+            import pdb; pdb.set_trace()
 
-            if info_df is None:
-                info_df = results
-            else:
-                info_df = info_df.join(results)
+            info_df = pd.concat([info_df, results])
+
         info_dfs.append(info_df)
 
     # Join the tables, reformat, and save
@@ -373,10 +391,9 @@ def event_effects_ttest(
     rename(columns={"Name": "protein"}).\
     set_index("protein")
 
-    return results_df
     long_results = pd.DataFrame()
 
-    for cancer_type in data_tables.keys():
+    for cancer_type in omics_dict.keys():
         cancer_df = results_df.\
         loc[:, results_df.columns.str.startswith(cancer_type)].\
         dropna(axis="index", how="all").\
