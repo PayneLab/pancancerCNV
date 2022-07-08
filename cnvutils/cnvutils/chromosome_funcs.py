@@ -336,47 +336,44 @@ def event_effects_ttest(
             results_df = results_df.join(results)
         
     # Append difference data
-    diff_df = None
-    for cancer_type in data_tables.keys():
-        df = data_tables[cancer_type]
-        df = df.drop("event", axis=1)
-        results = df.apply(lambda x: _get_abundance_diff(x, has_event[cancer_type]))
-        df = pd.DataFrame(results)
-        if isinstance(df.index[0], tuple):
-            df[['Name', f'{cancer_type}_Database_ID']] = pd.DataFrame(df.index.values.tolist(), index=df.index)
-            df.set_index(['Name', f'{cancer_type}_Database_ID'], inplace=True)
-        else:
-            df.index.name='Name'
-        df.rename(columns={0: f'{cancer_type}_diff'}, inplace=True)
-        if diff_df is None:
-            diff_df = df
-        else:
-            diff_df = diff_df.join(df)
+    info_dfs = []
+    for func, col_name in [
+        [_get_abundance_diff, "diff"],
+        [_get_has_event_sample_size, "has_event_sample_size"],
+        [_get_not_has_event_sample_size, "not_has_event_sample_size"],
+    ]:
+        info_df = None
+        for cancer_type in data_tables.keys():
+            df = data_tables[cancer_type]
+            df = df.drop("event", axis=1)
 
-    # Append sample size data
-    sample_ct_df = None
-    for cancer_type in data_tables.keys():
-        df = data_tables[cancer_type]
-        df = df.drop("event", axis=1)
-        import pdb; pdb.set_trace()
-        results = df.apply(lambda x: _get_sample_size(x, has_event[cancer_type]))
-        if isinstance(df.index[0], tuple):
-            df[['Name', f'{cancer_type}_Database_ID']] = pd.DataFrame(df.index.values.tolist(), index=df.index)
-            df.set_index(['Name', f'{cancer_type}_Database_ID'], inplace=True)
-        else:
-            df.index.name='Name'
-        if sample_ct_df is None:
-            sample_ct_df = df
-        else:
-            sample_ct_df = sample_ct_df.join(df)
+            results = df.apply(lambda x: func(x, has_event[cancer_type]))
+            results = pd.DataFrame(results)
+
+            if isinstance(results.index[0], tuple):
+                results[['Name', f'{cancer_type}_Database_ID']] = pd.DataFrame(results.index.values.tolist(), index=results.index)
+                results.set_index(['Name', f'{cancer_type}_Database_ID'], inplace=True)
+            else:
+                results.index.name='Name'
+
+            results.rename(columns={0: f'{cancer_type}_{col_name}'}, inplace=True)
+
+            if info_df is None:
+                info_df = results
+            else:
+                info_df = info_df.join(results)
+        info_dfs.append(info_df)
 
     # Join the tables, reformat, and save
-    results_df = results_df.join(diff_df)
+    for info_df in info_dfs:
+        results_df = results_df.join(info_df)
+
     results_df = results_df.\
     reset_index(drop=False).\
     rename(columns={"Name": "protein"}).\
     set_index("protein")
 
+    return results_df
     long_results = pd.DataFrame()
 
     for cancer_type in data_tables.keys():
@@ -395,12 +392,14 @@ def event_effects_ttest(
         # Rename the pvalue and diff columns to not have the cancer type
         cancer_df = cancer_df.rename(columns={
             f"{cancer_type}_pvalue": "adj_p",
-            f"{cancer_type}_diff": "change"
+            f"{cancer_type}_diff": "change",
+            f"{cancer_type}_has_event_sample_size": "has_event_sample_size",
+            f"{cancer_type}_not_has_event_sample_size": "not_has_event_sample_size",
         }).\
         assign(cancer_type=cancer_type)
 
         # Reorder the columns
-        cancer_df = cancer_df[["cancer_type", "protein", "Database_ID", "adj_p", "change"]]
+        cancer_df = cancer_df[["cancer_type", "protein", "Database_ID", "adj_p", "change", "has_event_sample_size", "not_has_event_sample_size"]]
 
         # Append to the overall dataframe
         long_results = pd.concat([long_results, cancer_df])
@@ -437,14 +436,17 @@ def _get_abundance_diff(col, event):
     no_event_avg = no_event.mean()
     return event_avg - no_event_avg
 
-def _get_sample_size(col, event):
+def _get_has_event_sample_size(col, event):
 
     has_event = col[event]
+    has_ct = has_event.notna().sum()
+
+    return has_ct
+
+def _get_not_has_event_sample_size(col, event):
+
     invert_list = [not x for x in event]
     no_event = col[invert_list]
+    not_has_ct = no_event.notna().sum()
 
-    import pdb; pdb.set_trace()
-
-    pass
-
-    return 
+    return not_has_ct
