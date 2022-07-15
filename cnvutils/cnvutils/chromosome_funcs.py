@@ -392,42 +392,6 @@ def event_effects_ttest(
     reset_index(drop=True).\
     rename(columns={"Name": "protein"})
 
-    return all_results
-
-    long_results = pd.DataFrame()
-
-    for cancer_type in omics_dict.keys():
-        cancer_df = results_df.\
-        loc[:, results_df.columns.str.startswith(cancer_type)].\
-        dropna(axis="index", how="all").\
-        reset_index(drop=False)
-
-        # If the cancer type has database IDs, make a separate column that has them.
-        # If not, create a column of NaNs (so that the tables all match)
-        if f"{cancer_type}_Database_ID" in cancer_df.columns:
-            cancer_df = cancer_df.rename(columns={f"{cancer_type}_Database_ID": "Database_ID"})
-        else:
-            cancer_df = cancer_df.assign(Database_ID=np.nan)
-
-        # Rename the pvalue and diff columns to not have the cancer type
-        cancer_df = cancer_df.rename(columns={
-            f"{cancer_type}_pvalue": "adj_p",
-            f"{cancer_type}_change": "change",
-            f"{cancer_type}_has_event_sample_size": "has_event_sample_size",
-            f"{cancer_type}_not_has_event_sample_size": "not_has_event_sample_size",
-        }).\
-        assign(cancer_type=cancer_type)
-
-        # Reorder the columns
-        cancer_df = cancer_df[["cancer_type", "protein", "Database_ID", "adj_p", "change", "has_event_sample_size", "not_has_event_sample_size"]]
-
-        # Append to the overall dataframe
-        long_results = pd.concat([long_results, cancer_df])
-
-    # Drop duplicate rows and reset the index
-    long_results = long_results[~long_results.duplicated(keep=False)].\
-    reset_index(drop=True)
-    
     save_path = get_ttest_results_path(
         data_dir=data_dir,
         source=source,
@@ -438,7 +402,7 @@ def event_effects_ttest(
         cis_or_trans=cis_or_trans,
         proteomics_or_transcriptomics=proteomics_or_transcriptomics,
     )
-    long_results.to_csv(save_path, sep='\t', index=False)
+    all_results.to_csv(save_path, sep='\t', index=False)
 
 # Helper functions
 def _get_gain_counts(row):

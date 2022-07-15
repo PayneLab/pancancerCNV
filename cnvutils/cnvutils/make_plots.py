@@ -462,7 +462,6 @@ def make_genes_manhattan_plot(
         cis_or_trans,
         proteomics_or_transcriptomics,
         level=None,
-        facet_row=None,
         data_dir="../data",
         title=None,
 ):
@@ -479,6 +478,32 @@ def make_genes_manhattan_plot(
         data_dir=data_dir,
     )
 
+    if ttest_results.shape[0] == 0:
+        return # No data, no graph
+
+    # Make cool label column with the sample counts for each cancer type
+    strings = ttest_results.astype(str)
+
+    strings = strings.\
+    groupby(["protein", "Database_ID"]).\
+    apply(
+        lambda x: (x["cancer_type"] + ": " +  
+                   x["has_event_sample_size"] + " with, " + 
+                   x["not_has_event_sample_size"] + " without").tolist()
+    ).\
+    reset_index(drop=False).\
+    rename(columns={0: "counts"})
+
+    strings = strings.assign(
+        counts=(strings["protein"] + "_" + strings["Database_ID"]).apply(lambda x: [x]) + strings["counts"]
+    )
+
+    ttest_results = ttest_results.merge(
+        right=strings,
+        how="left",
+        on=["protein", "Database_ID"]
+    )
+        
     ttest_results = ttest_results.assign(
         line=-np.log10(SIG_CUTOFF),
         neg_log_adj_p=-np.log10(ttest_results["adj_p"]),
@@ -512,7 +537,7 @@ def make_genes_manhattan_plot(
         dots,
         line,
     ).facet(
-        facet="protein",
+        facet="counts",
         columns=7,
         spacing=alt.RowColnumber(column=0, row=20),
     ).properties(
@@ -557,6 +582,9 @@ def make_drivers_manhattan_plot(
             data_dir=data_dir,
             title=f"{source} {level + ' level ' if level else ''}chr {chromosome}{arm} {cis_or_trans} {'protein' if proteomics_or_transcriptomics == 'proteomics' else 'RNA'} drivers effects"
     )
+
+    if mplot is None:
+        return # No data means no chart
 
     # Save the chart
     path = get_drivers_manhattan_plot_path(
