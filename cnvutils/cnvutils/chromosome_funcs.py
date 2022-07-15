@@ -325,6 +325,7 @@ def event_effects_ttest(
 
         event = df[["event"]].copy(deep=True)
         event.columns = event.columns.get_level_values("Name")
+        event = event["event"] # Make it a Series instead of a DataFrame
 
         has_event[cancer_type] = event
 
@@ -355,12 +356,10 @@ def event_effects_ttest(
         results = results.reset_index(drop=False)
         all_results = pd.concat([all_results, results])
 
-    return all_results, has_event
-
     # Append difference data
     info_dfs = []
     for func, col_name in [
-        [_get_abundance_diff, "diff"],
+        [_get_abundance_change, "change"],
         [_get_has_event_sample_size, "has_event_sample_size"],
         [_get_not_has_event_sample_size, "not_has_event_sample_size"],
     ]:
@@ -374,9 +373,8 @@ def event_effects_ttest(
 
             results = pd.DataFrame(results).\
             rename(columns={0: col_name}).\
-            assign(cancer_type=cancer_type)
-
-            import pdb; pdb.set_trace()
+            assign(cancer_type=cancer_type).\
+            reset_index(drop=False)
 
             info_df = pd.concat([info_df, results])
 
@@ -384,12 +382,17 @@ def event_effects_ttest(
 
     # Join the tables, reformat, and save
     for info_df in info_dfs:
-        results_df = results_df.join(info_df)
+        all_results = all_results.merge(
+            right=info_df,
+            how="outer",
+            on=["Name", "Database_ID", "cancer_type"],
+        )
 
-    results_df = results_df.\
-    reset_index(drop=False).\
-    rename(columns={"Name": "protein"}).\
-    set_index("protein")
+    all_results = all_results.\
+    reset_index(drop=True).\
+    rename(columns={"Name": "protein"})
+
+    return all_results
 
     long_results = pd.DataFrame()
 
@@ -409,7 +412,7 @@ def event_effects_ttest(
         # Rename the pvalue and diff columns to not have the cancer type
         cancer_df = cancer_df.rename(columns={
             f"{cancer_type}_pvalue": "adj_p",
-            f"{cancer_type}_diff": "change",
+            f"{cancer_type}_change": "change",
             f"{cancer_type}_has_event_sample_size": "has_event_sample_size",
             f"{cancer_type}_not_has_event_sample_size": "not_has_event_sample_size",
         }).\
@@ -444,7 +447,7 @@ def _get_gain_counts(row):
 def _get_loss_counts(row):
     return (row < -INDIVIDUAL_GENE_CNV_MAGNITUDE_CUTOFF).sum()
 
-def _get_abundance_diff(col, event):
+def _get_abundance_change(col, event):
 
     has_event = col[event]
     invert_list = [not x for x in event]
