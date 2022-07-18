@@ -3,6 +3,7 @@ import cptac.utils
 import numpy as np
 import os
 import pandas as pd
+import warnings
 
 from .constants import (
     ALL_CANCERS,
@@ -245,6 +246,7 @@ def event_effects_ttest(
     gain_or_loss,
     cis_or_trans,
     proteomics_or_transcriptomics,
+    tissue_type,
     cancer_types,
     source,
     level=None,
@@ -275,10 +277,24 @@ def event_effects_ttest(
         cis_or_trans=cis_or_trans,
     ).reset_index(drop=False)["Name"]
 
+    to_drop = [] # For any empty dataframes
     for cancer_type in omics_dict.keys():
         
-        df = omics_dict[cancer_type].\
-        transpose().\
+        df = omics_dict[cancer_type]
+
+        # Select just the tissue type we want
+        if tissue_type == "tumor":
+            df = df[~df.index.str.endswith(".N")]
+        elif tissue_type == "normal":
+            df = df[df.index.str.endswith(".N")]
+            df.index = df.index.str[:-2] # So that they'll match up
+        else:
+            raise ValueError(f"Invalid tissue_type '{tissue_type}'")
+
+        if df.shape[0] == 0:
+            to_drop.append(cancer_type)
+
+        df = df.transpose().\
         reset_index()
 
         df.columns.name = None
@@ -294,6 +310,10 @@ def event_effects_ttest(
         df = df.set_index(["Name", "Database_ID"])
 
         omics_dict[cancer_type] = df
+
+    for cancer_type in to_drop:
+        warnings.warn(f"Empty dataframe for cancer_type={cancer_type}, tissue_type={tissue_type}, source={source}, level={level}, chromosome={chromosome}, arm={arm}, gain_or_loss={gain_or_loss}, cis_or_trans={cis_or_trans}, proteomics_or_transcriptomics={proteomics_or_transcriptomics}.")
+        del omics_dict[cancer_type]
 
     # Join in has_event data
     has_event = {}
@@ -335,15 +355,24 @@ def event_effects_ttest(
 
         omics = omics_dict[cancer_type]
 
-        results = cptac.utils.\
-        wrap_ttest(
-            df=omics, 
-            label_column=omics[["event"]].columns[0],
-            alpha=SIG_CUTOFF,
-            correction_method="fdr_bh",
-            return_all=True,
-            quiet=True,
-        ).\
+        try:
+            results = cptac.utils.wrap_ttest(
+                df=omics, 
+                label_column=omics[["event"]].columns[0],
+                alpha=SIG_CUTOFF,
+                correction_method="fdr_bh",
+                return_all=True,
+                quiet=True,
+            )
+
+        except cptac.exceptions.InvalidParameterError as e:
+            if str(e) == "No groups had enough members to pass mincount; no tests run.":
+                warnings.warn(f"Too small sample size for cancer_type={cancer_type}, tissue_type={tissue_type}, source={source}, level={level}, chromosome={chromosome}, arm={arm}, gain_or_loss={gain_or_loss}, cis_or_trans={cis_or_trans}, proteomics_or_transcriptomics={proteomics_or_transcriptomics}.")
+                continue
+            else:
+                raise e
+
+        results = results.\
         set_index("Comparison").\
         rename(columns={"P_Value": "adj_p"}).\
         assign(cancer_type=cancer_type)
@@ -401,6 +430,7 @@ def event_effects_ttest(
         gain_or_loss=gain_or_loss,
         cis_or_trans=cis_or_trans,
         proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+        tissue_type=tissue_type,
     )
     all_results.to_csv(save_path, sep='\t', index=False)
 
