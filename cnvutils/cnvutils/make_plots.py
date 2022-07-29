@@ -364,6 +364,7 @@ def make_ttest_counts_plot(
     gain_or_loss,
     cis_or_trans,
     proteomics_or_transcriptomics,
+    tissue_type,
     source,
     level=None,
     data_dir=os.path.join(os.getcwd(), "..", "data"),
@@ -379,6 +380,7 @@ def make_ttest_counts_plot(
         gain_or_loss=gain_or_loss,
         cis_or_trans=cis_or_trans,
         proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+        tissue_type=tissue_type,
     )
 
     ttest_results = pd.\
@@ -427,7 +429,7 @@ def make_ttest_counts_plot(
             title="Cancer type",
         )
     ).properties(
-        title=f"{source} {level + ' level ' if level else ''}chr {chromosome}{arm} {cis_or_trans} {'protein' if proteomics_or_transcriptomics == 'proteomics' else 'RNA'} effects"
+        title=f"{tissue_type} {source} {level + ' level ' if level else ''}chr {chromosome}{arm} {cis_or_trans} {'protein' if proteomics_or_transcriptomics == 'proteomics' else 'RNA'} effects"
     ).configure_title(
         anchor="middle"
     ).configure_header(
@@ -446,6 +448,7 @@ def make_ttest_counts_plot(
         gain_or_loss=gain_or_loss,
         cis_or_trans=cis_or_trans,
         proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+        tissue_type=tissue_type,
         chart_format=CHART_FORMAT,
     )
 
@@ -479,6 +482,7 @@ def make_genes_manhattan_plot(
     )
 
     if ttest_results.shape[0] == 0:
+        warnings.warn(f"Empty dataframe for source={source}, level={level}, chromosome={chromosome}, arm={arm}, gain_or_loss={gain_or_loss}, cis_or_trans={cis_or_trans}, proteomics_or_transcriptomics={proteomics_or_transcriptomics}.")
         return # No data, no graph
 
     # Make cool label column with the sample counts for each cancer type

@@ -246,12 +246,18 @@ def event_effects_ttest(
     gain_or_loss,
     cis_or_trans,
     proteomics_or_transcriptomics,
-    tissue_type,
     cancer_types,
     source,
+    comparison,
+    tissue_type=None,
+    has_event=None,
     level=None,
     data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
+
+    if comparison not in ["tissue_type", "has_event"]:
+        raise ValueError(f"Invalid value '{comparison}' for comparison parameter")
+
     # Get omics tables
     omics_dict = get_tables(
         data_dir=data_dir,
@@ -282,14 +288,18 @@ def event_effects_ttest(
         
         df = omics_dict[cancer_type]
 
-        # Select just the tissue type we want
-        if tissue_type == "tumor":
-            df = df[~df.index.str.endswith(".N")]
-        elif tissue_type == "normal":
-            df = df[df.index.str.endswith(".N")]
-            df.index = df.index.str[:-2] # So that they'll match up
-        else:
-            raise ValueError(f"Invalid tissue_type '{tissue_type}'")
+        # If applicable, select just the tissue type we want
+        if comparison == "has_event":
+
+            if tissue_type is None:
+                raise ValueError(f"To compare based on has_event, you must choose a single tissue type.")
+            elif tissue_type == "tumor":
+                df = df[~df.index.str.endswith(".N")]
+            elif tissue_type == "normal":
+                df = df[df.index.str.endswith(".N")]
+                df.index = df.index.str[:-2] # So that they'll match up
+            else:
+                raise ValueError(f"Invalid tissue_type '{tissue_type}'")
 
         if df.shape[0] == 0:
             to_drop.append(cancer_type)
@@ -316,7 +326,7 @@ def event_effects_ttest(
         del omics_dict[cancer_type]
 
     # Join in has_event data
-    has_event = {}
+    has_event_dfs = {}
     for cancer_type in omics_dict.keys():
         df = omics_dict[cancer_type]
         df = df.transpose()
@@ -339,15 +349,44 @@ def event_effects_ttest(
             fill="",
         )
 
-        df = df.join(event, how="inner")
-        df = df.drop(columns="proportion")
-        omics_dict[cancer_type] = df
+        # If needed, create tissue_type column and get rid of suffixes on normal sample patient IDs
+        if comparison == "tissue_type":
+
+            # Create tissue_type column
+            df = df.assign(tumor=~df.index.str.endswith(".N"))
+
+            # Remove normal sample patient ID suffixes
+            df.index = np.where(
+                df.index.str.endswith(".N"),
+                df.index.str[:-2],
+                df.index,
+            )
+
+        # Join to event table
+        df = df.\
+        join(event, how="inner").\
+        drop(columns=("proportion", ""))
 
         event = df[["event"]].copy(deep=True)
         event.columns = event.columns.get_level_values("Name")
         event = event["event"] # Make it a Series instead of a DataFrame
 
-        has_event[cancer_type] = event
+        has_event_dfs[cancer_type] = event
+
+        # If applicable, select just the event status that we want
+        if comparison == "tissue_type":
+
+            if has_event is None:
+                raise ValueError(f"To compare based on event status, you must specify a tissue type.")
+            elif has_event:
+                df = df[df["event"]]
+            else:
+                df = df[~df["event"]]
+
+            # Drop has_event column
+            df = df.drop(columns=("event", ""))
+
+        omics_dict[cancer_type] = df
 
     # Run t-tests
     all_results = pd.DataFrame()
@@ -355,10 +394,15 @@ def event_effects_ttest(
 
         omics = omics_dict[cancer_type]
 
+        if comparison == "tissue_type":
+            label = "tumor"
+        elif comparison == "has_event":
+            label = "event"
+
         try:
             results = cptac.utils.wrap_ttest(
                 df=omics, 
-                label_column=omics[["event"]].columns[0],
+                label_column=omics[[label]].columns[0],
                 alpha=SIG_CUTOFF,
                 correction_method="fdr_bh",
                 return_all=True,
@@ -385,6 +429,8 @@ def event_effects_ttest(
         results = results.reset_index(drop=False)
         all_results = pd.concat([all_results, results])
 
+    return all_results
+
     # Append difference data
     info_dfs = []
     for func, col_name in [
@@ -398,7 +444,7 @@ def event_effects_ttest(
             df = omics_dict[cancer_type]
             df = df.drop("event", axis=1)
 
-            results = df.apply(lambda x: func(x, has_event[cancer_type]))
+            results = df.apply(lambda x: func(x, has_event_dfs[cancer_type]))
 
             results = pd.DataFrame(results).\
             rename(columns={0: col_name}).\
