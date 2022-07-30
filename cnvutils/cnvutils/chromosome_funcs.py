@@ -255,7 +255,7 @@ def event_effects_ttest(
     data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
 
-    if comparison not in ["tissue_type", "has_event"]:
+    if comparison not in ["tumor", "has_event"]:
         raise ValueError(f"Invalid value '{comparison}' for comparison parameter")
 
     # Get omics tables
@@ -326,7 +326,6 @@ def event_effects_ttest(
         del omics_dict[cancer_type]
 
     # Join in has_event data
-    has_event_dfs = {}
     for cancer_type in omics_dict.keys():
         df = omics_dict[cancer_type]
         df = df.transpose()
@@ -350,7 +349,7 @@ def event_effects_ttest(
         )
 
         # If needed, create tissue_type column and get rid of suffixes on normal sample patient IDs
-        if comparison == "tissue_type":
+        if comparison == "tumor":
 
             # Create tissue_type column
             df = df.assign(tumor=~df.index.str.endswith(".N"))
@@ -371,10 +370,8 @@ def event_effects_ttest(
         event.columns = event.columns.get_level_values("Name")
         event = event["event"] # Make it a Series instead of a DataFrame
 
-        has_event_dfs[cancer_type] = event
-
         # If applicable, select just the event status that we want
-        if comparison == "tissue_type":
+        if comparison == "tumor":
 
             if has_event is None:
                 raise ValueError(f"To compare based on event status, you must specify a tissue type.")
@@ -389,15 +386,15 @@ def event_effects_ttest(
         omics_dict[cancer_type] = df
 
     # Run t-tests
+    if comparison == "tumor":
+        label = "tumor"
+    elif comparison == "has_event":
+        label = "event"
+
     all_results = pd.DataFrame()
     for cancer_type in omics_dict.keys():
 
         omics = omics_dict[cancer_type]
-
-        if comparison == "tissue_type":
-            label = "tumor"
-        elif comparison == "has_event":
-            label = "event"
 
         try:
             results = cptac.utils.wrap_ttest(
@@ -429,22 +426,22 @@ def event_effects_ttest(
         results = results.reset_index(drop=False)
         all_results = pd.concat([all_results, results])
 
-    return all_results
-
     # Append difference data
     info_dfs = []
     for func, col_name in [
         [_get_abundance_change, "change"],
-        [_get_has_event_sample_size, "has_event_sample_size"],
-        [_get_not_has_event_sample_size, "not_has_event_sample_size"],
+        [_get_has_event_sample_size, f"{comparison}_sample_size"],
+        [_get_not_has_event_sample_size, f"not_{comparison}_sample_size"],
     ]:
 
         info_df = pd.DataFrame()
         for cancer_type in omics_dict.keys():
-            df = omics_dict[cancer_type]
-            df = df.drop("event", axis=1)
 
-            results = df.apply(lambda x: func(x, has_event_dfs[cancer_type]))
+            df = omics_dict[cancer_type]
+            label_col = df[label]
+            df = df.drop(columns=label)
+
+            results = df.apply(lambda x: func(x, label_col))
 
             results = pd.DataFrame(results).\
             rename(columns={0: col_name}).\
@@ -467,6 +464,13 @@ def event_effects_ttest(
     reset_index(drop=True).\
     rename(columns={"Name": "protein"})
 
+    if comparison == "has_event":
+        comparison_name = "has_vs_not_has_event"
+        group = tissue_type
+    elif comparison == "tumor":
+        comparison_name = "tumor_vs_normal"
+        group = "has_event" if has_event else "not_has_event"
+
     save_path = get_ttest_results_path(
         data_dir=data_dir,
         source=source,
@@ -476,8 +480,10 @@ def event_effects_ttest(
         gain_or_loss=gain_or_loss,
         cis_or_trans=cis_or_trans,
         proteomics_or_transcriptomics=proteomics_or_transcriptomics,
-        tissue_type=tissue_type,
+        group=group,
+        comparison_name=comparison_name,
     )
+
     all_results.to_csv(save_path, sep='\t', index=False)
 
 # Helper functions
