@@ -321,11 +321,13 @@ def event_effects_ttest(
 
         omics_dict[cancer_type] = df
 
+    # Drop any tables that didn't have any samples for the specified tissue type
     for cancer_type in to_drop:
-        warnings.warn(f"Empty dataframe for cancer_type={cancer_type}, tissue_type={tissue_type}, source={source}, level={level}, chromosome={chromosome}, arm={arm}, gain_or_loss={gain_or_loss}, cis_or_trans={cis_or_trans}, proteomics_or_transcriptomics={proteomics_or_transcriptomics}.")
+        warnings.warn(f"Empty dataframe for cancer_type={cancer_type}, source={source}, level={level}, chromosome={chromosome}, arm={arm}, gain_or_loss={gain_or_loss}, cis_or_trans={cis_or_trans}, proteomics_or_transcriptomics={proteomics_or_transcriptomics}, comparison={comparison}, tissue_type={tissue_type}, has_event={has_event}.")
         del omics_dict[cancer_type]
 
     # Join in has_event data
+    to_drop = [] # For any empty dataframes
     for cancer_type in omics_dict.keys():
         df = omics_dict[cancer_type]
         df = df.transpose()
@@ -380,10 +382,23 @@ def event_effects_ttest(
             else:
                 df = df[~df["event"]]
 
+            # If there are no normal samples, we can't run a test
+            if df["tumor"].value_counts().shape[0] == 1:
+                to_drop.append(cancer_type)
+
             # Drop has_event column
             df = df.drop(columns=("event", ""))
 
+        if df.shape[0] == 0:
+            to_drop.append(cancer_type)
+
         omics_dict[cancer_type] = df
+
+    # Drop any tables that didn't have any samples for the specified event status
+    for cancer_type in to_drop:
+        warnings.warn(f"Only one tissue type for cancer_type={cancer_type}, source={source}, level={level}, chromosome={chromosome}, arm={arm}, gain_or_loss={gain_or_loss}, cis_or_trans={cis_or_trans}, proteomics_or_transcriptomics={proteomics_or_transcriptomics}, comparison={comparison}, tissue_type={tissue_type}, has_event={has_event}.")
+        del omics_dict[cancer_type]
+
 
     # Run t-tests
     if comparison == "tumor":
@@ -408,7 +423,7 @@ def event_effects_ttest(
 
         except cptac.exceptions.InvalidParameterError as e:
             if str(e) == "No groups had enough members to pass mincount; no tests run.":
-                warnings.warn(f"Too small sample size for cancer_type={cancer_type}, tissue_type={tissue_type}, source={source}, level={level}, chromosome={chromosome}, arm={arm}, gain_or_loss={gain_or_loss}, cis_or_trans={cis_or_trans}, proteomics_or_transcriptomics={proteomics_or_transcriptomics}.")
+                warnings.warn(f"Too small sample size for cancer_type={cancer_type}, source={source}, level={level}, chromosome={chromosome}, arm={arm}, gain_or_loss={gain_or_loss}, cis_or_trans={cis_or_trans}, proteomics_or_transcriptomics={proteomics_or_transcriptomics}, comparison={comparison}, tissue_type={tissue_type}, has_event={has_event}.")
                 continue
             else:
                 raise e
