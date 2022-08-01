@@ -364,13 +364,22 @@ def make_ttest_counts_plot(
     gain_or_loss,
     cis_or_trans,
     proteomics_or_transcriptomics,
-    tissue_type,
     source,
+    comparison,
+    tissue_type=None,
+    has_event=None,
     level=None,
     data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
 
     # Get our ttest results file
+    if comparison == "has_event":
+        comparison_name = "has_vs_not_has_event"
+        group = tissue_type
+    elif comparison == "tumor":
+        comparison_name = "tumor_vs_normal"
+        group = "has_event" if has_event else "not_has_event"
+
     ttest_results_path = get_ttest_results_path(
         data_dir=data_dir,
         source=source,
@@ -380,7 +389,8 @@ def make_ttest_counts_plot(
         gain_or_loss=gain_or_loss,
         cis_or_trans=cis_or_trans,
         proteomics_or_transcriptomics=proteomics_or_transcriptomics,
-        tissue_type=tissue_type,
+        group=group,
+        comparison_name=comparison_name,
     )
 
     ttest_results = pd.\
@@ -429,7 +439,7 @@ def make_ttest_counts_plot(
             title="Cancer type",
         )
     ).properties(
-        title=f"{tissue_type} {source} {level + ' level ' if level else ''}chr {chromosome}{arm} {cis_or_trans} {'protein' if proteomics_or_transcriptomics == 'proteomics' else 'RNA'} effects"
+        title=f"{tissue_type if has_event is None else 'Has event' if has_event else 'Not has event'} {source} {level + ' level ' if level else ''}chr {chromosome}{arm} {cis_or_trans} {'protein' if proteomics_or_transcriptomics == 'proteomics' else 'RNA'} effects"
     ).configure_title(
         anchor="middle"
     ).configure_header(
@@ -448,7 +458,8 @@ def make_ttest_counts_plot(
         gain_or_loss=gain_or_loss,
         cis_or_trans=cis_or_trans,
         proteomics_or_transcriptomics=proteomics_or_transcriptomics,
-        tissue_type=tissue_type,
+        group=group,
+        comparison_name=comparison_name,
         chart_format=CHART_FORMAT,
     )
 
