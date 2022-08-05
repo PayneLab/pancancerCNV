@@ -397,10 +397,10 @@ def make_ttest_counts_plot(
     read_csv(ttest_results_path, sep="\t").\
     rename(columns={"Name": "protein"})
 
-    prots = ttest_results[ttest_results["adj_p"] <= 0.05].reset_index(drop=True)
+    prots = ttest_results[ttest_results["adj_p"] <= SIG_CUTOFF].reset_index(drop=True)
     prots_cts = prots.groupby("cancer_type").count()[["protein"]]
 
-    fail_prots = ttest_results[ttest_results["adj_p"] > 0.05].reset_index(drop=True)
+    fail_prots = ttest_results[ttest_results["adj_p"] > SIG_CUTOFF].reset_index(drop=True)
     fail_cts = fail_prots.groupby("cancer_type").count()[["protein"]]
 
     prots_cts.insert(0, "count_type", "Significant difference")

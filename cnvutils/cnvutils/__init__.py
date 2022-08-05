@@ -1,5 +1,6 @@
 from .chromosome_funcs import (
     event_effects_ttest,
+    get_has_vs_not_has_tumor_normal_diff_props,
     make_counts_table,
     make_has_event_table, 
     select_genes_for_event,

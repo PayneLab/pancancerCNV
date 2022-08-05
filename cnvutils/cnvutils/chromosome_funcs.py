@@ -3,6 +3,7 @@ import cptac.utils
 import numpy as np
 import os
 import pandas as pd
+import scipy
 import warnings
 
 from .constants import (
@@ -16,6 +17,7 @@ from .filenames import (
     get_has_event_path,
     get_ttest_results_path,
 )
+from .function_runners import multi_runner
 from .load_data import (
     get_cnv_counts,
     get_tables,
@@ -253,6 +255,7 @@ def event_effects_ttest(
     has_event=None,
     level=None,
     data_dir=os.path.join(os.getcwd(), "..", "data"),
+    save=True,
 ):
 
     if comparison not in ["tumor", "has_event"]:
@@ -486,20 +489,135 @@ def event_effects_ttest(
         comparison_name = "tumor_vs_normal"
         group = "has_event" if has_event else "not_has_event"
 
-    save_path = get_ttest_results_path(
-        data_dir=data_dir,
-        source=source,
-        level=level,
-        chromosome=chromosome,
-        arm=arm,
-        gain_or_loss=gain_or_loss,
-        cis_or_trans=cis_or_trans,
-        proteomics_or_transcriptomics=proteomics_or_transcriptomics,
-        group=group,
-        comparison_name=comparison_name,
+    if save:
+        save_path = get_ttest_results_path(
+            data_dir=data_dir,
+            source=source,
+            level=level,
+            chromosome=chromosome,
+            arm=arm,
+            gain_or_loss=gain_or_loss,
+            cis_or_trans=cis_or_trans,
+            proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+            group=group,
+            comparison_name=comparison_name,
+        )
+
+        all_results.to_csv(save_path, sep='\t', index=False)
+
+    else:
+        return all_results
+
+def get_has_vs_not_has_tumor_normal_diff_props(
+    chromosomes_events,
+    sources,
+    levels,    
+):
+
+    # Get the proportions of genes affected and not affected for each event and category
+    all_props = multi_runner(
+        func=_get_ttest_sig_counts,
+        sources=sources,
+        levels=levels,
+        chromosomes_events=chromosomes_events,
+        more_dicts=[
+            {
+                "name": "has_event",
+                "vals": [True, False],
+            },
+            {
+                "name": "proteomics_or_transcriptomics",
+                "vals": ["proteomics", "transcriptomics"],
+            },
+            {
+                "name": "cis_or_trans",
+                "vals": ["cis", "trans"],
+            },
+        ]
     )
 
-    all_results.to_csv(save_path, sep='\t', index=False)
+    all_props = pd.\
+    concat(all_props, axis=0).\
+    reset_index(drop=True)
+
+    # Group proportions with the same event and categories, with has event paired with not has event
+    all_props = all_props.\
+    drop(columns="n").\
+    infer_objects().\
+    pivot(
+        index=[
+            "chromosome",
+            "arm",
+            "gain_or_loss",
+            "cis_or_trans",
+            "proteomics_or_transcriptomics",
+            "cancer_types",
+            "source",
+            "level",
+            "prop_name",
+        ],
+        columns="has_event",
+        values="prop",
+    ).\
+    rename(columns={False: "not_has_prop", True: "has_prop"}).\
+    reset_index(drop=False)
+
+    all_props.columns.name = None
+
+    # Split out the 3 types of proportions:
+    #   - Proportion of genes with a tumor/normal p-value <= 0.05
+    #   - Proportion of genes with a tumor/normal p-value > 0.05
+    #   - Proportion of genes with a NaN tumor/normal p-value
+    sig_props = all_props[all_props["prop_name"] == "sig_prop"]
+    not_sig_props = all_props[all_props["prop_name"] == "not_sig_prop"]
+    na_props = all_props[all_props["prop_name"] == "na_prop"]
+
+    # Get a paired t-test p-value for all has event vs. not has event
+    # proportions, then split into subgroups and recursively get p-values
+    # for has vs. not has within those subgroups
+    all_pvals = pd.DataFrame()
+    for name, props in [
+        ["sig_props", sig_props],
+        ["not_sig_props", not_sig_props],
+        ["na_props", na_props],
+    ]:
+        _, p_all = scipy.stats.ttest_rel(
+            a=props["has_prop"],
+            b=props["not_has_prop"],
+            nan_policy="omit",
+        )
+        
+        pvals = {
+            "name": name,
+            "p_all": p_all,
+        }
+        
+        _split_groups(
+            props, 
+            split_cols=[
+                "source",
+                "proteomics_or_transcriptomics",
+                "cis_or_trans",
+                "gain_or_loss",
+            ], 
+            results=pvals,
+            prefix="p"
+        )
+        
+        pvals = pd.Series(pvals)
+        all_pvals = pd.concat([all_pvals, pvals], axis=1)
+
+    # Return all the p-values
+    all_pvals = all_pvals.\
+    transpose().\
+    set_index("name", drop=True).\
+    transpose().\
+    reset_index(drop=False).\
+    rename(columns={"index": "name"})
+
+    all_pvals.columns.name = None
+
+    return all_pvals
 
 # Helper functions
 def _get_gain_counts(row):
@@ -531,3 +649,106 @@ def _get_not_has_event_sample_size(col, event):
     not_has_ct = no_event.notna().sum()
 
     return not_has_ct
+
+def _get_ttest_sig_counts(
+    chromosome,
+    arm,
+    gain_or_loss,
+    cis_or_trans,
+    proteomics_or_transcriptomics,
+    cancer_types,
+    source,
+    has_event=None,
+    level=None,
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
+):
+    
+    res_path = get_ttest_results_path(
+        data_dir=data_dir,
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        arm=arm,
+        gain_or_loss=gain_or_loss,
+        cis_or_trans=cis_or_trans,
+        proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+        group="has_event" if has_event else "not_has_event",
+        comparison_name="tumor_vs_normal",
+    )
+
+    all_res = pd.read_csv(res_path, sep="\t")
+
+    all_props = pd.DataFrame()
+    for cancer_type in cancer_types:
+        
+        cancer_type_res = all_res[all_res["cancer_type"] == cancer_type]
+        
+        if cancer_type_res["adj_p"].size > 0:
+            sig = (cancer_type_res["adj_p"] <= 0.05).sum()
+            not_sig = (cancer_type_res["adj_p"] > 0.05).sum()
+            na = cancer_type_res["adj_p"].isna().sum()
+
+            sig_prop = sig / cancer_type_res["adj_p"].size
+            not_sig_prop = not_sig / cancer_type_res["adj_p"].size
+            na_prop = na / cancer_type_res["adj_p"].size
+        else:
+            sig_prop = np.nan
+            not_sig_prop = np.nan
+            na_prop = np.nan
+            
+        for prop in [
+            ["sig_prop", sig_prop],
+            ["not_sig_prop", not_sig_prop],
+            ["na_prop", na_prop],
+        ]:
+
+            cancer_type_props = pd.Series({
+                "chromosome": chromosome,
+                "arm": arm,
+                "gain_or_loss": gain_or_loss,
+                "cis_or_trans": cis_or_trans,
+                "proteomics_or_transcriptomics": proteomics_or_transcriptomics,
+                "cancer_types": cancer_type,
+                "source": source,
+                "level": level,
+                "has_event": has_event,
+                "n": cancer_type_res["adj_p"].size,
+                "prop_name": prop[0],
+                "prop": prop[1],
+            })
+
+            all_props = pd.concat([all_props, cancer_type_props], axis=1)
+        
+    all_props = all_props.\
+    transpose().\
+    reset_index(drop=True)
+
+    return all_props
+
+def _split_groups(df, split_cols, results, prefix):
+    """Recursively split proportions into subgroups and run t-tests on subgroups."""
+    
+    if len(split_cols) == 0:
+        return
+    
+    col = split_cols[0]
+    for val in df[col].unique():
+        
+        group = df[df[col] == val]
+        
+        _, p = scipy.stats.ttest_rel(
+            a=group["has_prop"],
+            b=group["not_has_prop"],
+            nan_policy="omit",
+        )
+        
+        new_prefix = "_".join([prefix, val])
+        results[new_prefix] = p
+        
+        _split_groups(
+            df=group,
+            split_cols=split_cols[1:],
+            results=results,
+            prefix=new_prefix,
+        )
+
