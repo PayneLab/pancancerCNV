@@ -256,6 +256,7 @@ def event_effects_ttest(
     level=None,
     data_dir=os.path.join(os.getcwd(), "..", "data"),
     save=True,
+    permuted_event_data=None,
 ):
 
     if comparison not in ["tumor", "has_event"]:
@@ -335,16 +336,19 @@ def event_effects_ttest(
         df = omics_dict[cancer_type]
         df = df.transpose()
 
-        event_path = get_has_event_path(
-            data_dir=data_dir,
-            source=source,
-            cancer_type=cancer_type,
-            level=level,
-            chromosome=chromosome,
-            arm=arm,
-            gain_or_loss=gain_or_loss,
-        )
-        event = pd.read_csv(event_path, sep='\t', index_col=0)
+        if permuted_event_data is None:
+            event_path = get_has_event_path(
+                data_dir=data_dir,
+                source=source,
+                cancer_type=cancer_type,
+                level=level,
+                chromosome=chromosome,
+                arm=arm,
+                gain_or_loss=gain_or_loss,
+            )
+            event = pd.read_csv(event_path, sep='\t', index_col=0)
+        else:
+            event = permuted_event_data[cancer_type]
 
         event.columns.name = "Name"
         event.columns = cptac.dataframe_tools.add_index_levels(
@@ -379,7 +383,7 @@ def event_effects_ttest(
         if comparison == "tumor":
 
             if has_event is None:
-                raise ValueError(f"To compare based on event status, you must specify a tissue type.")
+                raise ValueError(f"To compare based on tissue type, you must specify an event status with the 'has_event' parameter.")
             elif has_event:
                 df = df[df["event"]]
             else:
@@ -489,29 +493,29 @@ def event_effects_ttest(
         comparison_name = "tumor_vs_normal"
         group = "has_event" if has_event else "not_has_event"
 
+    save_path = get_ttest_results_path(
+        data_dir=data_dir,
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        arm=arm,
+        gain_or_loss=gain_or_loss,
+        cis_or_trans=cis_or_trans,
+        proteomics_or_transcriptomics=proteomics_or_transcriptomics,
+        group=group,
+        comparison_name=comparison_name,
+    )
+
     if save:
-        save_path = get_ttest_results_path(
-            data_dir=data_dir,
-            source=source,
-            level=level,
-            chromosome=chromosome,
-            arm=arm,
-            gain_or_loss=gain_or_loss,
-            cis_or_trans=cis_or_trans,
-            proteomics_or_transcriptomics=proteomics_or_transcriptomics,
-            group=group,
-            comparison_name=comparison_name,
-        )
-
         all_results.to_csv(save_path, sep='\t', index=False)
-
     else:
-        return all_results
+        return (save_path, all_results)
 
 def get_has_vs_not_has_tumor_normal_diff_props(
     chromosomes_events,
     sources,
-    levels,    
+    levels,
+    ttest_res=None,
 ):
 
     # Get the proportions of genes affected and not affected for each event and category
@@ -521,6 +525,10 @@ def get_has_vs_not_has_tumor_normal_diff_props(
         levels=levels,
         chromosomes_events=chromosomes_events,
         more_dicts=[
+            {
+                "name": "ttest_res",
+                "vals": [ttest_res],
+            },
             {
                 "name": "has_event",
                 "vals": [True, False],
@@ -658,6 +666,7 @@ def _get_ttest_sig_counts(
     proteomics_or_transcriptomics,
     cancer_types,
     source,
+    ttest_res,
     has_event=None,
     level=None,
     data_dir=os.path.join(os.getcwd(), "..", "data"),
@@ -676,7 +685,10 @@ def _get_ttest_sig_counts(
         comparison_name="tumor_vs_normal",
     )
 
-    all_res = pd.read_csv(res_path, sep="\t")
+    if ttest_res is None:
+        all_res = pd.read_csv(res_path, sep="\t")
+    else:
+        all_res = ttest_res[res_path]
 
     all_props = pd.DataFrame()
     for cancer_type in cancer_types:
