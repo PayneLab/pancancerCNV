@@ -25,7 +25,7 @@ def _runner(
             
         kwargs[name] = val
 
-    print(f"Running {func.__name__} with {kwargs}...\n")
+    print(f"Running {func.__name__}...\n")# with {kwargs}...\n")
 
     return func(**kwargs)
 

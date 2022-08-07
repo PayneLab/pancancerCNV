@@ -14,6 +14,7 @@ from .constants import (
 )
 from .filenames import (
     get_cnv_counts_path,
+    get_event_name,
     get_has_event_path,
     get_ttest_results_path,
 )
@@ -348,7 +349,14 @@ def event_effects_ttest(
             )
             event = pd.read_csv(event_path, sep='\t', index_col=0)
         else:
-            event = permuted_event_data[cancer_type]
+            event_name = get_event_name(
+                source=source,
+                level=level,
+                chromosome=chromosome,
+                arm=arm,
+                gain_or_loss=gain_or_loss,
+            )
+            event = permuted_event_data[event_name][cancer_type]
 
         event.columns.name = "Name"
         event.columns = cptac.dataframe_tools.add_index_levels(
@@ -374,10 +382,6 @@ def event_effects_ttest(
         df = df.\
         join(event, how="inner").\
         drop(columns=("proportion", ""))
-
-        event = df[["event"]].copy(deep=True)
-        event.columns = event.columns.get_level_values("Name")
-        event = event["event"] # Make it a Series instead of a DataFrame
 
         # If applicable, select just the event status that we want
         if comparison == "tumor":
@@ -625,6 +629,107 @@ def get_has_vs_not_has_tumor_normal_diff_props(
 
     all_pvals.columns.name = None
 
+    # Reshape table to long format
+    all_pvals = all_pvals.melt(
+        id_vars=["name"],
+        value_vars=["sig_props", "not_sig_props", "na_props"],
+        var_name="group",
+        value_name="adj_p",
+    )
+
+    return all_pvals
+
+def permute_props(
+    sources,
+    levels,
+    chromosomes_events,
+    rng,
+):
+    # Optional fallback if we're not worried about reproducing exact permutations
+    if rng is None:
+        rng = np.random.default_rng()
+
+    # Get permuted has_event tables for the events we're interested in
+    all_event_perms = multi_runner(
+        func=_permute_has_event,
+        sources=["cptac", "gistic"],
+        levels=["gene"],
+        chromosomes_events={
+            8: {
+                "p": ["loss"],
+                "q": ["gain"],
+            },
+        },
+        more_dicts=[
+            {
+                "name": "rng",
+                "vals": [rng],
+            }
+        ],
+    )
+    
+    # Convert tuples to dictionary
+    all_event_perms = dict(all_event_perms)
+
+    # Re-run all the tumor vs. normal t-tests, within samples with and without the event
+    # separately, with the permuted has_event labels
+    perm_res = multi_runner(
+        func=event_effects_ttest,
+        sources=["cptac", "gistic"],
+        levels=["gene"],
+        chromosomes_events={
+            8: {
+                "p": ["loss"],
+                "q": ["gain"],
+            },
+        },
+        more_dicts=[
+            {
+                "name": "save",
+                "vals": [False],
+            },
+            {
+                "name": "permuted_event_data",
+                "vals": [all_event_perms],
+            },
+            {
+                "name": "comparison",
+                "vals": ["tumor"]
+            },
+            {
+                "name": "has_event",
+                "vals": [True, False],
+            },
+            {
+                "name": "proteomics_or_transcriptomics",
+                "vals": ["proteomics", "transcriptomics"],
+            },
+            {
+                "name": "cis_or_trans",
+                "vals": ["cis", "trans"],
+            },
+        ],
+    )
+
+    # Convert tuple of (filename, df) into a dictionary
+    # The next function will access the appropriate df based on what
+    # its filename would have been if it was saved to disk
+    perm_res = dict(perm_res)
+
+    # Pass those t-test results to the proportion p value function and get the p values
+    all_pvals = get_has_vs_not_has_tumor_normal_diff_props(
+        chromosomes_events={
+                8: {
+                    "p": ["loss"],
+                    "q": ["gain"],
+                },
+            },
+        sources=["cptac", "gistic"],
+        levels=["gene"],
+        ttest_res=perm_res,
+    )
+
+    # Return those p values so they can be added to the overall distribution
     return all_pvals
 
 # Helper functions
@@ -764,3 +869,39 @@ def _split_groups(df, split_cols, results, prefix):
             prefix=new_prefix,
         )
 
+def _permute_has_event(
+    chromosome,
+    arm,
+    gain_or_loss,
+    cancer_types,
+    source,
+    rng,
+    level=None,
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
+):
+    event_perms = {}
+    
+    for cancer_type in cancer_types:
+        cancer_type_event_path = get_has_event_path(
+            data_dir=data_dir,
+            source=source,
+            cancer_type=cancer_type,
+            level=level,
+            chromosome=chromosome,
+            arm=arm,
+            gain_or_loss=gain_or_loss,
+        )
+
+        cancer_type_event = pd.read_csv(cancer_type_event_path, sep='\t', index_col=0)
+        perm_cancer_type_event = cancer_type_event.assign(event=rng.permutation(cancer_type_event["event"]))
+        event_perms[cancer_type] = perm_cancer_type_event
+        
+    event_name = get_event_name(
+        source=source,
+        level=level,
+        chromosome=chromosome,
+        arm=arm,
+        gain_or_loss=gain_or_loss,
+    )
+
+    return (event_name, event_perms)
