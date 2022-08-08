@@ -11,5 +11,6 @@ build/
 00_functions/data/sources/gistic_tables/
 00_functions/tmp/
 00_functions/*/indices
+00_functions/*/output
 
 cnvutils/cnvutils/entrez_api_key.txt
