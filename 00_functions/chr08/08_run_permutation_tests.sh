@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --time=02:30:00   # walltime
+#SBATCH --time=14:00:00   # walltime
 #SBATCH --ntasks=1000   # number of processor cores (i.e. tasks)
-#SBATCH --mem-per-cpu=8192M   # memory per CPU core
+#SBATCH --mem-per-cpu=4096M   # memory per CPU core
 #SBATCH -J "perms1"   # job name
 #SBATCH --mail-user=calebmlindgren@gmail.com   # email address
 #SBATCH --mail-type=BEGIN
