@@ -30,7 +30,10 @@ results = cnvutils.permute_props(
 )
 
 # Save the results to a temporary output directory
+save_dir = f"tmp{i // 1000:0>3}"
+os.makedirs(save_dir, exist_ok=True)
+
 results.to_csv(
-    os.path.join(f"tmp{i // 1000:0>3}", f"results_{i:0>6}"),
+    os.path.join(save_dir, f"results_{i:0>6}.tsv"),
     sep="\t",
 )
