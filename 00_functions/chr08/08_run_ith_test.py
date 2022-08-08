@@ -1,11 +1,12 @@
 import cnvutils
 import numpy as np
 import os
+import sys
 
 ENTROPY = 294341852078515767793057943394766554310
 
 # Get the index of this iteration
-i = os.getenv("SLURM_ARRAY_TASK_ID")
+i = int(str.split(sys.argv[1], "/")[-1])
 
 # Generate the seed sequence for this iteration
 sseq = np.random.SeedSequence(entropy=ENTROPY, spawn_key=(i,))
@@ -30,6 +31,6 @@ results = cnvutils.permute_props(
 
 # Save the results to a temporary output directory
 results.to_csv(
-    os.path.join("tmp", f"results_{i:0>6}"),
+    os.path.join(f"tmp{i // 1000:0>3}", f"results_{i:0>6}"),
     sep="\t",
 )
