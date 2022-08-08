@@ -16,5 +16,4 @@ export OMP_NUM_THREADS=$SLURM_CPUS_ON_NODE
 # LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 
 module load miniconda3/latest
-conda activate py37
 jupyter nbconvert --ExecutePreprocessor.timeout=None --to notebook --inplace --execute 08_has_vs_not_has_tumor_normal_props_diffs_permutation_tests.ipynb
