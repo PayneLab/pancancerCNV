@@ -37,6 +37,9 @@ def get_has_event_path(data_dir, source, cancer_type, level, chromosome, arm, ga
 def get_ttest_results_path(data_dir, source, level, chromosome, arm, gain_or_loss, cis_or_trans, proteomics_or_transcriptomics, group, comparison_name):
     return os.path.join(data_dir, f"ttest_{get_event_name(source, level, chromosome, arm, gain_or_loss)}_{cis_or_trans}_{proteomics_or_transcriptomics}_{group}_{comparison_name}.tsv")
 
+def get_proportions_perm_test_results_path(data_dir, chromosome):
+    return os.path.join(data_dir, f"props_perm_test_chr{chromosome}.tsv")
+
 # Metadata
 def get_event_metadata_path(data_dir, source, level, chromosome, arm, gain_or_loss):
     return os.path.join(data_dir, f"metadata_{get_event_name(source, level, chromosome, arm, gain_or_loss)}.json")

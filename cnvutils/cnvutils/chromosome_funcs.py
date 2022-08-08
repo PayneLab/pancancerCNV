@@ -1,5 +1,6 @@
 import cptac
 import cptac.utils
+import multiprocessing
 import numpy as np
 import os
 import pandas as pd
@@ -16,6 +17,7 @@ from .filenames import (
     get_cnv_counts_path,
     get_event_name,
     get_has_event_path,
+    get_proportions_perm_test_results_path,
     get_ttest_results_path,
 )
 from .function_runners import multi_runner
@@ -736,6 +738,35 @@ def permute_props(
 
     # Return those p values so they can be added to the overall distribution
     return all_pvals
+
+def props_permutation_test(
+    n,
+    sources,
+    levels,
+    chromosomes_events,
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
+):
+    sq = np.random.SeedSequence()
+    print(f"Entropy: '{sq.entropy}'")
+
+    child_seeds = sq.spawn(n)
+    args = [(
+        sources,
+        levels,
+        chromosomes_events,
+        np.random.default_rng(s),
+    ) for s in child_seeds]
+    
+    with multiprocessing.Pool() as pool:
+        results = pool.starmap(permute_props, args)
+    
+    all_pvals = pd.concat(results)
+
+    save_path = get_proportions_perm_test_results_path(
+        data_dir=data_dir,
+        chromosome=f"{'_'.join([str(k) for k in chromosomes_events.keys()])}",
+    )
+    all_pvals.to_csv(save_path, sep="\t", index=False)
 
 # Helper functions
 def _get_gain_counts(row):
