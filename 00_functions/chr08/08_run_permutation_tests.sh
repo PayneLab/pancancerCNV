@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --time=14:00:00   # walltime
-#SBATCH --ntasks=1000   # number of processor cores (i.e. tasks)
+#SBATCH --ntasks=2000   # number of processor cores (i.e. tasks)
 #SBATCH --mem-per-cpu=4096M   # memory per CPU core
 #SBATCH -J "perms1"   # job name
 #SBATCH --mail-user=calebmlindgren@gmail.com   # email address
@@ -15,5 +15,4 @@ export OMP_NUM_THREADS=$SLURM_CPUS_ON_NODE
 
 # LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 
-module load miniconda3/latest
 jupyter nbconvert --ExecutePreprocessor.timeout=None --to notebook --inplace --execute 08_has_vs_not_has_tumor_normal_props_diffs_permutation_tests.ipynb
