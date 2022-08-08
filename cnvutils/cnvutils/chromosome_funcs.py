@@ -650,11 +650,7 @@ def permute_props(
     levels,
     chromosomes_events,
     rng,
-    i,
 ):
-    # Make a record of this permutation
-    print(f"pm{i:0>6}")
-    
     # Optional fallback if we're not worried about reproducing exact permutations
     if rng is None:
         rng = np.random.default_rng()
@@ -676,7 +672,7 @@ def permute_props(
                 "vals": [rng],
             }
         ],
-        multi=False,
+        multi=True,
     )
     
     # Convert tuples to dictionary
@@ -720,7 +716,7 @@ def permute_props(
                 "vals": ["cis", "trans"],
             },
         ],
-        multi=False,
+        multi=True,
     )
 
     # Convert tuple of (filename, df) into a dictionary
@@ -739,41 +735,11 @@ def permute_props(
         sources=["cptac", "gistic"],
         levels=["gene"],
         ttest_res=perm_res,
-        multi=False,
+        multi=True,
     )
 
     # Return those p values so they can be added to the overall distribution
     return all_pvals
-
-def props_permutation_test(
-    n,
-    sources,
-    levels,
-    chromosomes_events,
-    data_dir=os.path.join(os.getcwd(), "..", "data"),
-):
-    sq = np.random.SeedSequence()
-    print(f"Entropy: '{sq.entropy}'")
-
-    child_seeds = sq.spawn(n)
-    args = [(
-        sources,
-        levels,
-        chromosomes_events,
-        np.random.default_rng(s),
-        i,
-    ) for i, s in enumerate(child_seeds)]
-    
-    with multiprocessing.Pool() as pool:
-        results = pool.starmap(permute_props, args)
-    
-    all_pvals = pd.concat(results)
-
-    save_path = get_proportions_perm_test_results_path(
-        data_dir=data_dir,
-        chromosome=f"{'_'.join([str(k) for k in chromosomes_events.keys()])}",
-    )
-    all_pvals.to_csv(save_path, sep="\t", index=False)
 
 # Helper functions
 def _get_gain_counts(row):
