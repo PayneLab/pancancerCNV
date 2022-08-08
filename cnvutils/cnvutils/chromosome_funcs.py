@@ -650,11 +650,10 @@ def permute_props(
     levels,
     chromosomes_events,
     rng,
-    log_dir,
     i,
 ):
     # Make a record of this permutation
-    pathlib.Path(os.path.join(log_dir, f"{i:0>6}")).touch()
+    print(f"pm{i:0>6}")
     
     # Optional fallback if we're not worried about reproducing exact permutations
     if rng is None:
@@ -753,13 +752,8 @@ def props_permutation_test(
     chromosomes_events,
     data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
-    # Get rng seeds
     sq = np.random.SeedSequence()
     print(f"Entropy: '{sq.entropy}'")
-
-    # Get log dir
-    log_dir = str(time.time())
-    os.makedirs(log_dir)
 
     child_seeds = sq.spawn(n)
     args = [(
@@ -767,7 +761,6 @@ def props_permutation_test(
         levels,
         chromosomes_events,
         np.random.default_rng(s),
-        log_dir,
         i,
     ) for i, s in enumerate(child_seeds)]
     
