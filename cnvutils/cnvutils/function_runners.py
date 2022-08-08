@@ -35,7 +35,8 @@ def multi_runner(
     levels,
     chromosomes_events,
     more_dicts=[],
-    threads=None,
+    processes=None,
+    multi=True
 ):
 
     args = _get_multi_runner_args(
@@ -46,12 +47,15 @@ def multi_runner(
         more_dicts=more_dicts,
     )
 
-    if threads is None:
-        with multiprocessing.Pool() as pool:
-            results = pool.starmap(_runner, args)
+    if multi:
+        if processes is None:
+            with multiprocessing.Pool() as pool:
+                results = pool.starmap(_runner, args)
+        else:
+            with multiprocessing.Pool(processes) as pool:
+                results = pool.starmap(_runner, args)
     else:
-        with multiprocessing.Pool(threads) as pool:
-            results = pool.starmap(_runner, args)
+        results = itertools.starmap(_runner, args)
 
     return results
 

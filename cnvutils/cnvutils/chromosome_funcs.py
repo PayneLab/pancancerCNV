@@ -520,6 +520,7 @@ def get_has_vs_not_has_tumor_normal_diff_props(
     sources,
     levels,
     ttest_res=None,
+    multi=True,
 ):
 
     # Get the proportions of genes affected and not affected for each event and category
@@ -545,7 +546,8 @@ def get_has_vs_not_has_tumor_normal_diff_props(
                 "name": "cis_or_trans",
                 "vals": ["cis", "trans"],
             },
-        ]
+        ],
+        multi=multi,
     )
 
     all_props = pd.\
@@ -666,6 +668,7 @@ def permute_props(
                 "vals": [rng],
             }
         ],
+        multi=False,
     )
     
     # Convert tuples to dictionary
@@ -709,6 +712,7 @@ def permute_props(
                 "vals": ["cis", "trans"],
             },
         ],
+        multi=False,
     )
 
     # Convert tuple of (filename, df) into a dictionary
@@ -727,6 +731,7 @@ def permute_props(
         sources=["cptac", "gistic"],
         levels=["gene"],
         ttest_res=perm_res,
+        multi=False,
     )
 
     # Return those p values so they can be added to the overall distribution
