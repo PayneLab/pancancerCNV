@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --time=07:00:00   # walltime
+#SBATCH --time=24:00:00   # walltime
 #SBATCH --ntasks=128   # number of processor cores (i.e. tasks)
 #SBATCH --mem-per-cpu=4000M   # memory per CPU core
 #SBATCH --nodes=1
@@ -16,4 +16,5 @@ export OMP_NUM_THREADS=$SLURM_CPUS_ON_NODE
 
 # LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 
-srun python 08_has_vs_not_has_tumor_normal_props_diffs_permutation_tests.py
+export NUMEXPR_MAX_THREADS=$SLURM_CPUS_ON_NODE
+python 08_has_vs_not_has_tumor_normal_props_diffs_permutation_tests.py
