@@ -8,7 +8,7 @@
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
-#SBATCH -o raw_output/slrm_%a.out 
+#SBATCH -o output_raw/slrm_%a.out 
 #SBATCH --array 0-9998:11 # 9999 factors to 3*3*11*101
 
 for i in {0..10}; do # run 11 processes in parallel
