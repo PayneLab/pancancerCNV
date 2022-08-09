@@ -12,5 +12,6 @@ build/
 00_functions/tmp/
 00_functions/*/output
 00_functions/*/run*
+00_functions/*/tmp*
 
 cnvutils/cnvutils/entrez_api_key.txt
