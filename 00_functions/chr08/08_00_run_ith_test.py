@@ -6,7 +6,7 @@ import sys
 ENTROPY = 294341852078515767793057943394766554310
 
 # Get the index of this iteration
-i = int(str.split(sys.argv[1], "/")[-1])
+i = int(sys.argv[1])
 
 # Generate the seed sequence for this iteration
 sseq = np.random.SeedSequence(entropy=ENTROPY, spawn_key=(i,))
