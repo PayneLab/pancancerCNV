@@ -672,7 +672,7 @@ def permute_props(
                 "vals": [rng],
             }
         ],
-        multi=True,
+        multi=False,
     )
     
     # Convert tuples to dictionary
@@ -716,7 +716,7 @@ def permute_props(
                 "vals": ["cis", "trans"],
             },
         ],
-        multi=True,
+        multi=False,
     )
 
     # Convert tuple of (filename, df) into a dictionary
@@ -735,7 +735,7 @@ def permute_props(
         sources=["cptac", "gistic"],
         levels=["gene"],
         ttest_res=perm_res,
-        multi=True,
+        multi=False,
     )
 
     # Return those p values so they can be added to the overall distribution

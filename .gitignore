@@ -10,7 +10,7 @@ build/
 00_functions/data/sources/cptac_tables/
 00_functions/data/sources/gistic_tables/
 00_functions/tmp/
-00_functions/*/indices
 00_functions/*/output
+00_functions/*/run*
 
 cnvutils/cnvutils/entrez_api_key.txt
