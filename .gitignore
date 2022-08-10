@@ -12,6 +12,7 @@ build/
 00_functions/tmp/
 00_functions/*/output
 00_functions/*/run*
+00_functions/*/all_run*
 00_functions/*/tmp*
 slurm*.out
 
