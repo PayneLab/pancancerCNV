@@ -36,4 +36,6 @@ os.makedirs(save_dir, exist_ok=True)
 results.to_csv(
     os.path.join(save_dir, f"results_{i:0>6}.tsv"),
     sep="\t",
+    index=False,
+    header=False,
 )
