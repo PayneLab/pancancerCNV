@@ -6,7 +6,7 @@ do
   do
     if [ "$i" \< "$j" ]
     then
-     diff -s $i $j | grep -v '^Only in '
+     cmp -s $i $j && echo "Files $i and $j are identical"
     fi
   done
 done
