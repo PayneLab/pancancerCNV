@@ -30,7 +30,7 @@ results = cnvutils.permute_props(
 )
 
 # Save the results to a temporary output directory
-save_dir = f"tmp{i // 1000:0>3}"
+save_dir = "run6"
 os.makedirs(save_dir, exist_ok=True)
 
 results.to_csv(
