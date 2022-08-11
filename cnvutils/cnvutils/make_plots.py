@@ -744,4 +744,3 @@ def _find_gain_or_loss_regions(
     event_data = pd.DataFrame({'start': start, 'end': end, 'counts': total, 'length': size}).sort_values('start')
 
     return event_data
-

@@ -1,4 +1,5 @@
 from .chromosome_funcs import (
+    calculate_permutation_p_values,
     event_effects_ttest,
     get_has_vs_not_has_tumor_normal_diff_props,
     make_counts_table,

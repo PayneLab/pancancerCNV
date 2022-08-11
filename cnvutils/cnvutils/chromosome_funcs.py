@@ -2,6 +2,7 @@ import cptac
 import cptac.utils
 import multiprocessing
 import numpy as np
+import operator as op
 import os
 import pathlib
 import pandas as pd
@@ -19,7 +20,9 @@ from .filenames import (
     get_cnv_counts_path,
     get_event_name,
     get_has_event_path,
+    get_proportions_perm_p_values_path,
     get_proportions_perm_test_results_path,
+    get_proportions_raw_p_values_path,
     get_ttest_results_path,
 )
 from .function_runners import multi_runner
@@ -525,6 +528,8 @@ def get_has_vs_not_has_tumor_normal_diff_props(
     levels,
     ttest_res=None,
     multi=True,
+    save=True,
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
 
     # Get the proportions of genes affected and not affected for each event and category
@@ -643,7 +648,15 @@ def get_has_vs_not_has_tumor_normal_diff_props(
         value_name="adj_p",
     )
 
-    return all_pvals
+    save_path = get_proportions_raw_p_values_path(
+        data_dir=data_dir,
+        chromosome=list(chromosomes_events.keys())[0],
+    )
+
+    if save:
+        all_pvals.to_csv(save_path, sep='\t', index=False)
+    else:
+        return all_pvals
 
 def permute_props(
     sources,
@@ -737,10 +750,57 @@ def permute_props(
         levels=["gene"],
         ttest_res=perm_res,
         multi=multi,
+        save=False,
     )
 
     # Return those p values so they can be added to the overall distribution
     return all_pvals
+
+def calculate_permutation_p_values(
+    chromosome,
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
+):
+    
+    perm = _get_permutations_results(chromosome=8)
+
+    perm = dict(list(perm.groupby(["group", "name"])["adj_p"]))
+
+    true_path = get_proportions_raw_p_values_path(
+        data_dir=data_dir, 
+        chromosome=chromosome,
+    )
+    true = pd.read_csv(true_path, sep="\t")
+
+    true =  dict(list(true.groupby(["group", "name"])["adj_p"]))
+
+    all_p = pd.DataFrame()
+    for key in true.keys():
+        p_true = true[key]
+        p_perm = perm[key]
+
+        if p_true.iloc[0] <= p_perm.median():
+            comp = op.gt
+        else:
+            comp = op.lt
+
+        p_val = comp(p_true.iloc[0], p_perm).sum() / p_perm.size
+
+        p_df = pd.DataFrame({
+            "group": [key[0]],
+            "name": [key[1]],
+            "p": [p_val],
+        })
+        
+        all_p = pd.concat([all_p, p_df])
+        
+    all_p = all_p.reset_index(drop=True)
+    
+    save_path = get_proportions_perm_p_values_path(
+        data_dir=data_dir,
+        chromosome=chromosome,
+    )
+    
+    all_p.to_csv(save_path, sep="\t", index=False)
 
 # Helper functions
 def _get_gain_counts(row):
@@ -915,3 +975,17 @@ def _permute_has_event(
     )
 
     return (event_name, event_perms)
+
+def _get_permutations_results(
+    chromosome,
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
+):
+    perms_path = get_proportions_perm_test_results_path(
+        data_dir=data_dir,
+        chromosome=chromosome,
+    )
+    
+    perms = pd.read_csv(perms_path, sep="\t", header=None, na_values="--")
+    perms.columns = ["name", "group", "adj_p"]
+    
+    return perms

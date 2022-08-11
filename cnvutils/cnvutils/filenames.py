@@ -40,8 +40,14 @@ def get_has_event_path(data_dir, source, cancer_type, level, chromosome, arm, ga
 def get_ttest_results_path(data_dir, source, level, chromosome, arm, gain_or_loss, cis_or_trans, proteomics_or_transcriptomics, group, comparison_name):
     return os.path.join(data_dir, f"ttest_{get_event_name(source, level, chromosome, arm, gain_or_loss)}_{cis_or_trans}_{proteomics_or_transcriptomics}_{group}_{comparison_name}.tsv")
 
+def get_proportions_raw_p_values_path(data_dir, chromosome):
+    return os.path.join(data_dir, f"props_raw_p_{get_chromosome_label(chromosome)}.tsv")
+
 def get_proportions_perm_test_results_path(data_dir, chromosome):
     return os.path.join(data_dir, f"props_perm_test_{get_chromosome_label(chromosome)}.tsv.gz")
+
+def get_proportions_perm_p_values_path(data_dir, chromosome):
+    return os.path.join(data_dir, f"props_perm_p_{get_chromosome_label(chromosome)}.tsv")
 
 # Metadata
 def get_event_metadata_path(data_dir, source, level, chromosome, arm, gain_or_loss):
@@ -59,11 +65,15 @@ def get_chr_line_plot_path(data_dir, source, level, chromosome, chart_format):
 def get_chr_gradient_plot_path(data_dir, source, level, chromosome, chart_format):
     return os.path.join(get_charts_img_path(data_dir), f"gradient_plot_{get_source_level_chromosome_label(source, level, chromosome)}.{chart_format}")
 
+def get_event_calling_histogram_path(data_dir, source, level, chromosome, arm, gain_or_loss, chart_format):
+    return os.path.join(get_charts_img_path(data_dir), f"event_calling_histogram_{get_event_name(source, level, chromosome, arm, gain_or_loss)}.{chart_format}")
+
+
 def get_ttest_counts_plot_path(data_dir, source, level, chromosome, arm, gain_or_loss, cis_or_trans, proteomics_or_transcriptomics, group, comparison_name, chart_format):
     return os.path.join(get_charts_img_path(data_dir), f"ttest_counts_plot_{get_event_name(source, level, chromosome, arm, gain_or_loss)}_{cis_or_trans}_{proteomics_or_transcriptomics}_{group}_{comparison_name}.{chart_format}")
 
 def get_drivers_manhattan_plot_path(data_dir, source, level, chromosome, arm, gain_or_loss, cis_or_trans, proteomics_or_transcriptomics, chart_format):
     return os.path.join(get_charts_img_path(data_dir), f"drivers_manhattan_plot_{get_event_name(source, level, chromosome, arm, gain_or_loss)}_{cis_or_trans}_{proteomics_or_transcriptomics}.{chart_format}")
 
-def get_permutation_test_results_plot_path(data_dir, chromosome, chart_format):
+def get_prop_perm_p_vals_manhattan_plot_path(data_dir, chromosome, chart_format):
     return os.path.join(get_charts_img_path(data_dir), f"permutation_test_results_chart_{get_chromosome_label(chromosome)}.{chart_format}")
