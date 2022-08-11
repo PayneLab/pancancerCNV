@@ -650,6 +650,7 @@ def permute_props(
     levels,
     chromosomes_events,
     rng,
+    multi=False,
 ):
     # Optional fallback if we're not worried about reproducing exact permutations
     if rng is None:
@@ -672,7 +673,7 @@ def permute_props(
                 "vals": [rng],
             }
         ],
-        multi=False,
+        multi=multi,
     )
     
     # Convert tuples to dictionary
@@ -716,7 +717,7 @@ def permute_props(
                 "vals": ["cis", "trans"],
             },
         ],
-        multi=False,
+        multi=multi,
     )
 
     # Convert tuple of (filename, df) into a dictionary
@@ -735,7 +736,7 @@ def permute_props(
         sources=["cptac", "gistic"],
         levels=["gene"],
         ttest_res=perm_res,
-        multi=False,
+        multi=multi,
     )
 
     # Return those p values so they can be added to the overall distribution
