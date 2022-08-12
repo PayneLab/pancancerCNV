@@ -17,6 +17,7 @@ from .constants import (
     SIG_CUTOFF,
 )
 from .filenames import (
+    get_all_props_path,
     get_cnv_counts_path,
     get_event_name,
     get_has_event_path,
@@ -417,7 +418,6 @@ def event_effects_ttest(
         warnings.warn(f"Only one tissue type for cancer_type={cancer_type}, source={source}, level={level}, chromosome={chromosome}, arm={arm}, gain_or_loss={gain_or_loss}, cis_or_trans={cis_or_trans}, proteomics_or_transcriptomics={proteomics_or_transcriptomics}, comparison={comparison}, tissue_type={tissue_type}, has_event={has_event}.")
         del omics_dict[cancer_type]
 
-
     # Run t-tests
     if comparison == "tumor":
         label = "tumor"
@@ -586,6 +586,14 @@ def get_has_vs_not_has_tumor_normal_diff_props(
     reset_index(drop=False)
 
     all_props.columns.name = None
+
+    if save:
+        all_props_path = get_all_props_path(
+            data_dir=data_dir,
+            chromosome=list(chromosomes_events.keys())[0],
+        )
+
+        all_props.to_csv(all_props_path, sep="\t", index=False)
 
     # Split out the 3 types of proportions:
     #   - Proportion of genes with a tumor/normal p-value <= 0.05

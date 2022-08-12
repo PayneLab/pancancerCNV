@@ -1,0 +1,313 @@
+chromosome	arm	gain_or_loss	cis_or_trans	proteomics_or_transcriptomics	cancer_types	source	level	prop_name	not_has_prop	has_prop
+8	p	loss	cis	proteomics	brca	cptac		na_prop		
+8	p	loss	cis	proteomics	brca	cptac		not_sig_prop		
+8	p	loss	cis	proteomics	brca	cptac		sig_prop		
+8	p	loss	cis	proteomics	brca	gistic	gene	na_prop		
+8	p	loss	cis	proteomics	brca	gistic	gene	not_sig_prop		
+8	p	loss	cis	proteomics	brca	gistic	gene	sig_prop		
+8	p	loss	cis	proteomics	coad	cptac		na_prop	0.04597701149425287	0.10344827586206896
+8	p	loss	cis	proteomics	coad	cptac		not_sig_prop	0.3448275862068966	0.367816091954023
+8	p	loss	cis	proteomics	coad	cptac		sig_prop	0.6091954022988506	0.5287356321839081
+8	p	loss	cis	proteomics	coad	gistic	gene	na_prop	0.042105263157894736	0.09473684210526316
+8	p	loss	cis	proteomics	coad	gistic	gene	not_sig_prop	0.35789473684210527	0.37894736842105264
+8	p	loss	cis	proteomics	coad	gistic	gene	sig_prop	0.6	0.5263157894736842
+8	p	loss	cis	proteomics	hnscc	cptac		na_prop	0.017241379310344827	0.04310344827586207
+8	p	loss	cis	proteomics	hnscc	cptac		not_sig_prop	0.3706896551724138	0.5172413793103449
+8	p	loss	cis	proteomics	hnscc	cptac		sig_prop	0.6120689655172413	0.4396551724137931
+8	p	loss	cis	proteomics	hnscc	gistic	gene	na_prop	0.03125	0.0703125
+8	p	loss	cis	proteomics	hnscc	gistic	gene	not_sig_prop	0.375	0.453125
+8	p	loss	cis	proteomics	hnscc	gistic	gene	sig_prop	0.59375	0.4765625
+8	p	loss	cis	proteomics	lscc	cptac		na_prop	0.031007751937984496	0.06201550387596899
+8	p	loss	cis	proteomics	lscc	cptac		not_sig_prop	0.26356589147286824	0.20930232558139536
+8	p	loss	cis	proteomics	lscc	cptac		sig_prop	0.7054263565891473	0.7286821705426356
+8	p	loss	cis	proteomics	lscc	gistic	gene	na_prop	0.04195804195804196	0.06993006993006994
+8	p	loss	cis	proteomics	lscc	gistic	gene	not_sig_prop	0.26573426573426573	0.2517482517482518
+8	p	loss	cis	proteomics	lscc	gistic	gene	sig_prop	0.6923076923076923	0.6783216783216783
+8	p	loss	cis	proteomics	luad	cptac		na_prop	0.03875968992248062	0.06976744186046512
+8	p	loss	cis	proteomics	luad	cptac		not_sig_prop	0.24806201550387597	0.35658914728682173
+8	p	loss	cis	proteomics	luad	cptac		sig_prop	0.7131782945736435	0.5736434108527132
+8	p	loss	cis	proteomics	luad	gistic	gene	na_prop	0.035211267605633804	0.07746478873239436
+8	p	loss	cis	proteomics	luad	gistic	gene	not_sig_prop	0.2535211267605634	0.3732394366197183
+8	p	loss	cis	proteomics	luad	gistic	gene	sig_prop	0.7112676056338029	0.5492957746478874
+8	p	loss	cis	proteomics	ov	cptac		na_prop	0.37272727272727274	1.0
+8	p	loss	cis	proteomics	ov	cptac		not_sig_prop	0.5454545454545454	0.0
+8	p	loss	cis	proteomics	ov	cptac		sig_prop	0.08181818181818182	0.0
+8	p	loss	cis	proteomics	ov	gistic	gene	na_prop	1.0	0.3442622950819672
+8	p	loss	cis	proteomics	ov	gistic	gene	not_sig_prop	0.0	0.5327868852459017
+8	p	loss	cis	proteomics	ov	gistic	gene	sig_prop	0.0	0.12295081967213115
+8	p	loss	cis	proteomics	pdac	gistic	gene	na_prop	0.023622047244094488	0.18110236220472442
+8	p	loss	cis	proteomics	pdac	gistic	gene	not_sig_prop	0.3779527559055118	0.6929133858267716
+8	p	loss	cis	proteomics	pdac	gistic	gene	sig_prop	0.5984251968503937	0.12598425196850394
+8	p	loss	cis	transcriptomics	brca	cptac		na_prop		
+8	p	loss	cis	transcriptomics	brca	cptac		not_sig_prop		
+8	p	loss	cis	transcriptomics	brca	cptac		sig_prop		
+8	p	loss	cis	transcriptomics	brca	gistic	gene	na_prop		
+8	p	loss	cis	transcriptomics	brca	gistic	gene	not_sig_prop		
+8	p	loss	cis	transcriptomics	brca	gistic	gene	sig_prop		
+8	p	loss	cis	transcriptomics	coad	cptac		na_prop		
+8	p	loss	cis	transcriptomics	coad	cptac		not_sig_prop		
+8	p	loss	cis	transcriptomics	coad	cptac		sig_prop		
+8	p	loss	cis	transcriptomics	coad	gistic	gene	na_prop		
+8	p	loss	cis	transcriptomics	coad	gistic	gene	not_sig_prop		
+8	p	loss	cis	transcriptomics	coad	gistic	gene	sig_prop		
+8	p	loss	cis	transcriptomics	hnscc	cptac		na_prop	0.024752475247524754	0.039603960396039604
+8	p	loss	cis	transcriptomics	hnscc	cptac		not_sig_prop	0.5297029702970297	0.5247524752475248
+8	p	loss	cis	transcriptomics	hnscc	cptac		sig_prop	0.44554455445544555	0.43564356435643564
+8	p	loss	cis	transcriptomics	hnscc	gistic	gene	na_prop	0.02727272727272727	0.03636363636363636
+8	p	loss	cis	transcriptomics	hnscc	gistic	gene	not_sig_prop	0.5136363636363637	0.5636363636363636
+8	p	loss	cis	transcriptomics	hnscc	gistic	gene	sig_prop	0.4590909090909091	0.4
+8	p	loss	cis	transcriptomics	lscc	cptac		na_prop	0.024752475247524754	0.054455445544554455
+8	p	loss	cis	transcriptomics	lscc	cptac		not_sig_prop	0.3316831683168317	0.31683168316831684
+8	p	loss	cis	transcriptomics	lscc	cptac		sig_prop	0.6435643564356436	0.6287128712871287
+8	p	loss	cis	transcriptomics	lscc	gistic	gene	na_prop	0.022727272727272728	0.05
+8	p	loss	cis	transcriptomics	lscc	gistic	gene	not_sig_prop	0.3409090909090909	0.3409090909090909
+8	p	loss	cis	transcriptomics	lscc	gistic	gene	sig_prop	0.6363636363636364	0.6090909090909091
+8	p	loss	cis	transcriptomics	luad	cptac		na_prop	0.0594059405940594	0.06435643564356436
+8	p	loss	cis	transcriptomics	luad	cptac		not_sig_prop	0.3217821782178218	0.3613861386138614
+8	p	loss	cis	transcriptomics	luad	cptac		sig_prop	0.6188118811881188	0.5742574257425742
+8	p	loss	cis	transcriptomics	luad	gistic	gene	na_prop	0.05454545454545454	0.05909090909090909
+8	p	loss	cis	transcriptomics	luad	gistic	gene	not_sig_prop	0.32727272727272727	0.39090909090909093
+8	p	loss	cis	transcriptomics	luad	gistic	gene	sig_prop	0.6181818181818182	0.55
+8	p	loss	cis	transcriptomics	ov	cptac		na_prop		
+8	p	loss	cis	transcriptomics	ov	cptac		not_sig_prop		
+8	p	loss	cis	transcriptomics	ov	cptac		sig_prop		
+8	p	loss	cis	transcriptomics	ov	gistic	gene	na_prop		
+8	p	loss	cis	transcriptomics	ov	gistic	gene	not_sig_prop		
+8	p	loss	cis	transcriptomics	ov	gistic	gene	sig_prop		
+8	p	loss	cis	transcriptomics	pdac	gistic	gene	na_prop	0.02727272727272727	0.09545454545454546
+8	p	loss	cis	transcriptomics	pdac	gistic	gene	not_sig_prop	0.4681818181818182	0.7090909090909091
+8	p	loss	cis	transcriptomics	pdac	gistic	gene	sig_prop	0.5045454545454545	0.19545454545454546
+8	p	loss	trans	proteomics	brca	cptac		na_prop		
+8	p	loss	trans	proteomics	brca	cptac		not_sig_prop		
+8	p	loss	trans	proteomics	brca	cptac		sig_prop		
+8	p	loss	trans	proteomics	brca	gistic	gene	na_prop		
+8	p	loss	trans	proteomics	brca	gistic	gene	not_sig_prop		
+8	p	loss	trans	proteomics	brca	gistic	gene	sig_prop		
+8	p	loss	trans	proteomics	coad	cptac		na_prop	0.043409983174425126	0.11643297812675267
+8	p	loss	trans	proteomics	coad	cptac		not_sig_prop	0.3159842961301178	0.3647784632641615
+8	p	loss	trans	proteomics	coad	cptac		sig_prop	0.6406057206954571	0.5187885586090858
+8	p	loss	trans	proteomics	coad	gistic	gene	na_prop	0.04816436510609633	0.10968900864488604
+8	p	loss	trans	proteomics	coad	gistic	gene	not_sig_prop	0.31391040754462785	0.36948467497473897
+8	p	loss	trans	proteomics	coad	gistic	gene	sig_prop	0.6379252273492758	0.520826316380375
+8	p	loss	trans	proteomics	hnscc	cptac		na_prop	0.03664921465968586	0.07958115183246073
+8	p	loss	trans	proteomics	hnscc	cptac		not_sig_prop	0.3794938917975567	0.4780104712041885
+8	p	loss	trans	proteomics	hnscc	cptac		sig_prop	0.5838568935427574	0.4424083769633508
+8	p	loss	trans	proteomics	hnscc	gistic	gene	na_prop	0.03860936408106219	0.07075471698113207
+8	p	loss	trans	proteomics	hnscc	gistic	gene	not_sig_prop	0.394916142557652	0.4581586303284417
+8	p	loss	trans	proteomics	hnscc	gistic	gene	sig_prop	0.5664744933612859	0.47108665269042627
+8	p	loss	trans	proteomics	lscc	cptac		na_prop	0.02163724418059678	0.04100921730979534
+8	p	loss	trans	proteomics	lscc	cptac		not_sig_prop	0.24089985939696923	0.26370879550070303
+8	p	loss	trans	proteomics	lscc	cptac		sig_prop	0.737462896422434	0.6952819871895016
+8	p	loss	trans	proteomics	lscc	gistic	gene	na_prop	0.02158273381294964	0.041914294651235535
+8	p	loss	trans	proteomics	lscc	gistic	gene	not_sig_prop	0.2321707851110416	0.27486706287144197
+8	p	loss	trans	proteomics	lscc	gistic	gene	sig_prop	0.7462464810760088	0.6832186424773224
+8	p	loss	trans	proteomics	luad	cptac		na_prop	0.025869687474893547	0.060416164537639594
+8	p	loss	trans	proteomics	luad	cptac		not_sig_prop	0.2752470474813208	0.3179079296215956
+8	p	loss	trans	proteomics	luad	cptac		sig_prop	0.6988832650437856	0.6216759058407648
+8	p	loss	trans	proteomics	luad	gistic	gene	na_prop	0.02798777545439923	0.06289207013028791
+8	p	loss	trans	proteomics	luad	gistic	gene	not_sig_prop	0.26982467428019946	0.3324754704841563
+8	p	loss	trans	proteomics	luad	gistic	gene	sig_prop	0.7021875502654014	0.6046324593855558
+8	p	loss	trans	proteomics	ov	cptac		na_prop	0.24563423527154096	1.0
+8	p	loss	trans	proteomics	ov	cptac		not_sig_prop	0.616580310880829	0.0
+8	p	loss	trans	proteomics	ov	cptac		sig_prop	0.13778545384763002	0.0
+8	p	loss	trans	proteomics	ov	gistic	gene	na_prop	1.0	0.24140249759846302
+8	p	loss	trans	proteomics	ov	gistic	gene	not_sig_prop	0.0	0.551104707012488
+8	p	loss	trans	proteomics	ov	gistic	gene	sig_prop	0.0	0.207492795389049
+8	p	loss	trans	proteomics	pdac	gistic	gene	na_prop	0.02827262252946911	0.22104050341221307
+8	p	loss	trans	proteomics	pdac	gistic	gene	not_sig_prop	0.3653283701143313	0.6494726579810334
+8	p	loss	trans	proteomics	pdac	gistic	gene	sig_prop	0.6063990073561996	0.12948683860675353
+8	p	loss	trans	transcriptomics	brca	cptac		na_prop		
+8	p	loss	trans	transcriptomics	brca	cptac		not_sig_prop		
+8	p	loss	trans	transcriptomics	brca	cptac		sig_prop		
+8	p	loss	trans	transcriptomics	brca	gistic	gene	na_prop		
+8	p	loss	trans	transcriptomics	brca	gistic	gene	not_sig_prop		
+8	p	loss	trans	transcriptomics	brca	gistic	gene	sig_prop		
+8	p	loss	trans	transcriptomics	coad	cptac		na_prop		
+8	p	loss	trans	transcriptomics	coad	cptac		not_sig_prop		
+8	p	loss	trans	transcriptomics	coad	cptac		sig_prop		
+8	p	loss	trans	transcriptomics	coad	gistic	gene	na_prop		
+8	p	loss	trans	transcriptomics	coad	gistic	gene	not_sig_prop		
+8	p	loss	trans	transcriptomics	coad	gistic	gene	sig_prop		
+8	p	loss	trans	transcriptomics	hnscc	cptac		na_prop	0.010995970063327577	0.018537708693149108
+8	p	loss	trans	transcriptomics	hnscc	cptac		not_sig_prop	0.4001727115716753	0.5781232009211283
+8	p	loss	trans	transcriptomics	hnscc	cptac		sig_prop	0.5888313183649971	0.4033390903857225
+8	p	loss	trans	transcriptomics	hnscc	gistic	gene	na_prop	0.011180267404333795	0.01677040110650069
+8	p	loss	trans	transcriptomics	hnscc	gistic	gene	not_sig_prop	0.4190871369294606	0.5298524665744583
+8	p	loss	trans	transcriptomics	hnscc	gistic	gene	sig_prop	0.5697325956662056	0.45337713231904103
+8	p	loss	trans	transcriptomics	lscc	cptac		na_prop	0.011283822682786413	0.014738054116292459
+8	p	loss	trans	transcriptomics	lscc	cptac		not_sig_prop	0.289349453080023	0.34024179620034545
+8	p	loss	trans	transcriptomics	lscc	cptac		sig_prop	0.6993667242371906	0.6450201496833621
+8	p	loss	trans	transcriptomics	lscc	gistic	gene	na_prop	0.011526048870447211	0.01446519133241125
+8	p	loss	trans	transcriptomics	lscc	gistic	gene	not_sig_prop	0.2857883817427386	0.35050714615029965
+8	p	loss	trans	transcriptomics	lscc	gistic	gene	sig_prop	0.7026855693868141	0.635027662517289
+8	p	loss	trans	transcriptomics	luad	cptac		na_prop	0.012665515256188831	0.01894070236039148
+8	p	loss	trans	transcriptomics	luad	cptac		not_sig_prop	0.31065054691997696	0.3621761658031088
+8	p	loss	trans	transcriptomics	luad	cptac		sig_prop	0.6766839378238342	0.6188831318364997
+8	p	loss	trans	transcriptomics	luad	gistic	gene	na_prop	0.01285154449054864	0.018729829414476717
+8	p	loss	trans	transcriptomics	luad	gistic	gene	not_sig_prop	0.30711157215306595	0.3792070078377132
+8	p	loss	trans	transcriptomics	luad	gistic	gene	sig_prop	0.6800368833563855	0.60206316274781
+8	p	loss	trans	transcriptomics	ov	cptac		na_prop		
+8	p	loss	trans	transcriptomics	ov	cptac		not_sig_prop		
+8	p	loss	trans	transcriptomics	ov	cptac		sig_prop		
+8	p	loss	trans	transcriptomics	ov	gistic	gene	na_prop		
+8	p	loss	trans	transcriptomics	ov	gistic	gene	not_sig_prop		
+8	p	loss	trans	transcriptomics	ov	gistic	gene	sig_prop		
+8	p	loss	trans	transcriptomics	pdac	gistic	gene	na_prop	0.013024435223605349	0.03434762563393269
+8	p	loss	trans	transcriptomics	pdac	gistic	gene	not_sig_prop	0.4607538035961272	0.8900991240202858
+8	p	loss	trans	transcriptomics	pdac	gistic	gene	sig_prop	0.5262217611802674	0.07555325034578146
+8	q	gain	cis	proteomics	brca	cptac		na_prop		
+8	q	gain	cis	proteomics	brca	cptac		not_sig_prop		
+8	q	gain	cis	proteomics	brca	cptac		sig_prop		
+8	q	gain	cis	proteomics	brca	gistic	gene	na_prop		
+8	q	gain	cis	proteomics	brca	gistic	gene	not_sig_prop		
+8	q	gain	cis	proteomics	brca	gistic	gene	sig_prop		
+8	q	gain	cis	proteomics	coad	cptac		na_prop	0.037914691943127965	0.05687203791469194
+8	q	gain	cis	proteomics	coad	cptac		not_sig_prop	0.3033175355450237	0.3127962085308057
+8	q	gain	cis	proteomics	coad	cptac		sig_prop	0.6587677725118484	0.6303317535545023
+8	q	gain	cis	proteomics	coad	gistic	gene	na_prop	0.04065040650406504	0.056910569105691054
+8	q	gain	cis	proteomics	coad	gistic	gene	not_sig_prop	0.3170731707317073	0.2967479674796748
+8	q	gain	cis	proteomics	coad	gistic	gene	sig_prop	0.6422764227642277	0.6463414634146342
+8	q	gain	cis	proteomics	hnscc	cptac		na_prop	0.029304029304029304	0.08424908424908426
+8	q	gain	cis	proteomics	hnscc	cptac		not_sig_prop	0.38461538461538464	0.45054945054945056
+8	q	gain	cis	proteomics	hnscc	cptac		sig_prop	0.5860805860805861	0.4652014652014652
+8	q	gain	cis	proteomics	hnscc	gistic	gene	na_prop	0.054140127388535034	0.06369426751592357
+8	q	gain	cis	proteomics	hnscc	gistic	gene	not_sig_prop	0.36942675159235666	0.40764331210191085
+8	q	gain	cis	proteomics	hnscc	gistic	gene	sig_prop	0.5764331210191083	0.5286624203821656
+8	q	gain	cis	proteomics	lscc	cptac		na_prop	0.01935483870967742	0.07096774193548387
+8	q	gain	cis	proteomics	lscc	cptac		not_sig_prop	0.26129032258064516	0.3
+8	q	gain	cis	proteomics	lscc	cptac		sig_prop	0.7193548387096774	0.6290322580645161
+8	q	gain	cis	proteomics	lscc	gistic	gene	na_prop	0.025210084033613446	0.058823529411764705
+8	q	gain	cis	proteomics	lscc	gistic	gene	not_sig_prop	0.24929971988795518	0.2689075630252101
+8	q	gain	cis	proteomics	lscc	gistic	gene	sig_prop	0.7254901960784313	0.6722689075630253
+8	q	gain	cis	proteomics	luad	cptac		na_prop	0.0	0.05102040816326531
+8	q	gain	cis	proteomics	luad	cptac		not_sig_prop	0.2687074829931973	0.30952380952380953
+8	q	gain	cis	proteomics	luad	cptac		sig_prop	0.7312925170068028	0.6394557823129252
+8	q	gain	cis	proteomics	luad	gistic	gene	na_prop	0.0029585798816568047	0.04437869822485207
+8	q	gain	cis	proteomics	luad	gistic	gene	not_sig_prop	0.28106508875739644	0.31952662721893493
+8	q	gain	cis	proteomics	luad	gistic	gene	sig_prop	0.7159763313609467	0.636094674556213
+8	q	gain	cis	proteomics	ov	cptac		na_prop	0.22440944881889763	1.0
+8	q	gain	cis	proteomics	ov	cptac		not_sig_prop	0.6181102362204725	0.0
+8	q	gain	cis	proteomics	ov	cptac		sig_prop	0.15748031496062992	0.0
+8	q	gain	cis	proteomics	ov	gistic	gene	na_prop	0.24829931972789115	1.0
+8	q	gain	cis	proteomics	ov	gistic	gene	not_sig_prop	0.6292517006802721	0.0
+8	q	gain	cis	proteomics	ov	gistic	gene	sig_prop	0.12244897959183673	0.0
+8	q	gain	cis	proteomics	pdac	gistic	gene	na_prop	0.028662420382165606	0.18789808917197454
+8	q	gain	cis	proteomics	pdac	gistic	gene	not_sig_prop	0.37898089171974525	0.6242038216560509
+8	q	gain	cis	proteomics	pdac	gistic	gene	sig_prop	0.5923566878980892	0.18789808917197454
+8	q	gain	cis	transcriptomics	brca	cptac		na_prop		
+8	q	gain	cis	transcriptomics	brca	cptac		not_sig_prop		
+8	q	gain	cis	transcriptomics	brca	cptac		sig_prop		
+8	q	gain	cis	transcriptomics	brca	gistic	gene	na_prop		
+8	q	gain	cis	transcriptomics	brca	gistic	gene	not_sig_prop		
+8	q	gain	cis	transcriptomics	brca	gistic	gene	sig_prop		
+8	q	gain	cis	transcriptomics	coad	cptac		na_prop		
+8	q	gain	cis	transcriptomics	coad	cptac		not_sig_prop		
+8	q	gain	cis	transcriptomics	coad	cptac		sig_prop		
+8	q	gain	cis	transcriptomics	coad	gistic	gene	na_prop		
+8	q	gain	cis	transcriptomics	coad	gistic	gene	not_sig_prop		
+8	q	gain	cis	transcriptomics	coad	gistic	gene	sig_prop		
+8	q	gain	cis	transcriptomics	hnscc	cptac		na_prop	0.0	0.005221932114882507
+8	q	gain	cis	transcriptomics	hnscc	cptac		not_sig_prop	0.34203655352480417	0.3681462140992167
+8	q	gain	cis	transcriptomics	hnscc	cptac		sig_prop	0.6579634464751958	0.6266318537859008
+8	q	gain	cis	transcriptomics	hnscc	gistic	gene	na_prop	0.002320185614849188	0.002320185614849188
+8	q	gain	cis	transcriptomics	hnscc	gistic	gene	not_sig_prop	0.3642691415313225	0.3689095127610209
+8	q	gain	cis	transcriptomics	hnscc	gistic	gene	sig_prop	0.6334106728538283	0.62877030162413
+8	q	gain	cis	transcriptomics	lscc	cptac		na_prop	0.0026109660574412533	0.0026109660574412533
+8	q	gain	cis	transcriptomics	lscc	cptac		not_sig_prop	0.22715404699738903	0.28720626631853785
+8	q	gain	cis	transcriptomics	lscc	cptac		sig_prop	0.7702349869451697	0.7101827676240209
+8	q	gain	cis	transcriptomics	lscc	gistic	gene	na_prop	0.002320185614849188	0.0
+8	q	gain	cis	transcriptomics	lscc	gistic	gene	not_sig_prop	0.24361948955916474	0.28074245939675174
+8	q	gain	cis	transcriptomics	lscc	gistic	gene	sig_prop	0.7540603248259861	0.7192575406032483
+8	q	gain	cis	transcriptomics	luad	cptac		na_prop	0.005221932114882507	0.0026109660574412533
+8	q	gain	cis	transcriptomics	luad	cptac		not_sig_prop	0.2584856396866841	0.2819843342036554
+8	q	gain	cis	transcriptomics	luad	cptac		sig_prop	0.7362924281984334	0.7154046997389034
+8	q	gain	cis	transcriptomics	luad	gistic	gene	na_prop	0.004640371229698376	0.002320185614849188
+8	q	gain	cis	transcriptomics	luad	gistic	gene	not_sig_prop	0.2691415313225058	0.29930394431554525
+8	q	gain	cis	transcriptomics	luad	gistic	gene	sig_prop	0.7262180974477959	0.6983758700696056
+8	q	gain	cis	transcriptomics	ov	cptac		na_prop		
+8	q	gain	cis	transcriptomics	ov	cptac		not_sig_prop		
+8	q	gain	cis	transcriptomics	ov	cptac		sig_prop		
+8	q	gain	cis	transcriptomics	ov	gistic	gene	na_prop		
+8	q	gain	cis	transcriptomics	ov	gistic	gene	not_sig_prop		
+8	q	gain	cis	transcriptomics	ov	gistic	gene	sig_prop		
+8	q	gain	cis	transcriptomics	pdac	gistic	gene	na_prop	0.0	0.004640371229698376
+8	q	gain	cis	transcriptomics	pdac	gistic	gene	not_sig_prop	0.4060324825986079	0.8863109048723898
+8	q	gain	cis	transcriptomics	pdac	gistic	gene	sig_prop	0.5939675174013921	0.10904872389791183
+8	q	gain	trans	proteomics	brca	cptac		na_prop		
+8	q	gain	trans	proteomics	brca	cptac		not_sig_prop		
+8	q	gain	trans	proteomics	brca	cptac		sig_prop		
+8	q	gain	trans	proteomics	brca	gistic	gene	na_prop		
+8	q	gain	trans	proteomics	brca	gistic	gene	not_sig_prop		
+8	q	gain	trans	proteomics	brca	gistic	gene	sig_prop		
+8	q	gain	trans	proteomics	coad	cptac		na_prop	0.049596177909225346	0.09248094642247753
+8	q	gain	trans	proteomics	coad	cptac		not_sig_prop	0.31771129564327155	0.3728813559322034
+8	q	gain	trans	proteomics	coad	cptac		sig_prop	0.6326925264475032	0.5346376976453191
+8	q	gain	trans	proteomics	coad	gistic	gene	na_prop	0.05938784833257195	0.07514846962083142
+8	q	gain	trans	proteomics	coad	gistic	gene	not_sig_prop	0.3292599360438556	0.3586112380082229
+8	q	gain	trans	proteomics	coad	gistic	gene	sig_prop	0.6113522156235724	0.5662402923709456
+8	q	gain	trans	proteomics	hnscc	cptac		na_prop	0.03432716977793506	0.07997876669910643
+8	q	gain	trans	proteomics	hnscc	cptac		not_sig_prop	0.3838803857382996	0.48925064142263114
+8	q	gain	trans	proteomics	hnscc	cptac		sig_prop	0.5817924444837653	0.4307705918782624
+8	q	gain	trans	proteomics	hnscc	gistic	gene	na_prop	0.04120049724738057	0.06135677499556029
+8	q	gain	trans	proteomics	hnscc	gistic	gene	not_sig_prop	0.39673237435624226	0.45293908719587994
+8	q	gain	trans	proteomics	hnscc	gistic	gene	sig_prop	0.5620671283963772	0.48570413780855975
+8	q	gain	trans	proteomics	lscc	cptac		na_prop	0.01243958481895254	0.06964582838126931
+8	q	gain	trans	proteomics	lscc	cptac		not_sig_prop	0.22026780762221693	0.3065525711116393
+8	q	gain	trans	proteomics	lscc	cptac		sig_prop	0.7672926075588306	0.6238016005070913
+8	q	gain	trans	proteomics	lscc	gistic	gene	na_prop	0.01590583744234134	0.058215365038969305
+8	q	gain	trans	proteomics	lscc	gistic	gene	not_sig_prop	0.2292031175441387	0.27739780499443295
+8	q	gain	trans	proteomics	lscc	gistic	gene	sig_prop	0.75489104501352	0.6643868299665977
+8	q	gain	trans	proteomics	luad	cptac		na_prop	0.0242631493242143	0.06782283015795473
+8	q	gain	trans	proteomics	luad	cptac		not_sig_prop	0.2618466047874939	0.34627910763719266
+8	q	gain	trans	proteomics	luad	cptac		sig_prop	0.7138902458882919	0.5858980622048526
+8	q	gain	trans	proteomics	luad	gistic	gene	na_prop	0.02590292531459389	0.06577872201340089
+8	q	gain	trans	proteomics	luad	gistic	gene	not_sig_prop	0.265484556300049	0.3382905703546331
+8	q	gain	trans	proteomics	luad	gistic	gene	sig_prop	0.7086125183853571	0.595930707631966
+8	q	gain	trans	proteomics	ov	cptac		na_prop	0.21317376921580075	1.0
+8	q	gain	trans	proteomics	ov	cptac		not_sig_prop	0.5589608873321658	0.0
+8	q	gain	trans	proteomics	ov	cptac		sig_prop	0.22786534345203346	0.0
+8	q	gain	trans	proteomics	ov	gistic	gene	na_prop	0.26147685094745066	1.0
+8	q	gain	trans	proteomics	ov	gistic	gene	not_sig_prop	0.5743309240085954	0.0
+8	q	gain	trans	proteomics	ov	gistic	gene	sig_prop	0.1641922250439539	0.0
+8	q	gain	trans	proteomics	pdac	gistic	gene	na_prop	0.026766402307137706	0.19232155731795242
+8	q	gain	trans	proteomics	pdac	gistic	gene	not_sig_prop	0.3741888968997837	0.6228370583994232
+8	q	gain	trans	proteomics	pdac	gistic	gene	sig_prop	0.5990447007930786	0.18484138428262437
+8	q	gain	trans	transcriptomics	brca	cptac		na_prop		
+8	q	gain	trans	transcriptomics	brca	cptac		not_sig_prop		
+8	q	gain	trans	transcriptomics	brca	cptac		sig_prop		
+8	q	gain	trans	transcriptomics	brca	gistic	gene	na_prop		
+8	q	gain	trans	transcriptomics	brca	gistic	gene	not_sig_prop		
+8	q	gain	trans	transcriptomics	brca	gistic	gene	sig_prop		
+8	q	gain	trans	transcriptomics	coad	cptac		na_prop		
+8	q	gain	trans	transcriptomics	coad	cptac		not_sig_prop		
+8	q	gain	trans	transcriptomics	coad	cptac		sig_prop		
+8	q	gain	trans	transcriptomics	coad	gistic	gene	na_prop		
+8	q	gain	trans	transcriptomics	coad	gistic	gene	not_sig_prop		
+8	q	gain	trans	transcriptomics	coad	gistic	gene	sig_prop		
+8	q	gain	trans	transcriptomics	hnscc	cptac		na_prop	0.011984408633428355	0.016871254872302052
+8	q	gain	trans	transcriptomics	hnscc	cptac		not_sig_prop	0.403455698411775	0.598638664262028
+8	q	gain	trans	transcriptomics	hnscc	cptac		sig_prop	0.5845598929547967	0.3844900808656699
+8	q	gain	trans	transcriptomics	hnscc	gistic	gene	na_prop	0.012951403068665773	0.014934951286389359
+8	q	gain	trans	transcriptomics	hnscc	gistic	gene	not_sig_prop	0.41835365497928945	0.5320576395776209
+8	q	gain	trans	transcriptomics	hnscc	gistic	gene	sig_prop	0.5686949419520448	0.45300740913598975
+8	q	gain	trans	transcriptomics	lscc	cptac		na_prop	0.01140264122403863	0.01902379428704404
+8	q	gain	trans	transcriptomics	lscc	cptac		not_sig_prop	0.263366106230729	0.41369480481703413
+8	q	gain	trans	transcriptomics	lscc	cptac		sig_prop	0.7252312525452325	0.5672814008959218
+8	q	gain	trans	transcriptomics	lscc	gistic	gene	na_prop	0.011784609999416603	0.017618575345662447
+8	q	gain	trans	transcriptomics	lscc	gistic	gene	not_sig_prop	0.2747797678081792	0.37115687532816055
+8	q	gain	trans	transcriptomics	lscc	gistic	gene	sig_prop	0.7134356221924042	0.611224549326177
+8	q	gain	trans	transcriptomics	luad	cptac		na_prop	0.012857059747512944	0.02193263133399267
+8	q	gain	trans	transcriptomics	luad	cptac		not_sig_prop	0.29315259759148293	0.41922159520623653
+8	q	gain	trans	transcriptomics	luad	cptac		sig_prop	0.6939903426610041	0.5588457734597708
+8	q	gain	trans	transcriptomics	luad	gistic	gene	na_prop	0.013068082375590689	0.021410652820722246
+8	q	gain	trans	transcriptomics	luad	gistic	gene	not_sig_prop	0.2941485327577154	0.41106119829648213
+8	q	gain	trans	transcriptomics	luad	gistic	gene	sig_prop	0.6927833848666939	0.5675281488827957
+8	q	gain	trans	transcriptomics	ov	cptac		na_prop		
+8	q	gain	trans	transcriptomics	ov	cptac		not_sig_prop		
+8	q	gain	trans	transcriptomics	ov	cptac		sig_prop		
+8	q	gain	trans	transcriptomics	ov	gistic	gene	na_prop		
+8	q	gain	trans	transcriptomics	ov	gistic	gene	not_sig_prop		
+8	q	gain	trans	transcriptomics	ov	gistic	gene	sig_prop		
+8	q	gain	trans	transcriptomics	pdac	gistic	gene	na_prop	0.014118196137914941	0.031036695642027885
+8	q	gain	trans	transcriptomics	pdac	gistic	gene	not_sig_prop	0.4621667347295957	0.8893880170351788
+8	q	gain	trans	transcriptomics	pdac	gistic	gene	sig_prop	0.5237150691324893	0.0795752873227933

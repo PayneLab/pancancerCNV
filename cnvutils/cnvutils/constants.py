@@ -56,7 +56,7 @@ GENE_CNV_PROPORTION_CUTOFF =  0.2
 CHART_DPI = 600
 CHART_FORMAT = "png"
 CHART_RENDER_METHOD = "selenium" # npm doesn't allow for chart scaling
-CHART_SCALE = 2.0
+CHART_SCALE = 8.0
 
 # Significance cutoff for B-H FDR adjusted p values
 SIG_CUTOFF = 0.05
