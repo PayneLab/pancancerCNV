@@ -6,14 +6,14 @@ dist/
 build/
 .DS_Store
 
-00_functions/data/sources/Broad_pipeline_wxs/
-00_functions/data/sources/cptac_tables/
-00_functions/data/sources/gistic_tables/
-00_functions/tmp/
-00_functions/*/output
-00_functions/*/run*
-00_functions/*/all_run*
-00_functions/*/tmp*
+data/sources/Broad_pipeline_wxs/
+data/sources/cptac_tables/
+data/sources/gistic_tables/
+tmp/
+*/output
+*/run*
+*/all_run*
+*/tmp*
 slurm*.out
 
 cnvutils/cnvutils/entrez_api_key.txt
