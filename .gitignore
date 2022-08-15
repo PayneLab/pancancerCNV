@@ -6,7 +6,7 @@ dist/
 build/
 .DS_Store
 
-data/sources/Broad_pipeline_wxs/
+data/sources/gistic_output/
 data/sources/cptac_tables/
 data/sources/gistic_tables/
 tmp/

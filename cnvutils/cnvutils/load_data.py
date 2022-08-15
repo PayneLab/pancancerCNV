@@ -808,10 +808,10 @@ def _load_cancer_type_cptac_tables(cancer_type, data_types, pancan, no_internet=
 
     return tables
 
-def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "..", "data")):
+def _load_gistic_tables(levels, data_dir=os.path.join(os.getcwd(), "data")):
 
     # Get the requested data types
-    gistic_dir = os.path.join(data_dir, "sources", "Broad_pipeline_wxs")
+    gistic_dir = os.path.join(data_dir, "sources", "gistic_output")
     data_file_paths = {
         "segment": os.path.join(gistic_dir, "all_lesions.txt"),
         "gene": os.path.join(gistic_dir, "all_data_by_genes.txt"),
