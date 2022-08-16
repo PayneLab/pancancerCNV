@@ -85,3 +85,6 @@ def get_protein_ttest_boxplot_path(data_dir, source, level, chromosome, arm, gai
 
 def get_props_barchart_path(data_dir, source, level, chromosome, arm, gain_or_loss, cis_or_trans, proteomics_or_transcriptomics, chart_format): 
     return os.path.join(get_charts_img_path(data_dir), f"props_barchart{get_event_name(source, level, chromosome, arm, gain_or_loss)}_{cis_or_trans}_{proteomics_or_transcriptomics}.{chart_format}")
+
+def get_diffs_boxplot_path(data_dir, source, level, chromosome, chart_format): 
+    return os.path.join(get_charts_img_path(data_dir), f"diffs_boxplot_{get_source_level_chromosome_label(source, level, chromosome)}.{chart_format}")
