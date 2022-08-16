@@ -20,7 +20,7 @@ sseq = np.random.SeedSequence(entropy=ENTROPY, spawn_key=(i,))
 
 print(sseq.state)
 
-# Create an RNG from that seed sequence
+# Create a RNG from that seed sequence
 rng = np.random.default_rng(sseq)
 
 # Get the results for this permutation

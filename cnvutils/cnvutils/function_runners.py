@@ -1,6 +1,7 @@
 import inspect
 import itertools
 import multiprocessing
+import os
 
 from .load_data import load_event_metadata
 
@@ -36,7 +37,8 @@ def multi_runner(
     chromosomes_events,
     more_dicts=[],
     processes=None,
-    multi=True
+    multi=True,
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
 ):
 
     args = _get_multi_runner_args(
@@ -45,6 +47,7 @@ def multi_runner(
         levels=levels,
         chromosomes_events=chromosomes_events,
         more_dicts=more_dicts,
+        data_dir=data_dir,
     )
 
     if multi:
@@ -65,6 +68,7 @@ def _get_multi_runner_args(
     levels,
     chromosomes_events,
     more_dicts,
+    data_dir,
 ):
 
     # Save each combination of args we want to run
@@ -88,6 +92,7 @@ def _get_multi_runner_args(
                             arm=arm,
                             gain_or_loss=event_type,
                             level=level,
+                            data_dir=data_dir,
                         )
 
                         # For any additional parameters, just do all combinations of them
