@@ -879,8 +879,8 @@ def _get_ttest_sig_counts(
         cancer_type_res = all_res[all_res["cancer_type"] == cancer_type]
         
         if cancer_type_res["adj_p"].size > 0:
-            sig = (cancer_type_res["adj_p"] <= 0.05).sum()
-            not_sig = (cancer_type_res["adj_p"] > 0.05).sum()
+            sig = (cancer_type_res["adj_p"] <= SIG_CUTOFF).sum()
+            not_sig = (cancer_type_res["adj_p"] > SIG_CUTOFF).sum()
             na = cancer_type_res["adj_p"].isna().sum()
 
             sig_prop = sig / cancer_type_res["adj_p"].size
