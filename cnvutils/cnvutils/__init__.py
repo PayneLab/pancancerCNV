@@ -1,5 +1,6 @@
 from .chromosome_funcs import (
     calculate_permutation_p_values,
+    cnv_cis_correlations,
     event_effects_ttest,
     get_has_vs_not_has_tumor_normal_diff_props,
     make_counts_table,
@@ -25,6 +26,7 @@ from .make_plots import (
     find_gain_and_loss_regions,
     make_chr_line_plot,
     make_chr_gradient_plot,
+    make_cnv_cis_correlations_plot,
     make_drivers_manhattan_plot,
     make_genes_manhattan_plot,
     make_ttest_counts_plot,

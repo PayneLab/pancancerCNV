@@ -684,6 +684,10 @@ def make_cytoband_plot(chrm, width, height, show_xlabel=True):
     
     return bars
 
+def make_cnv_cis_correlations_plot():
+    pass
+
+# Helper functions
 def _find_gain_or_loss_regions(
     counts,
     cancer_types,

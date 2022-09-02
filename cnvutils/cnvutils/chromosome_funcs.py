@@ -61,6 +61,7 @@ def make_counts_table(
         cnv = tables[level]
 
         if level == "gene":
+            # Get gene locations
             gene_locations = get_ncbi_gene_locations(data_dir=data_dir)
             chr_gene_locations = gene_locations[gene_locations["chromosome"] == chromosome]
         else:
@@ -168,9 +169,7 @@ def make_has_event_table(
     if source == "cptac":
 
         id_name = "Database_ID"
-
-        tables = get_tables(source=source, data_types=["CNV"], data_dir=data_dir)
-        cnv = tables["CNV"]
+        cnv = get_tables(source=source, data_types=["CNV"], data_dir=data_dir)["CNV"]
 
         # Get gene locations
         gene_locations = get_ensembl_gene_locations(data_dir=data_dir)
@@ -178,9 +177,7 @@ def make_has_event_table(
     elif source == "gistic":
 
         id_name = "NCBI_ID"
-
-        tables = get_tables(source=source, data_types=[level], data_dir=data_dir)
-        cnv = tables[level]
+        cnv = get_tables(source=source, data_types=[level], data_dir=data_dir)[level]
 
         if level == "gene":
             gene_locations = get_ncbi_gene_locations(data_dir=data_dir)
@@ -215,6 +212,8 @@ def make_has_event_table(
         
         # Calculate gene lengths, drop other columns
         gene_lengths = event_df["end_bp"] - event_df["start_bp"]
+        # TODO: negatives !!!
+        print((gene_lengths < 0).sum())
         event_df = event_df.drop(columns=[col for col in ['chromosome', 'start_bp', 'end_bp', 'arm', "Database_ID"] if col in event_df.columns])
 
         # Binarize all values to whether greater than/less than cutoff
@@ -284,10 +283,6 @@ def event_effects_ttest(
     gene_locations = get_ensembl_gene_locations(data_dir=data_dir)
 
     # Select proteins
-    # Note that the cnvutils.get_event_genes function uses Ensembl gene IDs for the 
-    # Database_ID column, while the proteomics dataframes that have a Database_ID column
-    # use RefSeq protein IDs. So, when we're selecting the genes we want, we ignore the 
-    # Database_ID column if it is present, and just use gene names.
     selected_genes = select_genes_for_event(
         gene_locations=gene_locations,
         chromosome=chromosome,
@@ -809,6 +804,87 @@ def calculate_permutation_p_values(
     )
     
     all_p.to_csv(save_path, sep="\t", index=False)
+
+def cnv_cis_correlations(
+    chromosome,
+    arm,
+    event_start,
+    event_end,
+    gain_or_loss,
+    proteomics_or_transcriptomics,
+    cancer_types,
+    source,
+    level=None,
+    tissue_type="tumor",
+    data_dir=os.path.join(os.getcwd(), "..", "data"),
+):
+    
+    # Get omics tables
+    omics_dict = get_tables(
+        data_dir=data_dir,
+        source=source,
+        data_types=[proteomics_or_transcriptomics],
+        cancer_types=cancer_types,
+    )
+    omics_dict = omics_dict[proteomics_or_transcriptomics]
+
+    # Get gene locations and CNV tables
+    if source == "cptac":
+
+        id_name = "Database_ID"
+        cnv = get_tables(source=source, data_types=["CNV"], data_dir=data_dir)["CNV"]
+        gene_locations = get_ensembl_gene_locations(data_dir=data_dir)
+
+    elif source == "gistic":
+
+        id_name = "NCBI_ID"
+        cnv = get_tables(source=source, data_types=[level], data_dir=data_dir)[level]
+        if level == "gene":
+            gene_locations = get_ncbi_gene_locations(data_dir=data_dir)
+        else:
+            raise ValueError(f"Invalid level '{level}'")
+    else:
+        raise ValueError(f"Invalid data source '{source}'")
+
+    # Select proteins in the event
+    selected_genes = select_genes_for_event(
+        gene_locations=gene_locations,
+        chromosome=chromosome,
+        event_start=event_start,
+        event_end=event_end,
+        cis_or_trans=cis_or_trans,
+    ).reset_index(drop=False)["Name"]
+
+    for cancer_type in omics_dict.keys():
+        
+        df = omics_dict[cancer_type]
+
+        # Select just the tissue type we want
+        if tissue_type == "tumor":
+            df = df[~df.index.str.endswith(".N")]
+        elif tissue_type == "normal":
+            df = df[df.index.str.endswith(".N")]
+            df.index = df.index.str[:-2] # So that they'll match up
+        else:
+            raise ValueError(f"Invalid tissue_type '{tissue_type}'")
+
+        # Clean up the dataframe
+        df = df.transpose().\
+        reset_index()
+
+        df.columns.name = None
+
+        # Get just the genes we want
+        df = df[df["Name"].isin(selected_genes)]
+
+        # Standardize index
+        if "Database_ID" not in df.columns:
+            df.insert(loc=1, column="Database_ID", value=np.nan)
+
+        # Set the index again
+        df = df.set_index(["Name", "Database_ID"])
+
+        omics_dict[cancer_type] = df
 
 # Helper functions
 def _get_gain_counts(row):
